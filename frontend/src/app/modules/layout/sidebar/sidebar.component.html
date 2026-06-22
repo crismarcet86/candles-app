@@ -1,7 +1,8 @@
 <nav class="sidebar" [class.closed]="!open">
   <div class="sidebar-logo">
-    <span class="logo-icon">🕯️</span>
-    <span class="logo-text" *ngIf="open">Candles App</span>
+    <img *ngIf="logoUrl" [src]="logoUrl" class="logo-img" alt="Logo">
+    <span *ngIf="!logoUrl" class="logo-icon">🕯️</span>
+    <span class="logo-text" *ngIf="open">{{ businessName }}</span>
     <button class="sidebar-close-btn" (click)="closeRequest.emit()" title="Cerrar menú">✕</button>
   </div>
 

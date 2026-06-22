@@ -1,7 +1,10 @@
 <div class="auth-wrapper">
   <div class="auth-card">
-    <div class="auth-logo">🕯️</div>
-    <h1 class="auth-title">Bienvenido</h1>
+    <div class="auth-logo">
+      <img *ngIf="logoUrl" [src]="logoUrl" class="login-logo-img" alt="Logo">
+      <span *ngIf="!logoUrl">🕯️</span>
+    </div>
+    <h1 class="auth-title">{{ businessName }}</h1>
     <p class="auth-subtitle">Ingresa a tu cuenta</p>
 
     <div class="alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>

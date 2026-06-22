@@ -1,0 +1,73 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">⚙️ Configuración de empresa</h1>
+      <p class="page-subtitle">Datos de tu negocio o emprendimiento</p>
+    </div>
+  </div>
+
+  <div class="card skeleton-card" *ngIf="loading">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loading">
+    <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+    <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <!-- Logo -->
+    <div class="card logo-card">
+      <h3 class="section-title">Logo del negocio</h3>
+      <div class="logo-section">
+        <div class="logo-preview">
+          <img *ngIf="previewUrl" [src]="previewUrl" alt="Logo" class="logo-img">
+          <div *ngIf="!previewUrl" class="logo-placeholder">🕯️</div>
+        </div>
+        <div class="logo-actions">
+          <p class="logo-hint">Se mostrará en el login y la barra lateral. Máx. 2 MB, formatos: PNG, JPG, SVG.</p>
+          <label class="btn-upload" [class.uploading]="uploadingLogo">
+            <span *ngIf="!uploadingLogo">📁 Elegir imagen</span>
+            <span *ngIf="uploadingLogo" class="spinner"></span>
+            <input type="file" accept="image/*" (change)="onFileChange($event)" style="display:none">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Datos generales -->
+    <div class="card">
+      <h3 class="section-title">Datos del negocio</h3>
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+        <div class="form-group">
+          <label>Nombre de la empresa / negocio <span class="required">*</span></label>
+          <input type="text" formControlName="name" placeholder="Ej: Velas Artesanales María"
+                 [class.invalid]="field('name')?.invalid && field('name')?.touched">
+          <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">Requerido</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>RUC / CI</label>
+            <input type="text" formControlName="ruc" placeholder="Ej: 1234567890001">
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="text" formControlName="phone" placeholder="Ej: +593 99 123 4567">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Observaciones</label>
+          <textarea formControlName="observations" placeholder="Dirección, slogan, datos adicionales..."></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" [disabled]="saving">
+            <span *ngIf="!saving">Guardar cambios</span>
+            <span *ngIf="saving" class="spinner"></span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

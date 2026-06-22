@@ -22,6 +22,8 @@
   margin-bottom: 0.5rem;
 }
 
+.login-logo-img { width: 80px; height: 80px; object-fit: contain; border-radius: 12px; }
+
 .auth-title {
   text-align: center;
   font-size: 1.6rem;

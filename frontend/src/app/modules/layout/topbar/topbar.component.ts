@@ -1,5 +1,6 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { AuthService } from '../../../core/services/auth.service';
+import { SettingsService } from '../../../core/services/settings.service';
 import { User } from '../../../shared/models/user.model';
 
 @Component({
@@ -12,8 +13,6 @@ export class TopbarComponent implements OnInit {
 
   user: User | null = null;
   businessName = '';
-  editingName = false;
-  tempName = '';
   userMenuOpen = false;
 
   // Change password modal
@@ -25,24 +24,13 @@ export class TopbarComponent implements OnInit {
   pwError = '';
   pwSuccess = '';
 
-  constructor(public auth: AuthService) {}
+  constructor(public auth: AuthService, private settingsService: SettingsService) {}
 
   ngOnInit(): void {
     this.auth.user$.subscribe(u => this.user = u);
-    this.businessName = this.auth.businessName;
-  }
-
-  startEdit(): void {
-    this.tempName = this.businessName;
-    this.editingName = true;
-  }
-
-  saveName(): void {
-    if (this.tempName.trim()) {
-      this.businessName = this.tempName.trim();
-      this.auth.setBusinessName(this.businessName);
-    }
-    this.editingName = false;
+    this.settingsService.settings$.subscribe(s => {
+      this.businessName = s?.name || this.auth.businessName;
+    });
   }
 
   toggleUserMenu(): void {

@@ -5,23 +5,9 @@
     ☰
   </button>
 
-  <!-- Nombre del negocio editable -->
+  <!-- Nombre del negocio -->
   <div class="business-name">
-    <ng-container *ngIf="!editingName; else editMode">
-      <span class="bname-text" (click)="startEdit()" title="Clic para editar">
-        {{ businessName }}
-      </span>
-      <button class="btn-edit-name" (click)="startEdit()" title="Editar nombre">✏️</button>
-    </ng-container>
-    <ng-template #editMode>
-      <input class="bname-input"
-             [(ngModel)]="tempName"
-             (keyup.enter)="saveName()"
-             (keyup.escape)="editingName = false"
-             (blur)="saveName()"
-             autofocus
-             maxlength="50">
-    </ng-template>
+    <span class="bname-text">{{ businessName }}</span>
   </div>
 
   <div class="topbar-right">

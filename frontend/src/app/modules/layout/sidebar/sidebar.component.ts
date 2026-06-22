@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MenuItem } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { SettingsService } from '../../../core/services/settings.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -10,6 +11,9 @@ import { AuthService } from '../../../core/services/auth.service';
 export class SidebarComponent implements OnInit {
   @Input() open = true;
   @Output() closeRequest = new EventEmitter<void>();
+
+  logoUrl: string | null = null;
+  businessName = '';
 
   // All menu groups — items with roles are filtered for the current user
   private allMenuGroups: { title: string; items: MenuItem[] }[] = [
@@ -41,18 +45,26 @@ export class SidebarComponent implements OnInit {
       title: 'Sistema',
       items: [
         { label: 'Reportes',    icon: '📈',  route: '/dashboard/reports' },
-        { label: 'Usuarios',    icon: '👤',  route: '/dashboard/users', roles: ['admin'] }
+        { label: 'Usuarios',    icon: '👤',  route: '/dashboard/users', roles: ['admin'] },
+        { label: 'Empresa',     icon: '⚙️',  route: '/dashboard/settings', roles: ['admin'] }
       ]
     }
   ];
 
   menuGroups: { title: string; items: MenuItem[] }[] = [];
 
-  constructor(private auth: AuthService) {}
+  constructor(private auth: AuthService, private settings: SettingsService) {}
 
   ngOnInit(): void {
     this.auth.user$.subscribe(() => this.buildMenu());
     this.buildMenu();
+    this.settings.settings$.subscribe(s => {
+      this.logoUrl = s?.logo_url || null;
+      this.businessName = s?.name || 'Mi Negocio';
+    });
+    if (!this.settings.current) {
+      this.settings.load().subscribe();
+    }
   }
 
   private buildMenu(): void {

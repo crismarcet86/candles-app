@@ -10,5 +10,6 @@ router.use('/auth',     require('./authRoutes'));
 router.use('/users',    require('./userRoutes'));
 router.use('/molds',    require('./moldRoutes'));
 router.use('/reports',  require('./reportRoutes'));
+router.use('/settings', require('./settingsRoutes'));
 
 module.exports = router;

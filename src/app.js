@@ -1,7 +1,8 @@
 const express = require('express');
-const cors = require('cors');
-const morgan = require('morgan');
-const routes = require('./routes');
+const cors    = require('cors');
+const morgan  = require('morgan');
+const path    = require('path');
+const routes  = require('./routes');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
@@ -10,6 +11,9 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || '*' }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
+
+// Serve uploaded files (logos, etc.)
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 app.use('/api', routes);
 
