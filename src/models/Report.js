@@ -30,7 +30,7 @@ class Report {
   static async getLowStock() {
     const [rows] = await pool.query(`
       SELECT p.id, p.name, p.stock, p.min_stock, p.price,
-             cat.name AS category_name, u.abbr AS unit_abbr
+             cat.name AS category_name, u.abbreviation AS unit_abbr
       FROM products p
       LEFT JOIN categories cat ON p.category_id = cat.id
       LEFT JOIN units u ON p.unit_id = u.id
