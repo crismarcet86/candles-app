@@ -39,14 +39,12 @@
         <div class="form-row">
           <div class="form-group">
             <label>Mano de obra (S/)</label>
-            <input type="number" formControlName="labor_cost" min="0" step="0.5" placeholder="0.00"
-                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+            <input type="number" formControlName="labor_cost" min="0" step="1" placeholder="0.00">
             <span class="field-hint">Costo de trabajo artesanal</span>
           </div>
           <div class="form-group">
             <label>Descuento (S/)</label>
-            <input type="number" formControlName="discount" min="0" step="0.5" placeholder="0.00"
-                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+            <input type="number" formControlName="discount" min="0" step="1" placeholder="0.00">
           </div>
         </div>
       </div>
@@ -81,12 +79,10 @@
                 </td>
                 <td class="td-num">
                   <input type="number" formControlName="quantity" min="0.001" step="1" style="max-width: 90px;"
-                         (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
                          [class.invalid]="itemField(i,'quantity')?.invalid && itemField(i,'quantity')?.touched">
                 </td>
                 <td class="td-num">
-                  <input type="number" formControlName="unit_price" min="0" step="0.5" style="max-width: 110px;"
-                         (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                  <input type="number" formControlName="unit_price" min="0" step="1" style="max-width: 110px;"
                          [class.invalid]="itemField(i,'unit_price')?.invalid && itemField(i,'unit_price')?.touched">
                 </td>
                 <td class="td-num">

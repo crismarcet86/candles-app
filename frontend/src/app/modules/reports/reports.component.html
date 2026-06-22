@@ -101,8 +101,8 @@
         <tbody>
           <tr *ngFor="let o of orders">
             <td>{{ o.id }}</td>
-            <td>{{ o.client_name || o.client || '—' }}</td>
-            <td>{{ o.items_count ?? o.items ?? '—' }}</td>
+            <td>{{ o.client_name || '—' }}</td>
+            <td>{{ o.item_count ?? '—' }}</td>
             <td>S/ {{ o.total | number:'1.2-2' }}</td>
             <td>{{ o.created_at | date:'dd/MM/yyyy' }}</td>
           </tr>
@@ -140,10 +140,10 @@
           <tbody>
             <tr *ngFor="let p of lowStock">
               <td>{{ p.name }}</td>
-              <td>{{ p.category || '—' }}</td>
+              <td>{{ p.category_name || '—' }}</td>
               <td class="td-alert">{{ p.stock | number:'1.2-2' }}</td>
               <td>{{ p.min_stock | number:'1.2-2' }}</td>
-              <td>{{ p.unit || '—' }}</td>
+              <td>{{ p.unit_abbr || '—' }}</td>
             </tr>
           </tbody>
         </table>
@@ -177,7 +177,7 @@
                 <span class="rank-badge">{{ i + 1 }}</span>
                 {{ c.name || c.client_name }}
               </td>
-              <td>{{ c.orders_count ?? c.total_orders ?? '—' }}</td>
+              <td>{{ c.order_count ?? '—' }}</td>
               <td>S/ {{ c.total_spent | number:'1.2-2' }}</td>
             </tr>
           </tbody>

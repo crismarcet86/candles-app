@@ -38,8 +38,7 @@
 
           <div class="form-group">
             <label>Cantidad de velas a calcular</label>
-            <input type="number" [(ngModel)]="quantity" min="1" step="1" placeholder="1"
-                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+            <input type="number" [(ngModel)]="quantity" min="1" step="1" placeholder="1">
           </div>
         </div>
 
@@ -54,7 +53,10 @@
             <div class="ingredient-line" *ngFor="let line of lines; let i = index">
               <div class="line-row">
                 <div class="form-group flex-grow">
-                  <label>Ingrediente</label>
+                  <label>
+                    <span *ngIf="line.isWaxLine">🕯️ Cera a usar</span>
+                    <span *ngIf="!line.isWaxLine">Ingrediente</span>
+                  </label>
                   <select [(ngModel)]="line.ingredient_id" (ngModelChange)="onIngredientChange(line)">
                     <option [ngValue]="null">Seleccionar...</option>
                     <optgroup *ngFor="let cat of getCategories()" [label]="cat">
@@ -71,9 +73,8 @@
                     <input type="number"
                            [(ngModel)]="line.grams"
                            (ngModelChange)="recalcLine(line)"
-                           min="0" step="0.1"
-                           placeholder="0"
-                           (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+                           min="0" step="1"
+                           placeholder="0">
                     <span class="input-suffix">{{ line.is_unit ? 'u' : 'g' }}</span>
                   </div>
                 </div>
@@ -94,10 +95,23 @@
         <!-- Precio de venta -->
         <div class="panel-section" *ngIf="selectedMold && lines.length > 0">
           <h3 class="section-title">Precio de venta</h3>
+
+          <div class="form-group">
+            <label>Margen de ganancia deseado</label>
+            <div class="margin-slider-wrapper">
+              <input type="range" [(ngModel)]="marginTarget" (ngModelChange)="applyMargin()"
+                     min="0" max="200" step="5" class="margin-slider">
+              <span class="margin-badge">{{ marginTarget }}%</span>
+            </div>
+            <div class="margin-hint" *ngIf="totalCostPerCandle > 0">
+              Precio sugerido: <strong>S/ {{ suggestedPrice | number:'1.2-2' }}</strong>
+              <button type="button" class="btn-apply-margin" (click)="useSuggestedPrice()">Usar</button>
+            </div>
+          </div>
+
           <div class="form-group">
             <label>Precio por vela (S/)</label>
-            <input type="number" [(ngModel)]="sellPrice" min="0" step="0.5" placeholder="0.00"
-                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+            <input type="number" [(ngModel)]="sellPrice" min="0" step="1" placeholder="0.00">
           </div>
         </div>
 

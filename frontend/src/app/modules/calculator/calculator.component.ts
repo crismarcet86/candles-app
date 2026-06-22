@@ -25,6 +25,7 @@ interface CalcLine {
   unit_abbr: string;
   is_unit: boolean;      // true si se cobra por unidad (pabilo), false si por gramo
   subtotal: number;
+  isWaxLine?: boolean;   // true = línea de cera, recibe gramos del molde automáticamente
 }
 
 @Component({
@@ -44,6 +45,7 @@ export class CalculatorComponent implements OnInit {
 
   sellPrice: number = 0;
   quantity: number  = 1;  // cuántas velas se calcula
+  marginTarget: number = 0; // % de margen deseado
 
   loadingMolds = true;
   loadingIngredients = true;
@@ -72,23 +74,23 @@ export class CalculatorComponent implements OnInit {
 
   onMoldChange(): void {
     this.selectedMold = this.molds.find(m => m.id === +this.selectedMoldId!) || null;
-    // Reset lines when mold changes
     this.lines = [];
     if (this.selectedMold) {
-      // Agregar línea de cera automáticamente
-      this.lines.push(this.emptyLine('Cera'));
+      // Primera línea marcada como wax: se auto-llena con wax_grams al elegir ingrediente
+      this.lines.push({ ...this.emptyLine(), isWaxLine: true });
     }
   }
 
-  private emptyLine(defaultName = ''): CalcLine {
+  private emptyLine(): CalcLine {
     return {
       ingredient_id: null,
-      ingredient_name: defaultName,
+      ingredient_name: '',
       grams: 0,
       unit_cost: 0,
       unit_abbr: 'g',
       is_unit: false,
-      subtotal: 0
+      subtotal: 0,
+      isWaxLine: false
     };
   }
 
@@ -111,18 +113,18 @@ export class CalculatorComponent implements OnInit {
     const unitLower = ing.unit_abbr.toLowerCase();
     if (unitLower === 'kg') {
       line.is_unit   = false;
-      line.unit_cost = ing.price / 1000; // convertir a costo por gramo
+      line.unit_cost = ing.price / 1000; // costo por gramo
     } else if (unitLower === 'g') {
       line.is_unit   = false;
-      line.unit_cost = ing.price;        // ya es por gramo
+      line.unit_cost = ing.price;
     } else {
-      // unidad, litro, etc. — cobrar por unidad
+      // pabilo u otras unidades
       line.is_unit   = true;
       line.unit_cost = ing.price;
     }
 
-    // Si la línea es cera, auto-llenar con los gramos del molde
-    if (line.ingredient_name.toLowerCase().includes('cera') && this.selectedMold) {
+    // Línea de cera: auto-llenar con los gramos del molde
+    if (line.isWaxLine && this.selectedMold) {
       line.grams = this.selectedMold.wax_grams;
     }
 
@@ -166,12 +168,29 @@ export class CalculatorComponent implements OnInit {
     return this.loadingMolds || this.loadingIngredients;
   }
 
+  get suggestedPrice(): number {
+    if (!this.totalCostPerCandle) return 0;
+    return this.totalCostPerCandle * (1 + this.marginTarget / 100);
+  }
+
+  applyMargin(): void {
+    // solo actualiza el precio de venta si el margen es > 0
+    if (this.marginTarget > 0) {
+      this.sellPrice = Math.round(this.suggestedPrice * 100) / 100;
+    }
+  }
+
+  useSuggestedPrice(): void {
+    this.sellPrice = Math.round(this.suggestedPrice * 100) / 100;
+  }
+
   reset(): void {
     this.selectedMoldId = null;
     this.selectedMold = null;
     this.lines = [];
     this.sellPrice = 0;
     this.quantity = 1;
+    this.marginTarget = 0;
   }
 
   getCategories(): string[] {

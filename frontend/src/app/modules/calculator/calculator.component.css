@@ -51,6 +51,14 @@ input:focus, select:focus { border-color: var(--primary, #8B5E3C); }
 .text-green { color: #16a34a !important; }
 .text-red { color: #dc2626 !important; }
 .tip-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.83rem; color: #92400e; margin-top: 1rem; }
+/* Margin slider */
+.margin-slider-wrapper { display: flex; align-items: center; gap: 0.75rem; }
+.margin-slider { flex: 1; accent-color: #8B5E3C; cursor: pointer; height: 6px; }
+.margin-badge { min-width: 3.5rem; text-align: center; background: #8B5E3C; color: #fff; border-radius: 20px; padding: 0.2rem 0.6rem; font-size: 0.85rem; font-weight: 700; }
+.margin-hint { font-size: 0.83rem; color: #374151; background: #f3f4f6; border-radius: 8px; padding: 0.5rem 0.75rem; display: flex; align-items: center; gap: 0.5rem; margin-top: 0.25rem; }
+.margin-hint strong { color: #8B5E3C; }
+.btn-apply-margin { margin-left: auto; padding: 0.2rem 0.65rem; background: #8B5E3C; color: #fff; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+.btn-apply-margin:hover { background: #6d4830; }
 /* Empty */
 .empty-calc { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }

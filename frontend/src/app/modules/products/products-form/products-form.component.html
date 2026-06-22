@@ -70,8 +70,7 @@
         <div class="form-group">
           <label for="price">Precio <span class="required">*</span></label>
           <input id="price" type="number" formControlName="price"
-                 placeholder="0.00" step="0.01" min="0"
-                 (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                 placeholder="0.00" step="1" min="0"
                  [class.invalid]="field('price')?.invalid && field('price')?.touched">
           <span class="field-error" *ngIf="field('price')?.hasError('required') && field('price')?.touched">
             El precio es requerido
@@ -88,8 +87,7 @@
             <span class="required" *ngIf="isEdit">*</span>
           </label>
           <input id="stock" type="number" formControlName="stock"
-                 placeholder="0" step="0.01" min="0"
-                 (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                 placeholder="0" step="1" min="0"
                  [class.invalid]="field('stock')?.invalid && field('stock')?.touched">
           <span class="field-error" *ngIf="field('stock')?.hasError('min') && field('stock')?.touched">
             El stock no puede ser negativo
@@ -101,8 +99,7 @@
       <div class="form-group">
         <label for="min_stock">Stock mínimo <span class="hint">(opcional, para alertas)</span></label>
         <input id="min_stock" type="number" formControlName="min_stock"
-               placeholder="0" step="0.01" min="0"
-               (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+               placeholder="0" step="1" min="0"
                [class.invalid]="field('min_stock')?.invalid && field('min_stock')?.touched">
         <span class="field-error" *ngIf="field('min_stock')?.hasError('min') && field('min_stock')?.touched">
           El stock mínimo no puede ser negativo

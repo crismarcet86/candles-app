@@ -23,8 +23,7 @@
       <div class="form-group">
         <label>Gramos de cera que contiene <span class="required">*</span></label>
         <div class="input-suffix-wrapper">
-          <input type="number" formControlName="wax_grams" placeholder="200" min="0.001" step="0.1"
-                 (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+          <input type="number" formControlName="wax_grams" placeholder="200" min="0.001" step="1"
                  [class.invalid]="field('wax_grams')?.invalid && field('wax_grams')?.touched">
           <span class="input-suffix">g</span>
         </div>
