@@ -2,91 +2,34 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">Dashboard</h1>
-      <p class="page-subtitle">Resumen del negocio</p>
+      <p class="page-subtitle">Bienvenido al sistema de gestión de velas</p>
     </div>
   </div>
 
-  <div class="loading-msg" *ngIf="loading">Cargando datos...</div>
-
-  <div *ngIf="!loading">
-
-    <!-- KPI Cards -->
-    <div class="kpi-grid" *ngIf="summary">
-      <div class="kpi-card" (click)="goTo('/dashboard/orders')">
-        <div class="kpi-icon">📦</div>
-        <div class="kpi-value">{{ summary.total_orders ?? '—' }}</div>
-        <div class="kpi-label">Órdenes totales</div>
-      </div>
-      <div class="kpi-card" (click)="goTo('/dashboard/orders')">
-        <div class="kpi-icon">💰</div>
-        <div class="kpi-value">S/ {{ summary.total_revenue != null ? (summary.total_revenue | number:'1.2-2') : '—' }}</div>
-        <div class="kpi-label">Ingresos totales</div>
-      </div>
-      <div class="kpi-card" (click)="goTo('/dashboard/clients')">
-        <div class="kpi-icon">👥</div>
-        <div class="kpi-value">{{ summary.active_clients ?? '—' }}</div>
-        <div class="kpi-label">Clientes activos</div>
-      </div>
-      <div class="kpi-card" (click)="goTo('/dashboard/proformas')">
-        <div class="kpi-icon">📋</div>
-        <div class="kpi-value">{{ summary.pending_proformas ?? '—' }}</div>
-        <div class="kpi-label">Proformas pendientes</div>
-      </div>
-      <div class="kpi-card kpi-alert" (click)="goTo('/dashboard/products')">
-        <div class="kpi-icon">⚠️</div>
-        <div class="kpi-value">{{ summary.low_stock_count ?? '—' }}</div>
-        <div class="kpi-label">Stock bajo mínimo</div>
-      </div>
-    </div>
-
-    <!-- Low Stock Alert -->
-    <div class="section-card" *ngIf="lowStock.length > 0">
-      <div class="section-header">
-        <h2 class="section-title">⚠️ Alertas de stock bajo</h2>
-        <button class="btn-link" (click)="goTo('/dashboard/products')">Ver todos →</button>
-      </div>
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Ingrediente</th>
-              <th>Stock actual</th>
-              <th>Stock mínimo</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let p of lowStock" class="row-alert">
-              <td>{{ p.name }}</td>
-              <td class="td-alert">{{ p.stock | number:'1.2-2' }} {{ p.unit_abbr }}</td>
-              <td>{{ p.min_stock | number:'1.2-2' }} {{ p.unit_abbr }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="section-card">
-      <h2 class="section-title">Acciones rápidas</h2>
-      <div class="quick-actions">
-        <button class="action-btn" (click)="goTo('/dashboard/proformas/new')">
-          <span class="action-icon">📄</span>
-          <span>Nueva proforma</span>
-        </button>
-        <button class="action-btn" (click)="goTo('/dashboard/products')">
-          <span class="action-icon">🧪</span>
-          <span>Ingredientes</span>
-        </button>
-        <button class="action-btn" (click)="goTo('/dashboard/calculator')">
-          <span class="action-icon">🧮</span>
-          <span>Calculadora</span>
-        </button>
-        <button class="action-btn" (click)="goTo('/dashboard/reports')">
-          <span class="action-icon">📈</span>
-          <span>Reportes</span>
-        </button>
-      </div>
-    </div>
-
+  <div class="quick-actions">
+    <button class="action-btn" (click)="goTo('/dashboard/proformas/new')">
+      <span class="action-icon">📄</span>
+      <span>Nueva proforma</span>
+    </button>
+    <button class="action-btn" (click)="goTo('/dashboard/products')">
+      <span class="action-icon">🧪</span>
+      <span>Ingredientes</span>
+    </button>
+    <button class="action-btn" (click)="goTo('/dashboard/clients')">
+      <span class="action-icon">👥</span>
+      <span>Clientes</span>
+    </button>
+    <button class="action-btn" (click)="goTo('/dashboard/calculator')">
+      <span class="action-icon">🧮</span>
+      <span>Calculadora</span>
+    </button>
+    <button class="action-btn" (click)="goTo('/dashboard/orders')">
+      <span class="action-icon">📦</span>
+      <span>Pedidos</span>
+    </button>
+    <button class="action-btn" (click)="goTo('/dashboard/reports')">
+      <span class="action-icon">📈</span>
+      <span>Reportes</span>
+    </button>
   </div>
 </div>
