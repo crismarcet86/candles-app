@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { User } from '../../../shared/models/user.model';
 import { UsersService } from '../users.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-users-list',
