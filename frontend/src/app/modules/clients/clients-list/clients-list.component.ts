@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Client } from '../../../shared/models/client.model';
 import { ClientsService } from '../clients.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-clients-list',
@@ -15,7 +17,7 @@ export class ClientsListComponent implements OnInit {
   successMsg = '';
   confirmDeleteId: number | null = null;
 
-  constructor(private service: ClientsService, private router: Router) {}
+  constructor(private service: ClientsService, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.load();
@@ -66,6 +68,22 @@ export class ClientsListComponent implements OnInit {
       error: err => {
         this.errorMsg = err.error?.message || 'Error al desactivar cliente';
       }
+    });
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/clients/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'clientes.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
     });
   }
 }

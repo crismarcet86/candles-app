@@ -14,6 +14,7 @@ const rules = [
 router.use(requireAuth, requireAdmin);
 
 router.get('/',       ctrl.getAll);
+router.get('/pdf',    ctrl.getPdf);
 router.get('/:id',    ctrl.getById);
 router.post('/',      rules, validate, ctrl.create);
 router.put('/:id',    ctrl.update);

@@ -1,5 +1,6 @@
 const Proforma = require('../models/Proforma');
 const { generateProformaPDF } = require('../utils/pdfProforma');
+const { generateListPDF } = require('../utils/pdfList');
 const { success, created, notFound, error } = require('../utils/response');
 
 exports.getAll = async (req, res, next) => {
@@ -46,6 +47,32 @@ exports.cancel = async (req, res, next) => {
   try {
     const ok = await Proforma.cancel(req.params.id);
     ok ? success(res, null, 'Proforma cancelada') : notFound(res, 'Proforma no encontrada o ya no está en borrador');
+  } catch (e) { next(e); }
+};
+
+// GET /api/proformas/pdf — listado PDF de todas las proformas
+exports.getListPdf = async (req, res, next) => {
+  try {
+    const proformas = await Proforma.findAll();
+    const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const rows = proformas.map(p => [
+      String(p.id).padStart(4, '0'),
+      p.client_name || '—',
+      `S/ ${(+p.total).toFixed(2)}`,
+      p.status,
+      p.notes || '—',
+    ]);
+    const pdf = await generateListPDF({
+      title: 'Listado de Proformas',
+      subtitle,
+      headers: ['ID', 'CLIENTE', 'TOTAL', 'ESTADO', 'NOTAS'],
+      widths:  [40, 175, 80, 80, 120],
+      aligns:  ['left', 'left', 'right', 'left', 'left'],
+      rows,
+    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="proformas.pdf"');
+    res.send(pdf);
   } catch (e) { next(e); }
 };
 

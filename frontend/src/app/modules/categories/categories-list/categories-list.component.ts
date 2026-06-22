@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Category } from '../../../shared/models/category.model';
 import { CategoriesService } from '../categories.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-categories-list',
@@ -17,7 +19,8 @@ export class CategoriesListComponent implements OnInit {
 
   constructor(
     private categoriesService: CategoriesService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +72,22 @@ export class CategoriesListComponent implements OnInit {
       error: err => {
         this.errorMsg = err.error?.message || 'Error al desactivar categoría';
       }
+    });
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/categories/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'categorias.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
     });
   }
 }

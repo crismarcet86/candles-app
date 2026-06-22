@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Unit } from '../../../shared/models/unit.model';
 import { UnitsService } from '../units.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-units-list',
@@ -17,7 +19,8 @@ export class UnitsListComponent implements OnInit {
 
   constructor(
     private unitsService: UnitsService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -69,6 +72,22 @@ export class UnitsListComponent implements OnInit {
       error: err => {
         this.errorMsg = err.error?.message || 'Error al eliminar unidad';
       }
+    });
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/units/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'unidades.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
     });
   }
 }

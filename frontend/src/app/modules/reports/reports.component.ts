@@ -92,7 +92,9 @@ export class ReportsComponent implements OnInit {
         const a = document.createElement('a');
         a.href = url;
         a.download = 'reporte.pdf';
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         URL.revokeObjectURL(url);
       },
       error: () => { this.errorMsg = 'Error al generar PDF'; }

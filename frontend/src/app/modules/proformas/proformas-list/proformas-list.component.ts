@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Proforma } from '../../../shared/models/proforma.model';
 import { ProformasService } from '../proformas.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-proformas-list',
@@ -15,7 +17,7 @@ export class ProformasListComponent implements OnInit {
   successMsg = '';
   confirmCancelId: number | null = null;
 
-  constructor(private service: ProformasService, private router: Router) {}
+  constructor(private service: ProformasService, private router: Router, private http: HttpClient) {}
 
   ngOnInit() { this.load(); }
 
@@ -51,5 +53,21 @@ export class ProformasListComponent implements OnInit {
   statusClass(status: string): string {
     const map: any = { borrador: 'badge-borrador', confirmada: 'badge-confirmada', cancelada: 'badge-cancelada' };
     return map[status] || '';
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/proformas/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'proformas.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
+    });
   }
 }

@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const { success, created, notFound, badRequest } = require('../utils/response');
+const { generateListPDF } = require('../utils/pdfList');
 
 // Solo accesible por admin (el middleware requireAdmin lo verifica)
 
@@ -35,5 +36,29 @@ exports.remove = async (req, res, next) => {
   try {
     const ok = await User.delete(req.params.id);
     ok ? success(res, null, 'Usuario desactivado') : notFound(res, 'Usuario no encontrado');
+  } catch (e) { next(e); }
+};
+
+exports.getPdf = async (req, res, next) => {
+  try {
+    const users = await User.findAll();
+    const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    const rows = users.map(u => [
+      u.name,
+      u.email,
+      u.role,
+      u.is_active === 1 ? 'Activo' : 'Inactivo',
+    ]);
+    const pdf = await generateListPDF({
+      title: 'Listado de Usuarios',
+      subtitle,
+      headers: ['NOMBRE', 'EMAIL', 'ROL', 'ESTADO'],
+      widths:  [160, 200, 75, 60],
+      aligns:  ['left', 'left', 'left', 'left'],
+      rows,
+    });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', 'attachment; filename="usuarios.pdf"');
+    res.send(pdf);
   } catch (e) { next(e); }
 };

@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Mold } from '../../../shared/models/mold.model';
 import { MoldsService } from '../molds.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-molds-list',
@@ -15,7 +17,7 @@ export class MoldsListComponent implements OnInit {
   successMsg = '';
   confirmDeactivateId: number | null = null;
 
-  constructor(private service: MoldsService, private router: Router) {}
+  constructor(private service: MoldsService, private router: Router, private http: HttpClient) {}
   ngOnInit() { this.load(); }
 
   load() {
@@ -37,6 +39,22 @@ export class MoldsListComponent implements OnInit {
     this.service.deactivate(id).subscribe({
       next: () => { this.successMsg = 'Molde desactivado'; this.load(); setTimeout(() => this.successMsg = '', 3000); },
       error: err => { this.errorMsg = err.error?.message || 'Error'; }
+    });
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/molds/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'moldes.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
     });
   }
 }

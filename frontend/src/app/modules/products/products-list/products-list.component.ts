@@ -1,7 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { Product } from '../../../shared/models/product.model';
 import { ProductsService } from '../products.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-products-list',
@@ -15,7 +17,7 @@ export class ProductsListComponent implements OnInit {
   successMsg = '';
   confirmDeleteId: number | null = null;
 
-  constructor(private service: ProductsService, private router: Router) {}
+  constructor(private service: ProductsService, private router: Router, private http: HttpClient) {}
 
   ngOnInit(): void {
     this.load();
@@ -71,5 +73,21 @@ export class ProductsListComponent implements OnInit {
 
   isLowStock(product: Product): boolean {
     return product.stock <= product.min_stock && product.is_active === 1;
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/products/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'productos.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
+    });
   }
 }

@@ -2,6 +2,7 @@ const router = require('express').Router();
 const ctrl   = require('../controllers/proformaController');
 const { body } = require('express-validator');
 const validate = require('../middlewares/validate');
+const { requireAuth } = require('../middlewares/auth');
 
 const rules = [
   body('client_id').isInt({ min: 1 }).withMessage('Cliente requerido'),
@@ -13,6 +14,7 @@ const rules = [
 ];
 
 router.get('/',               ctrl.getAll);
+router.get('/pdf',            requireAuth, ctrl.getListPdf);
 router.get('/:id',            ctrl.getById);
 router.get('/:id/pdf',        ctrl.getPdf);
 router.post('/',              rules, validate, ctrl.create);

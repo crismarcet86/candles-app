@@ -4,6 +4,7 @@
       <h1 class="page-title">📋 Órdenes</h1>
       <p class="page-subtitle">Registro de ventas confirmadas</p>
     </div>
+    <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
   </div>
 
   <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>

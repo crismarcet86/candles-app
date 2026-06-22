@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { User } from '../../../shared/models/user.model';
 import { UsersService } from '../users.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-users-list',
@@ -19,7 +21,8 @@ export class UsersListComponent implements OnInit {
   constructor(
     private usersService: UsersService,
     public auth: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -76,5 +79,21 @@ export class UsersListComponent implements OnInit {
 
   isCurrentUser(userId: number): boolean {
     return this.auth.currentUser?.id === userId;
+  }
+
+  downloadPdf(): void {
+    this.http.get(`${environment.apiUrl}/users/pdf`, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'usuarios.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+      error: () => {}
+    });
   }
 }
