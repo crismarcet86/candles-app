@@ -59,6 +59,12 @@ input:focus, select:focus { border-color: var(--primary, #8B5E3C); }
 .margin-hint strong { color: #8B5E3C; }
 .btn-apply-margin { margin-left: auto; padding: 0.2rem 0.65rem; background: #8B5E3C; color: #fff; border: none; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
 .btn-apply-margin:hover { background: #6d4830; }
+/* PDF button */
+.btn-pdf { width: 100%; margin-top: 1rem; padding: 0.65rem 1rem; background: #8B5E3C; color: #fff; border: none; border-radius: 8px; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+.btn-pdf:hover:not(:disabled) { background: #6B4423; }
+.btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
+.spinner-small { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
 /* Empty */
 .empty-calc { text-align: center; padding: 4rem 2rem; color: #9ca3af; }
 .empty-icon { font-size: 3rem; margin-bottom: 1rem; }

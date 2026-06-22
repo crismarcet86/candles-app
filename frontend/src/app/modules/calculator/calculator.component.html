@@ -181,6 +181,11 @@
         <div class="tip-box" *ngIf="sellPrice === 0">
           💡 Ingresá el precio de venta para ver tu margen de ganancia
         </div>
+
+        <button class="btn-pdf" (click)="downloadPdf()" [disabled]="pdfLoading">
+          <span *ngIf="!pdfLoading">⬇️ Descargar PDF</span>
+          <span *ngIf="pdfLoading" class="spinner-small"></span>
+        </button>
       </div>
 
     </div>

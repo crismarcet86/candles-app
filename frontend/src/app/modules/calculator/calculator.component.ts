@@ -49,6 +49,7 @@ export class CalculatorComponent implements OnInit {
 
   loadingMolds = true;
   loadingIngredients = true;
+  pdfLoading = false;
 
   constructor(private http: HttpClient) {}
 
@@ -182,6 +183,31 @@ export class CalculatorComponent implements OnInit {
 
   useSuggestedPrice(): void {
     this.sellPrice = Math.round(this.suggestedPrice * 100) / 100;
+  }
+
+  downloadPdf(): void {
+    this.pdfLoading = true;
+    const body = {
+      moldName:   this.selectedMold?.name,
+      waxGrams:   this.selectedMold?.wax_grams,
+      quantity:   this.quantity,
+      sellPrice:  this.sellPrice,
+      lines:      this.lines
+    };
+    this.http.post(`${environment.apiUrl}/calculator/pdf`, body, { responseType: 'blob' }).subscribe({
+      next: blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'calculo-vela.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.pdfLoading = false;
+      },
+      error: () => { this.pdfLoading = false; }
+    });
   }
 
   reset(): void {
