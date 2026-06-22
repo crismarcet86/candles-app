@@ -39,6 +39,10 @@ export class AuthService {
       .pipe(tap(res => this.saveSession(res)));
   }
 
+  changePassword(current_password: string, new_password: string): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/auth/change-password`, { current_password, new_password });
+  }
+
   logout(): void {
     localStorage.clear();
     this.userSubject.next(null);

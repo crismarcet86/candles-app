@@ -2,6 +2,7 @@
   <div class="sidebar-logo">
     <span class="logo-icon">🕯️</span>
     <span class="logo-text" *ngIf="open">Candles App</span>
+    <button class="sidebar-close-btn" (click)="closeRequest.emit()" title="Cerrar menú">✕</button>
   </div>
 
   <div class="sidebar-body">

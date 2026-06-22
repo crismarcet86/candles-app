@@ -1,0 +1,193 @@
+<div class="page">
+
+  <!-- ── Page Header ─────────────────────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📈 Reportes</h1>
+      <p class="page-subtitle">Resumen de actividad y métricas del negocio</p>
+    </div>
+    <button class="btn btn-pdf" (click)="downloadPdf()">
+      ⬇️ Descargar PDF
+    </button>
+  </div>
+
+  <!-- ── Error Alert ─────────────────────────────────────────── -->
+  <div class="alert alert-error" *ngIf="errorMsg">
+    {{ errorMsg }}
+  </div>
+
+  <!-- ── KPI Summary Cards ───────────────────────────────────── -->
+  <div class="section-card">
+    <h2 class="section-title">Resumen general</h2>
+
+    <!-- Skeleton -->
+    <div class="kpi-grid" *ngIf="loadingSummary">
+      <div class="kpi-card skeleton-card" *ngFor="let i of [1,2,3,4,5]">
+        <div class="skeleton-line skeleton-icon"></div>
+        <div class="skeleton-line skeleton-value"></div>
+        <div class="skeleton-line skeleton-label"></div>
+      </div>
+    </div>
+
+    <!-- Data -->
+    <div class="kpi-grid" *ngIf="!loadingSummary && summary">
+      <div class="kpi-card">
+        <div class="kpi-icon">📦</div>
+        <div class="kpi-value">{{ summary.total_orders ?? '—' }}</div>
+        <div class="kpi-label">Órdenes totales</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">💰</div>
+        <div class="kpi-value">S/ {{ summary.total_revenue != null ? (summary.total_revenue | number:'1.2-2') : '—' }}</div>
+        <div class="kpi-label">Ingresos totales</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">👥</div>
+        <div class="kpi-value">{{ summary.active_clients ?? '—' }}</div>
+        <div class="kpi-label">Clientes activos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-icon">📋</div>
+        <div class="kpi-value">{{ summary.pending_proformas ?? '—' }}</div>
+        <div class="kpi-label">Proformas pendientes</div>
+      </div>
+      <div class="kpi-card alert">
+        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-value">{{ summary.low_stock_count ?? '—' }}</div>
+        <div class="kpi-label">Stock bajo mínimo</div>
+      </div>
+    </div>
+
+    <!-- Empty summary -->
+    <div class="empty-state" *ngIf="!loadingSummary && !summary">
+      No se pudo cargar el resumen.
+    </div>
+  </div>
+
+  <!-- ── Orders with Date Filter ─────────────────────────────── -->
+  <div class="section-card">
+    <h2 class="section-title">Órdenes por período</h2>
+
+    <div class="filter-row">
+      <label class="filter-label">
+        Desde
+        <input type="date" class="filter-input" [(ngModel)]="fromDate" />
+      </label>
+      <label class="filter-label">
+        Hasta
+        <input type="date" class="filter-input" [(ngModel)]="toDate" />
+      </label>
+      <button class="btn btn-primary" (click)="applyFilter()">Aplicar</button>
+      <button class="btn btn-outline" (click)="clearFilter()">Limpiar</button>
+    </div>
+
+    <!-- Skeleton -->
+    <div *ngIf="loadingOrders">
+      <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper" *ngIf="!loadingOrders">
+      <table class="data-table" *ngIf="orders.length > 0; else noOrders">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Ítems</th>
+            <th>Total</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let o of orders">
+            <td>{{ o.id }}</td>
+            <td>{{ o.client_name || o.client || '—' }}</td>
+            <td>{{ o.items_count ?? o.items ?? '—' }}</td>
+            <td>S/ {{ o.total | number:'1.2-2' }}</td>
+            <td>{{ o.created_at | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </tbody>
+      </table>
+      <ng-template #noOrders>
+        <div class="empty-state">No hay órdenes en el período seleccionado.</div>
+      </ng-template>
+    </div>
+  </div>
+
+  <!-- ── Two-column grid: Low Stock + Top Clients ────────────── -->
+  <div class="reports-grid">
+
+    <!-- Low Stock -->
+    <div class="section-card">
+      <h2 class="section-title">⚠️ Stock bajo mínimo</h2>
+
+      <!-- Skeleton -->
+      <div *ngIf="loadingLowStock">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+      </div>
+
+      <div class="table-wrapper" *ngIf="!loadingLowStock">
+        <table class="data-table" *ngIf="lowStock.length > 0; else noLowStock">
+          <thead>
+            <tr>
+              <th>Ingrediente</th>
+              <th>Categoría</th>
+              <th>Stock</th>
+              <th>Mínimo</th>
+              <th>Unidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of lowStock">
+              <td>{{ p.name }}</td>
+              <td>{{ p.category || '—' }}</td>
+              <td class="td-alert">{{ p.stock | number:'1.2-2' }}</td>
+              <td>{{ p.min_stock | number:'1.2-2' }}</td>
+              <td>{{ p.unit || '—' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noLowStock>
+          <div class="empty-state">No hay productos con stock bajo.</div>
+        </ng-template>
+      </div>
+    </div>
+
+    <!-- Top Clients -->
+    <div class="section-card">
+      <h2 class="section-title">🏆 Top clientes</h2>
+
+      <!-- Skeleton -->
+      <div *ngIf="loadingTopClients">
+        <div class="skeleton-row" *ngFor="let i of [1,2,3]"></div>
+      </div>
+
+      <div class="table-wrapper" *ngIf="!loadingTopClients">
+        <table class="data-table" *ngIf="topClients.length > 0; else noTopClients">
+          <thead>
+            <tr>
+              <th>Cliente</th>
+              <th>Órdenes</th>
+              <th>Total gastado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of topClients; let i = index">
+              <td>
+                <span class="rank-badge">{{ i + 1 }}</span>
+                {{ c.name || c.client_name }}
+              </td>
+              <td>{{ c.orders_count ?? c.total_orders ?? '—' }}</td>
+              <td>S/ {{ c.total_spent | number:'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <ng-template #noTopClients>
+          <div class="empty-state">No hay datos de clientes aún.</div>
+        </ng-template>
+      </div>
+    </div>
+
+  </div><!-- /.reports-grid -->
+
+</div><!-- /.page -->

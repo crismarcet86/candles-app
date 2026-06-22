@@ -54,6 +54,7 @@ src/
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
+    Report.js        # getSummary, getOrdersByPeriod, getLowStock, getTopClients
   middlewares/
     auth.js          # requireAuth (JWT) y requireAdmin (role check)
     errorHandler.js  # Captura global de errores → JSON estandarizado
@@ -62,6 +63,7 @@ src/
     logger.js        # Winston logger
     response.js      # Helpers: success(), created(), error(), notFound(), badRequest()
     pdfProforma.js   # Generador PDF de proformas con pdfkit
+    pdfReport.js     # Generador PDF de reportes: KPIs, órdenes, stock bajo, top clientes
 ```
 
 ## Frontend Architecture
@@ -91,6 +93,7 @@ frontend/src/app/
     orders/               # Pedidos confirmados (solo lectura)
     molds/                # CRUD de moldes con capacidad en gramos de cera
     calculator/           # Calculadora de costos: molde + ingredientes → precio sugerido
+    reports/              # Reportes: KPIs, órdenes por período, stock bajo, top clientes + PDF
   shared/
     models/               # Interfaces TypeScript: Client, Product, Proforma, Mold, etc.
 ```
@@ -106,6 +109,7 @@ frontend/src/app/
 - `orders` — pedidos (solo lectura)
 - `molds` — moldes con capacidad en gramos
 - `calculator` — calculadora de costos de velas
+- `reports` — reportes gerenciales con PDF exportable
 
 ## Domain Model
 
@@ -149,15 +153,38 @@ Stock siempre usa columnas `DECIMAL` (nunca float) para evitar errores de redond
 - Soporta ingredientes por unidad (pabilos)
 - Calcula costo total, ganancia y margen dados un precio de venta
 
-## PDF de Proformas
+## PDF de Proformas y Reportes
 
-`GET /api/proformas/:id/pdf` — devuelve PDF generado con pdfkit.
-En el frontend, el detalle de proforma tiene un enlace `<a href="...">` que descarga directamente.
+- `GET /api/proformas/:id/pdf` — PDF individual de proforma (pdfkit). El frontend usa `<a href>` directo.
+- `GET /api/reports/pdf?from=YYYY-MM-DD&to=YYYY-MM-DD` — PDF de reporte gerencial. El frontend hace petición HTTP con blob download (los headers de auth se inyectan via interceptor).
+
+## Reportes (`/api/reports/` — requiere `Bearer token`)
+
+- `GET /summary` — 5 KPIs: total_orders, total_revenue, active_clients, pending_proformas, low_stock_count
+- `GET /orders?from=&to=` — órdenes confirmadas filtradas por rango de fechas
+- `GET /low-stock` — ingredientes donde `stock <= min_stock` (y `min_stock > 0`)
+- `GET /top-clients` — top 10 clientes por total gastado en órdenes
+- `GET /pdf?from=&to=` — PDF con todas las secciones anteriores
+
+## Cambiar Contraseña
+
+El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdown del usuario.
+- Usa `POST /api/auth/change-password` con `{ current_password, new_password }`
+- `AuthService.changePassword()` maneja la llamada HTTP
+- El modal está inline en `topbar.component.html` con estado en `topbar.component.ts`
 
 ## Validaciones Frontend
 
 - **Campos numéricos** (`type="number"`): bloquean teclas `e`, `E`, `+` con `(keydown)` para evitar notación científica
 - **Campos de correo**: usan `Validators.pattern(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)` en todos los formularios (login, registro, usuarios, clientes)
+
+## Responsive / Layout
+
+- **Sidebar en móvil** (`< 768px`): overlay full-screen (`width: 100vw`), se abre/cierra con el botón ☰ del topbar o el ✕ interno del sidebar
+- **Backdrop**: `layout.component` renderiza un `.sidebar-backdrop` semi-transparente cuando el sidebar está abierto en móvil — hacer clic lo cierra
+- **Auto-cierre**: `LayoutComponent` suscribe a `Router.events` (NavigationEnd) y cierra el sidebar al navegar en móvil
+- **`isMobile`**: se calcula con `window.innerWidth < 768` y se actualiza en `window:resize`
+- **CSS global responsive** (`styles.css`): `.form-row` colapsa a 1 columna, `.page-header` se apila, `.form-actions` se invierte (botón primario arriba) en móvil
 
 ## API Conventions
 

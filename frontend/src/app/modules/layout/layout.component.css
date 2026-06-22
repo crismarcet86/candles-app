@@ -3,6 +3,7 @@
   height: 100vh;
   overflow: hidden;
   background: #f3f4f6;
+  position: relative;
 }
 
 .main-area {
@@ -10,7 +11,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  transition: margin-left 0.3s;
+  min-width: 0;
 }
 
 .page-content {
@@ -19,9 +20,22 @@
   padding: 1.5rem;
 }
 
-/* Responsive: on small screens the sidebar overlays */
+/* Backdrop para cerrar sidebar en móvil */
+.sidebar-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 190;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
 @media (max-width: 768px) {
-  .app-shell {
-    position: relative;
+  .page-content {
+    padding: 1rem 0.875rem;
   }
 }

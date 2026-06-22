@@ -96,21 +96,47 @@
 
 .menu-label { white-space: nowrap; }
 
-/* Responsive: on mobile the sidebar overlays */
+/* Botón cerrar — solo visible en móvil */
+.sidebar-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 0.25rem 0.4rem;
+  border-radius: 4px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.sidebar-close-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+/* Responsive: en móvil el sidebar ocupa toda la pantalla como overlay */
 @media (max-width: 768px) {
   .sidebar {
     position: fixed;
     top: 0;
     left: 0;
     height: 100%;
+    width: 100vw !important;
+    min-width: 100vw !important;
     z-index: 200;
     transform: translateX(0);
-    transition: transform 0.3s, width 0.3s;
+    transition: transform 0.3s ease;
   }
 
   .sidebar.closed {
     transform: translateX(-100%);
-    width: 240px;
-    min-width: 240px;
   }
+
+  .sidebar-close-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .menu-label { display: block !important; }
+  .logo-text  { display: block !important; }
+  .group-title { display: block !important; }
 }

@@ -75,6 +75,59 @@ input, textarea, select { font-family: inherit; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ── Responsive global overrides ── */
+@media (max-width: 768px) {
+  /* Forms: columnas apiladas */
+  .form-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Tablas: scroll horizontal */
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Pages: menos padding */
+  .page {
+    padding: 0 !important;
+  }
+
+  /* Page header: wrap en 2 filas */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+  .page-header .btn-primary,
+  .page-header button {
+    align-self: flex-start;
+  }
+
+  /* Cards: menos padding */
+  .card {
+    padding: 1.25rem !important;
+  }
+
+  /* Form actions: botones full width en móvil pequeño */
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+  .form-actions button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Modal: ocupa más pantalla */
+  .modal {
+    margin: 0 1rem;
+  }
+
+  /* Topbar: user name oculto en pantallas muy pequeñas */
+  @media (max-width: 420px) {
+    .user-name { display: none; }
+  }
+}
+
 /* ── Utility: badge ── */
 .badge {
   display: inline-block;

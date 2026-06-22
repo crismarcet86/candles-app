@@ -42,6 +42,9 @@
           </span>
         </div>
         <hr>
+        <button class="dropdown-item" (click)="$event.stopPropagation(); openPwModal()">
+          🔑 Cambiar contraseña
+        </button>
         <button class="dropdown-item danger" (click)="$event.stopPropagation(); logout()">
           🚪 Cerrar sesión
         </button>
@@ -53,3 +56,37 @@
 
 <!-- Overlay para cerrar el menú -->
 <div class="overlay" *ngIf="userMenuOpen" (click)="userMenuOpen = false"></div>
+
+<!-- Modal cambiar contraseña -->
+<div class="modal-backdrop" *ngIf="showPwModal" (click)="closePwModal()">
+  <div class="pw-modal" (click)="$event.stopPropagation()">
+    <div class="pw-modal-header">
+      <h3>🔑 Cambiar contraseña</h3>
+      <button class="pw-modal-close" (click)="closePwModal()">✕</button>
+    </div>
+
+    <div class="alert-success" *ngIf="pwSuccess">{{ pwSuccess }}</div>
+    <div class="alert-error"   *ngIf="pwError">{{ pwError }}</div>
+
+    <div class="pw-form-group">
+      <label>Contraseña actual</label>
+      <input type="password" [(ngModel)]="currentPw" placeholder="••••••••" [disabled]="pwLoading">
+    </div>
+    <div class="pw-form-group">
+      <label>Nueva contraseña</label>
+      <input type="password" [(ngModel)]="newPw" placeholder="Mínimo 6 caracteres" [disabled]="pwLoading">
+    </div>
+    <div class="pw-form-group">
+      <label>Confirmar nueva contraseña</label>
+      <input type="password" [(ngModel)]="confirmPw" placeholder="Repetir nueva contraseña" [disabled]="pwLoading">
+    </div>
+
+    <div class="pw-modal-actions">
+      <button class="btn-outline" (click)="closePwModal()" [disabled]="pwLoading">Cancelar</button>
+      <button class="btn-primary" (click)="submitChangePassword()" [disabled]="pwLoading">
+        <span *ngIf="!pwLoading">Guardar</span>
+        <span *ngIf="pwLoading" class="spinner"></span>
+      </button>
+    </div>
+  </div>
+</div>

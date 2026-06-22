@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MenuItem } from '../../../shared/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -9,6 +9,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class SidebarComponent implements OnInit {
   @Input() open = true;
+  @Output() closeRequest = new EventEmitter<void>();
 
   // All menu groups — items with roles are filtered for the current user
   private allMenuGroups: { title: string; items: MenuItem[] }[] = [
@@ -39,6 +40,7 @@ export class SidebarComponent implements OnInit {
     {
       title: 'Sistema',
       items: [
+        { label: 'Reportes',    icon: '📈',  route: '/dashboard/reports' },
         { label: 'Usuarios',    icon: '👤',  route: '/dashboard/users', roles: ['admin'] }
       ]
     }
