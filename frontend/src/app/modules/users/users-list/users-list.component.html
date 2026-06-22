@@ -1,0 +1,88 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">👤 Usuarios</h1>
+      <p class="page-subtitle">Administra los accesos al sistema</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nuevo usuario</button>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Correo</th>
+            <th>Rol</th>
+            <th>Estado</th>
+            <th>Registro</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="users.length === 0">
+            <td colspan="6" class="empty-state">No hay usuarios registrados</td>
+          </tr>
+          <tr *ngFor="let user of users" [class.row-inactive]="user.is_active === 0">
+            <td>
+              <div class="user-cell">
+                <span class="avatar-sm">{{ user.name.charAt(0).toUpperCase() }}</span>
+                <span>{{ user.name }}</span>
+                <span class="you-badge" *ngIf="isCurrentUser(user.id)">Tú</span>
+              </div>
+            </td>
+            <td>{{ user.email }}</td>
+            <td>
+              <span class="badge" [class.badge-admin]="user.role === 'admin'" [class.badge-user]="user.role === 'user'">
+                {{ user.role === 'admin' ? 'Admin' : 'Usuario' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.badge-active]="user.is_active === 1" [class.badge-inactive]="user.is_active === 0">
+                {{ user.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-muted">{{ user.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action btn-edit" (click)="goToEdit(user.id)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-action btn-deactivate"
+                      (click)="askDeactivate(user.id)"
+                      [disabled]="isCurrentUser(user.id) || user.is_active === 0"
+                      title="Desactivar">
+                🚫
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null">
+    <div class="modal">
+      <h3>¿Desactivar usuario?</h3>
+      <p>El usuario no podrá iniciar sesión. Esta acción se puede revertir editando el usuario.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDeactivate()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDeactivate()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

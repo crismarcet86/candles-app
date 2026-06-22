@@ -1,0 +1,81 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🏷️ Categorías</h1>
+      <p class="page-subtitle">Administra las categorías de productos</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nueva categoría</button>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="categories.length === 0">
+            <td colspan="5" class="empty-state">No hay categorías registradas</td>
+          </tr>
+          <tr *ngFor="let category of categories" [class.row-inactive]="category.is_active === 0">
+            <td>{{ category.name }}</td>
+            <td>
+              <span *ngIf="category.description">{{ category.description }}</span>
+              <span *ngIf="!category.description" class="text-muted">—</span>
+            </td>
+            <td>
+              <span class="badge"
+                    [class.badge-active]="category.is_active === 1"
+                    [class.badge-inactive]="category.is_active === 0">
+                {{ category.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-muted">{{ category.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(category.id)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-action"
+                      (click)="askDeactivate(category.id)"
+                      [disabled]="category.is_active === 0"
+                      title="Desactivar">
+                🚫
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null">
+    <div class="modal">
+      <h3>¿Desactivar categoría?</h3>
+      <p>La categoría quedará inactiva. Esta acción se puede revertir editando la categoría.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDeactivate()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDeactivate()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

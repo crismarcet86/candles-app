@@ -1,0 +1,21 @@
+<nav class="sidebar" [class.closed]="!open">
+  <div class="sidebar-logo">
+    <span class="logo-icon">🕯️</span>
+    <span class="logo-text" *ngIf="open">Candles App</span>
+  </div>
+
+  <div class="sidebar-body">
+    <div class="menu-group" *ngFor="let group of menuGroups">
+      <span class="group-title" *ngIf="open">{{ group.title }}</span>
+      <a class="menu-item"
+         *ngFor="let item of group.items"
+         [routerLink]="item.route"
+         routerLinkActive="active"
+         [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+         [title]="!open ? item.label : ''">
+        <span class="menu-icon">{{ item.icon }}</span>
+        <span class="menu-label" *ngIf="open">{{ item.label }}</span>
+      </a>
+    </div>
+  </div>
+</nav>

@@ -1,0 +1,119 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar usuario' : 'Nuevo usuario' }}</h1>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="card" *ngIf="!loadingData">
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Nombre completo <span class="required">*</span></label>
+        <input id="name" type="text" formControlName="name"
+               placeholder="Nombre del usuario"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">
+          El nombre es requerido
+        </span>
+        <span class="field-error" *ngIf="field('name')?.hasError('minlength') && field('name')?.touched">
+          Mínimo 2 caracteres
+        </span>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label for="email">Correo electrónico <span class="required">*</span></label>
+        <input id="email" type="email" formControlName="email"
+               placeholder="correo@ejemplo.com"
+               [class.invalid]="field('email')?.invalid && field('email')?.touched">
+        <span class="field-error" *ngIf="field('email')?.hasError('required') && field('email')?.touched">
+          El correo es requerido
+        </span>
+        <span class="field-error" *ngIf="field('email')?.hasError('pattern') && field('email')?.touched">
+          Ingresa un correo válido (ej: usuario@dominio.com)
+        </span>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label for="password">
+          Contraseña
+          <span class="required" *ngIf="!isEdit">*</span>
+          <span class="hint" *ngIf="isEdit">(dejar vacío para no cambiar)</span>
+        </label>
+        <div class="input-icon-wrapper">
+          <input id="password"
+                 [type]="showPassword ? 'text' : 'password'"
+                 formControlName="password"
+                 placeholder="{{ isEdit ? 'Nueva contraseña (opcional)' : 'Mínimo 6 caracteres' }}"
+                 [class.invalid]="field('password')?.invalid && field('password')?.touched">
+          <button type="button" class="toggle-pw" (click)="showPassword = !showPassword">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <span class="field-error" *ngIf="field('password')?.hasError('required') && field('password')?.touched">
+          La contraseña es requerida
+        </span>
+        <span class="field-error" *ngIf="field('password')?.hasError('minlength') && field('password')?.touched">
+          Mínimo 6 caracteres
+        </span>
+      </div>
+
+      <!-- Role -->
+      <div class="form-group">
+        <label for="role">Rol <span class="required">*</span></label>
+        <select id="role" formControlName="role"
+                [class.invalid]="field('role')?.invalid && field('role')?.touched">
+          <option value="user">Usuario</option>
+          <option value="admin">Administrador</option>
+        </select>
+        <span class="field-hint">
+          Los administradores tienen acceso completo, incluida la gestión de usuarios.
+        </span>
+      </div>
+
+      <!-- is_active toggle (only in edit mode) -->
+      <div class="form-group form-toggle" *ngIf="isEdit">
+        <label class="toggle-label">
+          <span>Estado de cuenta</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="is_active" formControlName="is_active"
+                   [checked]="field('is_active')?.value === 1"
+                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear usuario' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

@@ -1,0 +1,91 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">👥 Clientes</h1>
+      <p class="page-subtitle">Gestiona la cartera de clientes</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nuevo cliente</button>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Cédula / RUC</th>
+            <th>Correo</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="items.length === 0">
+            <td colspan="7" class="empty-state">No hay clientes registrados</td>
+          </tr>
+          <tr *ngFor="let client of items" [class.row-inactive]="client.is_active === 0">
+            <td>{{ client.name }}</td>
+            <td>
+              <span *ngIf="client.cedula">{{ client.cedula }}</span>
+              <span class="text-muted" *ngIf="!client.cedula">—</span>
+            </td>
+            <td>
+              <span *ngIf="client.email">{{ client.email }}</span>
+              <span class="text-muted" *ngIf="!client.email">—</span>
+            </td>
+            <td>
+              <span *ngIf="client.phone">{{ client.phone }}</span>
+              <span class="text-muted" *ngIf="!client.phone">—</span>
+            </td>
+            <td>
+              <span class="badge"
+                    [class.badge-active]="client.is_active === 1"
+                    [class.badge-inactive]="client.is_active === 0">
+                {{ client.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="text-muted">{{ client.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(client.id)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-action"
+                      (click)="askDelete(client.id)"
+                      [disabled]="client.is_active === 0"
+                      title="Desactivar">
+                🚫
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
+    <div class="modal">
+      <h3>¿Desactivar cliente?</h3>
+      <p>El cliente no podrá ser seleccionado en nuevas proformas. Esta acción se puede revertir editando el cliente.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDelete()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

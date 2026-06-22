@@ -1,0 +1,85 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📦 Productos</h1>
+      <p class="page-subtitle">Gestiona el catálogo de productos</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nuevo producto</button>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Categoría</th>
+            <th>Unidad</th>
+            <th>Precio</th>
+            <th>Stock</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="items.length === 0">
+            <td colspan="7" class="empty-state">No hay productos registrados</td>
+          </tr>
+          <tr *ngFor="let product of items" [class.row-inactive]="product.is_active === 0">
+            <td>{{ product.name }}</td>
+            <td>{{ product.category_name }}</td>
+            <td>{{ product.unit_abbr }}</td>
+            <td>${{ product.price | number:'1.2-2' }}</td>
+            <td>
+              {{ product.stock }} {{ product.unit_abbr }}
+              <span class="badge badge-warning" *ngIf="isLowStock(product)">Stock bajo</span>
+            </td>
+            <td>
+              <span class="badge"
+                    [class.badge-active]="product.is_active === 1"
+                    [class.badge-inactive]="product.is_active === 0">
+                {{ product.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(product.id)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-action"
+                      (click)="askDelete(product.id)"
+                      [disabled]="product.is_active === 0"
+                      title="Desactivar">
+                🚫
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
+    <div class="modal">
+      <h3>¿Desactivar producto?</h3>
+      <p>El producto no aparecerá en nuevas proformas. Esta acción se puede revertir editando el producto.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDelete()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

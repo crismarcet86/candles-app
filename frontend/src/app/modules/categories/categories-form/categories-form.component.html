@@ -1,0 +1,75 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar categoría' : 'Nueva categoría' }}</h1>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3]"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="card" *ngIf="!loadingData">
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Nombre <span class="required">*</span></label>
+        <input id="name" type="text" formControlName="name"
+               placeholder="Nombre de la categoría"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">
+          El nombre es requerido
+        </span>
+        <span class="field-error" *ngIf="field('name')?.hasError('minlength') && field('name')?.touched">
+          Mínimo 2 caracteres
+        </span>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label for="description">Descripción</label>
+        <textarea id="description" formControlName="description"
+                  placeholder="Descripción opcional de la categoría"
+                  rows="3"></textarea>
+      </div>
+
+      <!-- is_active toggle (only in edit mode) -->
+      <div class="form-group form-toggle" *ngIf="isEdit">
+        <label class="toggle-label">
+          <span>Estado</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="is_active" formControlName="is_active"
+                   [checked]="field('is_active')?.value === 1"
+                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear categoría' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

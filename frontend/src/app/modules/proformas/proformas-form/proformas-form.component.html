@@ -1,0 +1,136 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar proforma' : 'Nueva proforma' }}</h1>
+    </div>
+  </div>
+
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <div *ngIf="!loadingData">
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Datos generales -->
+      <div class="card" style="margin-bottom: 1rem; padding: 1.5rem;">
+        <h3 class="section-title">Datos generales</h3>
+
+        <div class="form-group">
+          <label>Cliente <span class="required">*</span></label>
+          <select formControlName="client_id"
+                  [class.invalid]="field('client_id')?.invalid && field('client_id')?.touched">
+            <option [ngValue]="null">Seleccionar cliente...</option>
+            <option *ngFor="let c of clients" [value]="c.id">{{ c.name }}</option>
+          </select>
+          <span class="field-error" *ngIf="field('client_id')?.hasError('required') && field('client_id')?.touched">
+            Seleccioná un cliente
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label>Notas</label>
+          <textarea formControlName="notes" placeholder="Observaciones para el cliente..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Mano de obra (S/)</label>
+            <input type="number" formControlName="labor_cost" min="0" step="0.5" placeholder="0.00"
+                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+            <span class="field-hint">Costo de trabajo artesanal</span>
+          </div>
+          <div class="form-group">
+            <label>Descuento (S/)</label>
+            <input type="number" formControlName="discount" min="0" step="0.5" placeholder="0.00"
+                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Ítems de la proforma -->
+      <div class="card items-card">
+        <div class="items-header">
+          <h3 class="section-title">Detalle de productos / servicios</h3>
+          <button type="button" class="btn-add-item" (click)="addItem()">+ Agregar línea</button>
+        </div>
+
+        <div class="items-table-wrapper">
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Descripción</th>
+                <th class="th-num">Cantidad</th>
+                <th class="th-num">Precio unit. (S/)</th>
+                <th class="th-num">Subtotal</th>
+                <th class="th-remove"></th>
+              </tr>
+            </thead>
+            <tbody formArrayName="items">
+              <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+                <td>
+                  <input type="text" formControlName="description"
+                         placeholder="Ej: 12 velas aromáticas lavanda, Mano de obra..."
+                         [class.invalid]="itemField(i,'description')?.invalid && itemField(i,'description')?.touched">
+                  <span class="field-error" *ngIf="itemField(i,'description')?.hasError('required') && itemField(i,'description')?.touched">
+                    Requerido
+                  </span>
+                </td>
+                <td class="td-num">
+                  <input type="number" formControlName="quantity" min="0.001" step="1" style="max-width: 90px;"
+                         (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                         [class.invalid]="itemField(i,'quantity')?.invalid && itemField(i,'quantity')?.touched">
+                </td>
+                <td class="td-num">
+                  <input type="number" formControlName="unit_price" min="0" step="0.5" style="max-width: 110px;"
+                         (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                         [class.invalid]="itemField(i,'unit_price')?.invalid && itemField(i,'unit_price')?.touched">
+                </td>
+                <td class="td-num">
+                  <strong>S/ {{ getItemSubtotal(i) | number:'1.2-2' }}</strong>
+                </td>
+                <td class="td-remove">
+                  <button type="button" class="btn-remove-item" (click)="removeItem(i)"
+                          [disabled]="items.length === 1">✕</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totales -->
+        <div class="totals-section">
+          <div class="total-row">
+            <span>Subtotal</span>
+            <span>S/ {{ getSubtotal() | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row" *ngIf="(field('labor_cost')?.value || 0) > 0">
+            <span>Mano de obra</span>
+            <span>+ S/ {{ (field('labor_cost')?.value || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row" *ngIf="(field('discount')?.value || 0) > 0">
+            <span>Descuento</span>
+            <span class="text-danger">- S/ {{ (field('discount')?.value || 0) | number:'1.2-2' }}</span>
+          </div>
+          <div class="total-row total-final">
+            <span>TOTAL</span>
+            <span>S/ {{ getTotal() | number:'1.2-2' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear proforma' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

@@ -1,0 +1,110 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="goBack()">← Volver</button>
+      <h1 class="page-title" *ngIf="proforma">Proforma #{{ proforma.id }}</h1>
+    </div>
+    <div class="header-actions" *ngIf="proforma">
+      <a [href]="apiUrl + '/proformas/' + proforma.id + '/pdf'" target="_blank" class="btn-outline btn-pdf">
+        ⬇️ PDF
+      </a>
+      <ng-container *ngIf="proforma.status === 'borrador'">
+        <button class="btn-outline" (click)="goToEdit()">✏️ Editar</button>
+        <button class="btn-outline btn-cancel-action" (click)="showCancelDialog = true" [disabled]="actionLoading">Cancelar proforma</button>
+        <button class="btn-primary" (click)="showConfirmDialog = true" [disabled]="actionLoading">✅ Confirmar</button>
+      </ng-container>
+    </div>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Skeleton -->
+  <div class="card skeleton-card" *ngIf="loading">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Detail -->
+  <ng-container *ngIf="!loading && proforma">
+    <div class="card info-card">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Cliente</span>
+          <span class="info-value">{{ proforma.client_name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Estado</span>
+          <span class="badge" [ngClass]="statusClass(proforma.status)">{{ statusLabel(proforma.status) }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Fecha</span>
+          <span class="info-value">{{ proforma.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-item" *ngIf="proforma.notes">
+          <span class="info-label">Notas</span>
+          <span class="info-value">{{ proforma.notes }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card items-card">
+      <div class="items-header">
+        <h3>Productos</h3>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="th-num">Precio unit.</th>
+              <th class="th-num">Cantidad</th>
+              <th class="th-num">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of proforma.items">
+              <td>{{ item.product_name }}</td>
+              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }} / {{ item.unit_abbr }}</td>
+              <td class="td-num">{{ item.quantity | number:'1.0-3' }} {{ item.unit_abbr }}</td>
+              <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="totals-section">
+        <div class="total-row"><span>Subtotal</span><span>S/ {{ proforma.subtotal | number:'1.2-2' }}</span></div>
+        <div class="total-row" *ngIf="proforma.labor_cost > 0">
+          <span>Mano de obra</span><span>+ S/ {{ proforma.labor_cost | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row" *ngIf="proforma.discount > 0">
+          <span>Descuento</span><span class="text-danger">- S/ {{ proforma.discount | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row total-final"><span>TOTAL</span><span>S/ {{ proforma.total | number:'1.2-2' }}</span></div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="showConfirmDialog">
+    <div class="modal">
+      <h3>¿Confirmar proforma?</h3>
+      <p>Se creará una orden de venta y se descontará el stock de los productos. Esta acción no se puede deshacer.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="showConfirmDialog = false">Cancelar</button>
+        <button class="btn-primary" (click)="confirmProforma()">Sí, confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel dialog -->
+  <div class="modal-backdrop" *ngIf="showCancelDialog">
+    <div class="modal">
+      <h3>¿Cancelar proforma?</h3>
+      <p>La proforma pasará a estado cancelada y no podrá editarse ni confirmarse.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="showCancelDialog = false">No, mantener</button>
+        <button class="btn-danger"  (click)="cancelProforma()">Sí, cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

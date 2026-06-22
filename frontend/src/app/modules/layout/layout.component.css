@@ -1,0 +1,27 @@
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: #f3f4f6;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: margin-left 0.3s;
+}
+
+.page-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* Responsive: on small screens the sidebar overlays */
+@media (max-width: 768px) {
+  .app-shell {
+    position: relative;
+  }
+}

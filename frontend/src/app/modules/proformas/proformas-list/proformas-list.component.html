@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🧾 Proformas</h1>
+      <p class="page-subtitle">Cotizaciones y pedidos pendientes</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nueva proforma</button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Fecha</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="proformas.length === 0">
+            <td colspan="6" class="empty-state">No hay proformas registradas</td>
+          </tr>
+          <tr *ngFor="let p of proformas" [class.row-cancelled]="p.status === 'cancelada'">
+            <td class="text-muted">#{{ p.id }}</td>
+            <td>{{ p.client_name }}</td>
+            <td><strong>S/ {{ p.total | number:'1.2-2' }}</strong></td>
+            <td>
+              <span class="badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
+            </td>
+            <td class="text-muted">{{ p.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToDetail(p.id)" title="Ver detalle">👁️</button>
+              <button class="btn-action" (click)="goToEdit(p.id)"
+                      [disabled]="p.status !== 'borrador'" title="Editar">✏️</button>
+              <button class="btn-action" (click)="askCancel(p.id)"
+                      [disabled]="p.status !== 'borrador'" title="Cancelar">❌</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="confirmCancelId !== null">
+    <div class="modal">
+      <h3>¿Cancelar proforma?</h3>
+      <p>La proforma pasará a estado cancelada y no podrá editarse ni confirmarse.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelAction()">No, mantener</button>
+        <button class="btn-danger"  (click)="confirmCancel()">Sí, cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,142 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar producto' : 'Nuevo producto' }}</h1>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="card" *ngIf="!loadingData">
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Nombre -->
+      <div class="form-group">
+        <label for="name">Nombre <span class="required">*</span></label>
+        <input id="name" type="text" formControlName="name"
+               placeholder="Nombre del producto"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">
+          El nombre es requerido
+        </span>
+      </div>
+
+      <!-- Descripción -->
+      <div class="form-group">
+        <label for="description">Descripción <span class="hint">(opcional)</span></label>
+        <textarea id="description" formControlName="description"
+                  placeholder="Descripción del producto"></textarea>
+      </div>
+
+      <!-- Categoría + Unidad -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="category_id">Categoría <span class="required">*</span></label>
+          <select id="category_id" formControlName="category_id"
+                  [class.invalid]="field('category_id')?.invalid && field('category_id')?.touched">
+            <option [ngValue]="null" disabled>Seleccionar categoría</option>
+            <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.name }}</option>
+          </select>
+          <span class="field-error" *ngIf="field('category_id')?.invalid && field('category_id')?.touched">
+            La categoría es requerida
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="unit_id">Unidad <span class="required">*</span></label>
+          <select id="unit_id" formControlName="unit_id"
+                  [class.invalid]="field('unit_id')?.invalid && field('unit_id')?.touched">
+            <option [ngValue]="null" disabled>Seleccionar unidad</option>
+            <option *ngFor="let unit of units" [ngValue]="unit.id">{{ unit.name }} ({{ unit.abbr }})</option>
+          </select>
+          <span class="field-error" *ngIf="field('unit_id')?.invalid && field('unit_id')?.touched">
+            La unidad es requerida
+          </span>
+        </div>
+      </div>
+
+      <!-- Precio + Stock -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="price">Precio <span class="required">*</span></label>
+          <input id="price" type="number" formControlName="price"
+                 placeholder="0.00" step="0.01" min="0"
+                 (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                 [class.invalid]="field('price')?.invalid && field('price')?.touched">
+          <span class="field-error" *ngIf="field('price')?.hasError('required') && field('price')?.touched">
+            El precio es requerido
+          </span>
+          <span class="field-error" *ngIf="field('price')?.hasError('min') && field('price')?.touched">
+            El precio no puede ser negativo
+          </span>
+        </div>
+
+        <div class="form-group">
+          <label for="stock">
+            {{ isEdit ? 'Stock' : 'Stock inicial' }}
+            <span class="hint" *ngIf="!isEdit">(opcional)</span>
+            <span class="required" *ngIf="isEdit">*</span>
+          </label>
+          <input id="stock" type="number" formControlName="stock"
+                 placeholder="0" step="0.01" min="0"
+                 (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+                 [class.invalid]="field('stock')?.invalid && field('stock')?.touched">
+          <span class="field-error" *ngIf="field('stock')?.hasError('min') && field('stock')?.touched">
+            El stock no puede ser negativo
+          </span>
+        </div>
+      </div>
+
+      <!-- Stock mínimo -->
+      <div class="form-group">
+        <label for="min_stock">Stock mínimo <span class="hint">(opcional, para alertas)</span></label>
+        <input id="min_stock" type="number" formControlName="min_stock"
+               placeholder="0" step="0.01" min="0"
+               (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()"
+               [class.invalid]="field('min_stock')?.invalid && field('min_stock')?.touched">
+        <span class="field-error" *ngIf="field('min_stock')?.hasError('min') && field('min_stock')?.touched">
+          El stock mínimo no puede ser negativo
+        </span>
+      </div>
+
+      <!-- Toggle is_active (solo en edit) -->
+      <div class="form-group form-toggle" *ngIf="isEdit">
+        <label class="toggle-label">
+          <span>Estado del producto</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="is_active" formControlName="is_active"
+                   [checked]="field('is_active')?.value === 1"
+                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear producto' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

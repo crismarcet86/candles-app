@@ -1,0 +1,62 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar unidad' : 'Nueva unidad' }}</h1>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2]"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="card" *ngIf="!loadingData">
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Name -->
+      <div class="form-group">
+        <label for="name">Nombre <span class="required">*</span></label>
+        <input id="name" type="text" formControlName="name"
+               placeholder="Nombre de la unidad"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">
+          El nombre es requerido
+        </span>
+        <span class="field-error" *ngIf="field('name')?.hasError('minlength') && field('name')?.touched">
+          Mínimo 2 caracteres
+        </span>
+      </div>
+
+      <!-- Abbreviation -->
+      <div class="form-group">
+        <label for="abbreviation">Abreviatura <span class="required">*</span></label>
+        <input id="abbreviation" type="text" formControlName="abbreviation"
+               placeholder="Ej: kg, lt, un"
+               [class.invalid]="field('abbreviation')?.invalid && field('abbreviation')?.touched">
+        <span class="field-error" *ngIf="field('abbreviation')?.hasError('required') && field('abbreviation')?.touched">
+          La abreviatura es requerida
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear unidad' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

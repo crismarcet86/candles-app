@@ -1,0 +1,186 @@
+const { pool } = require('../config/database');
+
+class Proforma {
+  // ── Lectura ──────────────────────────────────────────────────
+
+  static async findAll() {
+    const [rows] = await pool.query(`
+      SELECT p.*, c.name AS client_name
+      FROM proformas p
+      JOIN clients c ON p.client_id = c.id
+      ORDER BY p.created_at DESC
+    `);
+    return rows;
+  }
+
+  static async findById(id) {
+    const [proformas] = await pool.query(`
+      SELECT p.*, c.name AS client_name
+      FROM proformas p
+      JOIN clients c ON p.client_id = c.id
+      WHERE p.id = ?
+    `, [id]);
+
+    if (!proformas[0]) return null;
+
+    const [items] = await pool.query(`
+      SELECT
+        pi.*,
+        pr.name          AS product_name,
+        u.abbreviation   AS unit_abbr
+      FROM proforma_items pi
+      LEFT JOIN products pr ON pi.product_id = pr.id
+      LEFT JOIN units    u  ON pr.unit_id    = u.id
+      WHERE pi.proforma_id = ?
+      ORDER BY pi.id
+    `, [id]);
+
+    return { ...proformas[0], items };
+  }
+
+  // ── Creación / edición ───────────────────────────────────────
+
+  /**
+   * Crea o actualiza una proforma en borrador.
+   * items: [{ product_id?, description, quantity, unit_price }]
+   * - product_id es opcional (para ítems de texto libre / mano de obra)
+   * - unit_price lo establece el usuario (no se toma del catálogo)
+   */
+  static async save({ id = null, client_id, notes, discount = 0, labor_cost = 0, items }) {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      let subtotal = 0;
+      const enrichedItems = [];
+
+      for (const item of items) {
+        const lineSubtotal = Number(item.unit_price) * Number(item.quantity);
+        subtotal += lineSubtotal;
+        enrichedItems.push({
+          product_id:  item.product_id  || null,
+          description: item.description || null,
+          quantity:    item.quantity,
+          unit_price:  item.unit_price,
+          subtotal:    lineSubtotal,
+        });
+      }
+
+      const total = subtotal + Number(labor_cost) - Number(discount);
+
+      let proformaId = id;
+
+      if (id) {
+        await conn.query(
+          `UPDATE proformas
+           SET client_id=?, notes=?, discount=?, labor_cost=?, subtotal=?, total=?, updated_at=NOW()
+           WHERE id=? AND status='borrador'`,
+          [client_id, notes || null, discount, labor_cost, subtotal, total, id]
+        );
+        await conn.query('DELETE FROM proforma_items WHERE proforma_id = ?', [id]);
+      } else {
+        const [result] = await conn.query(
+          'INSERT INTO proformas (client_id, notes, discount, labor_cost, subtotal, total) VALUES (?, ?, ?, ?, ?, ?)',
+          [client_id, notes || null, discount, labor_cost, subtotal, total]
+        );
+        proformaId = result.insertId;
+      }
+
+      for (const item of enrichedItems) {
+        await conn.query(
+          `INSERT INTO proforma_items
+           (proforma_id, product_id, description, quantity, unit_price, subtotal)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [proformaId, item.product_id, item.description, item.quantity, item.unit_price, item.subtotal]
+        );
+      }
+
+      await conn.commit();
+      return this.findById(proformaId);
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  /**
+   * Confirma la proforma:
+   * 1. Marca como 'confirmada'
+   * 2. Crea la orden
+   * 3. Descuenta stock solo de ítems que referencian un ingrediente (product_id no nulo)
+   */
+  static async confirm(id) {
+    const conn = await pool.getConnection();
+    try {
+      await conn.beginTransaction();
+
+      const proforma = await this.findById(id);
+      if (!proforma) throw new Error('Proforma no encontrada');
+      if (proforma.status !== 'borrador') throw new Error('Solo se pueden confirmar proformas en borrador');
+
+      const stockItems = proforma.items.filter(i => i.product_id);
+
+      // Verificar stock suficiente para ítems con ingrediente
+      for (const item of stockItems) {
+        const [[product]] = await conn.query(
+          'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
+          [item.product_id]
+        );
+        if (Number(product.stock) < Number(item.quantity)) {
+          throw new Error(`Stock insuficiente para "${product.name}": disponible ${product.stock}, requerido ${item.quantity}`);
+        }
+      }
+
+      // Marcar proforma como confirmada
+      await conn.query(
+        "UPDATE proformas SET status='confirmada', updated_at=NOW() WHERE id=?",
+        [id]
+      );
+
+      // Crear orden
+      const [orderResult] = await conn.query(
+        `INSERT INTO orders (proforma_id, client_id, notes, subtotal, discount, total)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, proforma.client_id, proforma.notes, proforma.subtotal, proforma.discount, proforma.total]
+      );
+      const orderId = orderResult.insertId;
+
+      // Copiar ítems y descontar stock donde aplica
+      for (const item of proforma.items) {
+        await conn.query(
+          `INSERT INTO order_items (order_id, product_id, description, quantity, unit_price, subtotal)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [orderId, item.product_id, item.description, item.quantity, item.unit_price, item.subtotal]
+        );
+        if (item.product_id) {
+          await conn.query(
+            'UPDATE products SET stock = stock - ?, updated_at=NOW() WHERE id=?',
+            [item.quantity, item.product_id]
+          );
+        }
+      }
+
+      await conn.commit();
+
+      const confirmed = await this.findById(id);
+      return { proforma: confirmed, order_id: orderId };
+    } catch (err) {
+      await conn.rollback();
+      throw err;
+    } finally {
+      conn.release();
+    }
+  }
+
+  static async cancel(id) {
+    const [result] = await pool.query(
+      "UPDATE proformas SET status='cancelada', updated_at=NOW() WHERE id=? AND status='borrador'",
+      [id]
+    );
+    return result.affectedRows > 0;
+  }
+}
+
+module.exports = Proforma;

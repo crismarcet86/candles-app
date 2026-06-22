@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🫙 Moldes</h1>
+      <p class="page-subtitle">Moldes con capacidad de cera en gramos</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nuevo molde</button>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th class="th-num">Cera (g)</th>
+            <th>Descripción</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="molds.length === 0">
+            <td colspan="5" class="empty-state">No hay moldes registrados</td>
+          </tr>
+          <tr *ngFor="let m of molds" [class.row-inactive]="m.is_active === 0">
+            <td><strong>{{ m.name }}</strong></td>
+            <td class="td-num">
+              <span class="wax-badge">{{ m.wax_grams | number:'1.0-1' }} g</span>
+            </td>
+            <td class="text-muted">{{ m.description || '—' }}</td>
+            <td>
+              <span class="badge" [class.badge-active]="m.is_active === 1" [class.badge-inactive]="m.is_active === 0">
+                {{ m.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(m.id)" title="Editar">✏️</button>
+              <button class="btn-action" (click)="askDeactivate(m.id)"
+                      [disabled]="m.is_active === 0" title="Desactivar">🚫</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null">
+    <div class="modal">
+      <h3>¿Desactivar molde?</h3>
+      <p>El molde no aparecerá en la calculadora. Podés reactivarlo editándolo.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDeactivate()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDeactivate()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+</div>

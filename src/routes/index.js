@@ -1,0 +1,13 @@
+const router = require('express').Router();
+
+router.use('/categories', require('./categoryRoutes'));
+router.use('/units',      require('./unitRoutes'));
+router.use('/products',   require('./productRoutes'));
+router.use('/clients',    require('./clientRoutes'));
+router.use('/proformas',  require('./proformaRoutes'));
+router.use('/orders',     require('./orderRoutes'));
+router.use('/auth',     require('./authRoutes'));
+router.use('/users',    require('./userRoutes'));
+router.use('/molds',    require('./moldRoutes'));
+
+module.exports = router;

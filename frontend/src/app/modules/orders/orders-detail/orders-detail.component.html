@@ -1,0 +1,70 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="goBack()">← Volver</button>
+      <h1 class="page-title" *ngIf="order">Orden #{{ order.id }}</h1>
+    </div>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="card skeleton-card" *ngIf="loading">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <ng-container *ngIf="!loading && order">
+    <div class="card info-card">
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Cliente</span>
+          <span class="info-value">{{ order.client_name }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Proforma origen</span>
+          <span class="info-value">#{{ order.proforma_id }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Fecha</span>
+          <span class="info-value">{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        <div class="info-item" *ngIf="order.notes">
+          <span class="info-label">Notas</span>
+          <span class="info-value">{{ order.notes }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card items-card">
+      <div class="items-header">
+        <h3>Productos</h3>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="th-num">Precio unit.</th>
+              <th class="th-num">Cantidad</th>
+              <th class="th-num">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of order.items">
+              <td>{{ item.product_name }}</td>
+              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }} / {{ item.unit_abbr }}</td>
+              <td class="td-num">{{ item.quantity | number:'1.0-3' }} {{ item.unit_abbr }}</td>
+              <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="totals-section">
+        <div class="total-row"><span>Subtotal</span><span>S/ {{ order.subtotal | number:'1.2-2' }}</span></div>
+        <div class="total-row" *ngIf="order.discount > 0">
+          <span>Descuento</span><span class="text-danger">- S/ {{ order.discount | number:'1.2-2' }}</span>
+        </div>
+        <div class="total-row total-final"><span>TOTAL</span><span>S/ {{ order.total | number:'1.2-2' }}</span></div>
+      </div>
+    </div>
+  </ng-container>
+</div>

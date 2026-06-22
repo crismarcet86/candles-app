@@ -1,0 +1,46 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📋 Órdenes</h1>
+      <p class="page-subtitle">Registro de ventas confirmadas</p>
+    </div>
+  </div>
+
+  <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Cliente</th>
+            <th>Proforma</th>
+            <th>Total</th>
+            <th>Fecha</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="orders.length === 0">
+            <td colspan="6" class="empty-state">No hay órdenes registradas</td>
+          </tr>
+          <tr *ngFor="let o of orders">
+            <td class="text-muted">#{{ o.id }}</td>
+            <td>{{ o.client_name }}</td>
+            <td class="text-muted">Proforma #{{ o.proforma_id }}</td>
+            <td><strong>S/ {{ o.total | number:'1.2-2' }}</strong></td>
+            <td class="text-muted">{{ o.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToDetail(o.id)" title="Ver detalle">👁️</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

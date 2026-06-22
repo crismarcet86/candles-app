@@ -1,0 +1,91 @@
+/* ── CSS Custom Properties — Candle warm theme ── */
+:root {
+  --primary:        #8B5E3C;
+  --primary-dark:   #6B4423;
+  --primary-light:  #A97C5B;
+  --secondary:      #F5E6D3;
+  --accent:         #D4A96A;
+  --accent-dark:    #B8883A;
+
+  --bg-page:        #f3f4f6;
+  --bg-card:        #ffffff;
+  --bg-sidebar:     #1a1a2e;
+
+  --text-primary:   #1a1a2e;
+  --text-secondary: #6b7280;
+  --text-muted:     #9ca3af;
+
+  --border:         #e5e7eb;
+  --border-focus:   #8B5E3C;
+
+  --danger:         #dc2626;
+  --danger-bg:      #fef2f2;
+  --danger-border:  #fecaca;
+
+  --success:        #16a34a;
+  --success-bg:     #f0fdf4;
+  --success-border: #bbf7d0;
+
+  --warning:        #d97706;
+  --warning-bg:     #fffbeb;
+
+  --radius-sm:      6px;
+  --radius-md:      10px;
+  --radius-lg:      16px;
+
+  --shadow-sm:      0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:      0 4px 12px rgba(0,0,0,0.10);
+  --shadow-lg:      0 8px 24px rgba(0,0,0,0.12);
+}
+
+/* ── Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  background: var(--bg-page);
+  color: var(--text-primary);
+}
+
+a { color: inherit; }
+button { font-family: inherit; }
+input, textarea, select { font-family: inherit; }
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f1f1; }
+::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+/* ── Utility: spinner ── */
+.spinner {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255,255,255,0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Utility: badge ── */
+.badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-admin  { background: #ede9fe; color: #7c3aed; }
+.badge-user   { background: #dbeafe; color: #1d4ed8; }
+.badge-active { background: var(--success-bg); color: var(--success); }
+.badge-inactive { background: #f3f4f6; color: #9ca3af; }

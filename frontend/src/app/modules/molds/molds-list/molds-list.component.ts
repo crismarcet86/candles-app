@@ -1,0 +1,42 @@
+import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
+import { Mold } from '../../../shared/models/mold.model';
+import { MoldsService } from '../molds.service';
+
+@Component({
+  selector: 'app-molds-list',
+  templateUrl: './molds-list.component.html',
+  styleUrls: ['./molds-list.component.css']
+})
+export class MoldsListComponent implements OnInit {
+  molds: Mold[] = [];
+  loading = true;
+  errorMsg = '';
+  successMsg = '';
+  confirmDeactivateId: number | null = null;
+
+  constructor(private service: MoldsService, private router: Router) {}
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.loading = true; this.errorMsg = '';
+    this.service.getAll().subscribe({
+      next: res => { this.molds = res.data; this.loading = false; },
+      error: err => { this.errorMsg = err.error?.message || 'Error al cargar moldes'; this.loading = false; }
+    });
+  }
+
+  goToNew() { this.router.navigate(['/dashboard/molds/new']); }
+  goToEdit(id: number) { this.router.navigate(['/dashboard/molds', id, 'edit']); }
+  askDeactivate(id: number) { this.confirmDeactivateId = id; }
+  cancelDeactivate() { this.confirmDeactivateId = null; }
+
+  confirmDeactivate() {
+    if (!this.confirmDeactivateId) return;
+    const id = this.confirmDeactivateId; this.confirmDeactivateId = null;
+    this.service.deactivate(id).subscribe({
+      next: () => { this.successMsg = 'Molde desactivado'; this.load(); setTimeout(() => this.successMsg = '', 3000); },
+      error: err => { this.errorMsg = err.error?.message || 'Error'; }
+    });
+  }
+}

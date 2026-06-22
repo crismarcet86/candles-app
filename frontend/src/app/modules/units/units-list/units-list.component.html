@@ -1,0 +1,69 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📏 Unidades</h1>
+      <p class="page-subtitle">Unidades de medida para los productos</p>
+    </div>
+    <button class="btn-primary" (click)="goToNew()">+ Nueva unidad</button>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Abreviatura</th>
+            <th>Fecha</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="units.length === 0">
+            <td colspan="4" class="empty-state">No hay unidades registradas</td>
+          </tr>
+          <tr *ngFor="let unit of units">
+            <td>{{ unit.name }}</td>
+            <td>
+              <span class="badge badge-abbr">{{ unit.abbreviation }}</span>
+            </td>
+            <td class="text-muted">{{ unit.created_at | date:'dd/MM/yyyy' }}</td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(unit.id)" title="Editar">
+                ✏️
+              </button>
+              <button class="btn-action" (click)="askDelete(unit.id)" title="Eliminar">
+                🗑️
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Confirm dialog -->
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
+    <div class="modal">
+      <h3>¿Eliminar unidad?</h3>
+      <p>Esta acción no se puede deshacer. La unidad será eliminada permanentemente.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDelete()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDelete()">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+
+</div>

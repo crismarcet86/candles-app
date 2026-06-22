@@ -1,0 +1,104 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <button class="btn-back" (click)="cancel()">← Volver</button>
+      <h1 class="page-title">{{ isEdit ? 'Editar cliente' : 'Nuevo cliente' }}</h1>
+    </div>
+  </div>
+
+  <!-- Loading state -->
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Form -->
+  <div class="card" *ngIf="!loadingData">
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <!-- Nombre -->
+      <div class="form-group">
+        <label for="name">Nombre <span class="required">*</span></label>
+        <input id="name" type="text" formControlName="name"
+               placeholder="Nombre del cliente"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">
+          El nombre es requerido
+        </span>
+      </div>
+
+      <!-- Cédula -->
+      <div class="form-group">
+        <label for="cedula">Cédula / RUC <span class="hint">(opcional)</span></label>
+        <input id="cedula" type="text" formControlName="cedula"
+               placeholder="Número de identificación"
+               maxlength="20">
+      </div>
+
+      <!-- Correo -->
+      <div class="form-group">
+        <label for="email">Correo electrónico <span class="hint">(opcional)</span></label>
+        <input id="email" type="email" formControlName="email"
+               placeholder="correo@ejemplo.com"
+               [class.invalid]="field('email')?.invalid && field('email')?.touched">
+        <span class="field-error" *ngIf="field('email')?.hasError('pattern') && field('email')?.touched">
+          Ingresa un correo válido (ej: usuario@dominio.com)
+        </span>
+      </div>
+
+      <!-- Teléfono -->
+      <div class="form-group">
+        <label for="phone">Teléfono <span class="hint">(opcional)</span></label>
+        <input id="phone" type="text" formControlName="phone"
+               placeholder="+51 999 999 999">
+      </div>
+
+      <!-- Dirección -->
+      <div class="form-group">
+        <label for="address">Dirección <span class="hint">(opcional)</span></label>
+        <input id="address" type="text" formControlName="address"
+               placeholder="Dirección del cliente">
+      </div>
+
+      <!-- Notas -->
+      <div class="form-group">
+        <label for="notes">Notas <span class="hint">(opcional)</span></label>
+        <textarea id="notes" formControlName="notes"
+                  placeholder="Observaciones o notas adicionales"></textarea>
+      </div>
+
+      <!-- Toggle is_active (solo en edit) -->
+      <div class="form-group form-toggle" *ngIf="isEdit">
+        <label class="toggle-label">
+          <span>Estado del cliente</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" id="is_active" formControlName="is_active"
+                   [checked]="field('is_active')?.value === 1"
+                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </label>
+      </div>
+
+      <!-- Actions -->
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">
+          Cancelar
+        </button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear cliente' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+</div>

@@ -1,0 +1,182 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🧮 Calculadora de costos</h1>
+      <p class="page-subtitle">Calculá el costo de tus velas para definir el precio de venta</p>
+    </div>
+    <button class="btn-outline" (click)="reset()">↺ Limpiar</button>
+  </div>
+
+  <div class="loading-msg" *ngIf="loading">Cargando datos...</div>
+
+  <div *ngIf="!loading">
+    <div class="calc-grid">
+
+      <!-- Panel izquierdo: configuración -->
+      <div class="calc-panel">
+
+        <!-- Molde y cantidad -->
+        <div class="panel-section">
+          <h3 class="section-title">Configuración</h3>
+
+          <div class="form-group">
+            <label>Molde</label>
+            <select [(ngModel)]="selectedMoldId" (ngModelChange)="onMoldChange()">
+              <option [ngValue]="null">Seleccionar molde...</option>
+              <option *ngFor="let m of molds" [value]="m.id">
+                {{ m.name }} — {{ m.wax_grams }}g de cera
+              </option>
+            </select>
+          </div>
+
+          <div class="form-group" *ngIf="selectedMold">
+            <div class="mold-info">
+              <span class="mold-info-label">Cera necesaria</span>
+              <span class="mold-info-value">{{ selectedMold.wax_grams }} g</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Cantidad de velas a calcular</label>
+            <input type="number" [(ngModel)]="quantity" min="1" step="1" placeholder="1"
+                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+          </div>
+        </div>
+
+        <!-- Ingredientes -->
+        <div class="panel-section" *ngIf="selectedMold">
+          <div class="section-header">
+            <h3 class="section-title">Ingredientes</h3>
+            <button class="btn-add" (click)="addLine()">+ Agregar</button>
+          </div>
+
+          <div class="ingredient-lines">
+            <div class="ingredient-line" *ngFor="let line of lines; let i = index">
+              <div class="line-row">
+                <div class="form-group flex-grow">
+                  <label>Ingrediente</label>
+                  <select [(ngModel)]="line.ingredient_id" (ngModelChange)="onIngredientChange(line)">
+                    <option [ngValue]="null">Seleccionar...</option>
+                    <optgroup *ngFor="let cat of getCategories()" [label]="cat">
+                      <option *ngFor="let ing of getByCategory(cat)" [value]="ing.id">
+                        {{ ing.name }} ({{ ing.unit_abbr }})
+                      </option>
+                    </optgroup>
+                  </select>
+                </div>
+
+                <div class="form-group qty-group">
+                  <label>{{ line.is_unit ? 'Unidades' : 'Gramos' }}</label>
+                  <div class="input-suffix-wrapper">
+                    <input type="number"
+                           [(ngModel)]="line.grams"
+                           (ngModelChange)="recalcLine(line)"
+                           min="0" step="0.1"
+                           placeholder="0"
+                           (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+                    <span class="input-suffix">{{ line.is_unit ? 'u' : 'g' }}</span>
+                  </div>
+                </div>
+
+                <button class="btn-remove" (click)="removeLine(i)" [disabled]="lines.length === 1" title="Quitar">✕</button>
+              </div>
+
+              <div class="line-cost" *ngIf="line.ingredient_id && line.grams > 0">
+                <span class="cost-detail">
+                  {{ line.is_unit ? line.grams + ' u × S/ ' + (line.unit_cost | number:'1.4-4') : line.grams + 'g × S/ ' + (line.unit_cost | number:'1.4-4') + '/g' }}
+                </span>
+                <span class="cost-value">S/ {{ line.subtotal | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Precio de venta -->
+        <div class="panel-section" *ngIf="selectedMold && lines.length > 0">
+          <h3 class="section-title">Precio de venta</h3>
+          <div class="form-group">
+            <label>Precio por vela (S/)</label>
+            <input type="number" [(ngModel)]="sellPrice" min="0" step="0.5" placeholder="0.00"
+                   (keydown)="['e','E','+'].includes($event.key) && $event.preventDefault()">
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Panel derecho: resultados -->
+      <div class="results-panel" *ngIf="selectedMold && totalCostPerCandle > 0">
+        <h3 class="section-title">Resultado</h3>
+
+        <div class="result-card">
+          <div class="result-section">
+            <h4 class="result-subtitle">Por vela</h4>
+            <div class="result-row" *ngFor="let line of lines">
+              <span *ngIf="line.ingredient_id && line.subtotal > 0">
+                {{ line.ingredient_name }}
+              </span>
+              <span *ngIf="line.ingredient_id && line.subtotal > 0" class="result-val">
+                S/ {{ line.subtotal | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="result-divider"></div>
+            <div class="result-row result-total">
+              <span>Costo total</span>
+              <span class="result-val">S/ {{ totalCostPerCandle | number:'1.2-2' }}</span>
+            </div>
+          </div>
+
+          <div class="result-section" *ngIf="sellPrice > 0">
+            <h4 class="result-subtitle">Precio vs costo</h4>
+            <div class="result-row">
+              <span>Precio de venta</span>
+              <span class="result-val">S/ {{ sellPrice | number:'1.2-2' }}</span>
+            </div>
+            <div class="result-row">
+              <span>Ganancia</span>
+              <span class="result-val" [class.text-green]="profit > 0" [class.text-red]="profit < 0">
+                S/ {{ profit | number:'1.2-2' }}
+              </span>
+            </div>
+            <div class="result-row">
+              <span>Margen</span>
+              <span class="result-val" [class.text-green]="margin > 0" [class.text-red]="margin < 0">
+                {{ margin | number:'1.0-1' }}%
+              </span>
+            </div>
+          </div>
+
+          <div class="result-section" *ngIf="quantity > 1">
+            <h4 class="result-subtitle">Para {{ quantity }} velas</h4>
+            <div class="result-row">
+              <span>Costo total</span>
+              <span class="result-val">S/ {{ totalCost | number:'1.2-2' }}</span>
+            </div>
+            <div class="result-row" *ngIf="sellPrice > 0">
+              <span>Ingreso total</span>
+              <span class="result-val">S/ {{ totalRevenue | number:'1.2-2' }}</span>
+            </div>
+            <div class="result-row" *ngIf="sellPrice > 0">
+              <span>Ganancia total</span>
+              <span class="result-val" [class.text-green]="totalProfit > 0" [class.text-red]="totalProfit < 0">
+                S/ {{ totalProfit | number:'1.2-2' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="tip-box" *ngIf="sellPrice === 0">
+          💡 Ingresá el precio de venta para ver tu margen de ganancia
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Empty state -->
+    <div class="empty-calc" *ngIf="!selectedMold">
+      <div class="empty-icon">🫙</div>
+      <p>Seleccioná un molde para empezar a calcular</p>
+      <span>Los gramos de cera se cargarán automáticamente</span>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,55 @@
+<header class="topbar">
+
+  <!-- Toggle sidebar -->
+  <button class="btn-icon" (click)="toggleSidebar.emit()" title="Menú">
+    ☰
+  </button>
+
+  <!-- Nombre del negocio editable -->
+  <div class="business-name">
+    <ng-container *ngIf="!editingName; else editMode">
+      <span class="bname-text" (click)="startEdit()" title="Clic para editar">
+        {{ businessName }}
+      </span>
+      <button class="btn-edit-name" (click)="startEdit()" title="Editar nombre">✏️</button>
+    </ng-container>
+    <ng-template #editMode>
+      <input class="bname-input"
+             [(ngModel)]="tempName"
+             (keyup.enter)="saveName()"
+             (keyup.escape)="editingName = false"
+             (blur)="saveName()"
+             autofocus
+             maxlength="50">
+    </ng-template>
+  </div>
+
+  <div class="topbar-right">
+    <!-- Avatar y menú de usuario -->
+    <div class="user-menu-wrapper">
+      <button class="user-btn" (click)="toggleUserMenu()">
+        <span class="avatar">{{ user?.name?.charAt(0)?.toUpperCase() }}</span>
+        <span class="user-name">{{ user?.name }}</span>
+        <span class="chevron" [class.open]="userMenuOpen">▾</span>
+      </button>
+
+      <div class="dropdown" *ngIf="userMenuOpen" (click)="userMenuOpen = false">
+        <div class="dropdown-header">
+          <strong>{{ user?.name }}</strong>
+          <small>{{ user?.email }}</small>
+          <span class="role-badge" [class.role-admin]="user?.role === 'admin'">
+            {{ user?.role === 'admin' ? 'Administrador' : 'Usuario' }}
+          </span>
+        </div>
+        <hr>
+        <button class="dropdown-item danger" (click)="$event.stopPropagation(); logout()">
+          🚪 Cerrar sesión
+        </button>
+      </div>
+    </div>
+  </div>
+
+</header>
+
+<!-- Overlay para cerrar el menú -->
+<div class="overlay" *ngIf="userMenuOpen" (click)="userMenuOpen = false"></div>
