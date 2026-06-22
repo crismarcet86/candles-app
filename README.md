@@ -163,6 +163,35 @@ Prefijo base: `/api` | Auth: `Authorization: Bearer <token>`
 
 ---
 
+## Resetear contraseña desde consola
+
+Desde la raíz del proyecto (con el `.env` configurado):
+
+```bash
+node -e "
+const bcrypt = require('bcryptjs');
+const { pool } = require('./src/config/database');
+bcrypt.hash('NUEVA_CONTRASEÑA', 10).then(hash => {
+  return pool.query('UPDATE users SET password = ? WHERE email = ?', [hash, 'EMAIL_DEL_USUARIO']);
+}).then(([r]) => {
+  console.log('Filas actualizadas:', r.affectedRows);
+  process.exit(0);
+}).catch(e => { console.error(e.message); process.exit(1); });
+"
+```
+
+Reemplazá `NUEVA_CONTRASEÑA` y `EMAIL_DEL_USUARIO` con los valores reales.
+
+Para ver los usuarios registrados:
+```bash
+node -e "
+const { pool } = require('./src/config/database');
+pool.query('SELECT id, email, role FROM users').then(([r]) => { console.table(r); process.exit(0); });
+"
+```
+
+---
+
 ## Variables de entorno
 
 | Variable | Descripción | Default |
