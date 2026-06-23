@@ -1,10 +1,11 @@
 export interface OrderItem {
   id: number;
-  product_id: number;
-  product_name: string;
+  product_id: number | null;
+  product_name: string | null;
+  description: string | null;
   quantity: number;
   unit_price: number;
-  unit_abbr: string;
+  unit_abbr: string | null;
   subtotal: number;
 }
 
