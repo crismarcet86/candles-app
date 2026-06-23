@@ -12,11 +12,17 @@ const rules = [
   body('stock').isFloat({ min: 0 }).withMessage('Stock inválido'),
 ];
 
-router.get('/',       ctrl.getAll);
-router.get('/pdf',    requireAuth, ctrl.getPdf);
-router.get('/:id',    ctrl.getById);
-router.post('/',      rules, validate, ctrl.create);
-router.put('/:id',    rules, validate, ctrl.update);
-router.delete('/:id', ctrl.remove);
+router.get('/',        ctrl.getAll);
+router.get('/pdf',       requireAuth, ctrl.getPdf);
+router.get('/stock/pdf', requireAuth, ctrl.getStockPdf);
+router.get('/:id',       ctrl.getById);
+router.post('/',       rules, validate, ctrl.create);
+router.put('/:id',     rules, validate, ctrl.update);
+router.delete('/:id',  ctrl.remove);
+router.patch('/:id/stock', requireAuth,
+  body('quantity').isFloat({ min: 0.001 }).withMessage('Cantidad debe ser mayor a 0'),
+  validate,
+  ctrl.addStock
+);
 
 module.exports = router;

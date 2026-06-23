@@ -30,6 +30,7 @@ export class SidebarComponent implements OnInit {
         { label: 'Unidades',     icon: '📏',  route: '/dashboard/units' },
         { label: 'Moldes',       icon: '🫙',  route: '/dashboard/molds' },
         { label: 'Ingredientes', icon: '📦',  route: '/dashboard/products' },
+        { label: 'Stock',        icon: '🏭',  route: '/dashboard/stock' },
         { label: 'Clientes',     icon: '👥',  route: '/dashboard/clients' }
       ]
     },

@@ -1,16 +1,19 @@
 const PDFDocument = require('pdfkit');
+const { drawPdfHeader } = require('./pdfHeader');
 
 /**
  * Genera el PDF del reporte general y lo retorna como Buffer.
  * @param {Object} opts
- * @param {Object}   opts.summary    - KPIs del resumen
- * @param {Array}    opts.orders     - Órdenes del período
- * @param {Array}    opts.lowStock   - Productos con stock bajo
- * @param {Array}    opts.topClients - Top clientes por gasto
- * @param {string}   [opts.from]     - Fecha inicio del período (YYYY-MM-DD)
- * @param {string}   [opts.to]       - Fecha fin del período (YYYY-MM-DD)
+ * @param {Object}   opts.summary      - KPIs del resumen
+ * @param {Array}    opts.orders       - Órdenes del período
+ * @param {Array}    opts.lowStock     - Productos con stock bajo
+ * @param {Array}    opts.topClients   - Top clientes por gasto
+ * @param {string}   [opts.from]       - Fecha inicio del período (YYYY-MM-DD)
+ * @param {string}   [opts.to]         - Fecha fin del período (YYYY-MM-DD)
+ * @param {string}   [opts.businessName]
+ * @param {string}   [opts.logoPath]
  */
-function generateReportPDF({ summary, orders, lowStock, topClients, from, to }) {
+function generateReportPDF({ summary, orders, lowStock, topClients, from, to, businessName, logoPath }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     const buffers = [];
@@ -91,9 +94,7 @@ function generateReportPDF({ summary, orders, lowStock, topClients, from, to }) 
     };
 
     // ── ENCABEZADO ────────────────────────────────────────────────
-    doc.fillColor(brown)
-       .fontSize(22).font('Helvetica-Bold')
-       .text('Velas Artesanales', 50, 50, { align: 'center', width: W });
+    drawPdfHeader(doc, { businessName, logoPath });
 
     doc.fillColor(gray)
        .fontSize(11).font('Helvetica')

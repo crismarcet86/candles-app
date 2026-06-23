@@ -1,11 +1,13 @@
 const PDFDocument = require('pdfkit');
+const { drawPdfHeader } = require('./pdfHeader');
 
 /**
  * Genera el PDF de una proforma y lo retorna como Buffer.
- * @param {Object} proforma  - Objeto proforma con items y client_name
- * @param {string} businessName - Nombre del negocio (del header)
+ * @param {Object} proforma      - Objeto proforma con items y client_name
+ * @param {string} businessName  - Nombre del negocio
+ * @param {string|null} logoPath - Filename del logo en public/uploads/
  */
-function generateProformaPDF(proforma, businessName = 'Velas Artesanales') {
+function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = null) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     const buffers = [];
@@ -20,9 +22,7 @@ function generateProformaPDF(proforma, businessName = 'Velas Artesanales') {
     const lightGray = '#f3f4f6';
 
     // ── ENCABEZADO ──────────────────────────────────────────────
-    doc.fillColor(brown)
-       .fontSize(22).font('Helvetica-Bold')
-       .text(businessName, 50, 50, { align: 'center', width: W });
+    drawPdfHeader(doc, { businessName, logoPath });
 
     doc.fillColor(darkBrown)
        .fontSize(11).font('Helvetica')

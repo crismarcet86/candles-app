@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
+import { CalculationPresetsService } from './calculation-presets.service';
 
 interface Ingredient {
   id: number;
@@ -51,7 +52,21 @@ export class CalculatorComponent implements OnInit {
   loadingIngredients = true;
   pdfLoading = false;
 
-  constructor(private http: HttpClient) {}
+  // Guardar cálculo
+  saveModal = false;
+  saveName = '';
+  saving = false;
+  saveSuccess = '';
+  saveError = '';
+  editingPresetId: number | null = null;
+
+  // Ver/cargar presets
+  presetsModal = false;
+  allPresets: any[] = [];
+  loadingPresets = false;
+  loadPresetError = '';
+
+  constructor(private http: HttpClient, private presets: CalculationPresetsService) {}
 
   ngOnInit(): void {
     this.http.get<any>(`${environment.apiUrl}/molds`).subscribe(r => {
@@ -210,6 +225,128 @@ export class CalculatorComponent implements OnInit {
     });
   }
 
+  openSaveModal(): void {
+    this.saveName = this.editingPresetId
+      ? (this.allPresets.find(p => p.id === this.editingPresetId)?.name || '')
+      : (this.selectedMold ? this.selectedMold.name : '');
+    this.saveSuccess = '';
+    this.saveError = '';
+    this.saveModal = true;
+  }
+
+  closeSaveModal(): void {
+    this.saveModal = false;
+    this.saveName = '';
+    // editingPresetId is intentionally kept — preset stays in edit mode until save, reset, or explicit cancel
+  }
+
+  savePreset(): void {
+    if (!this.saveName.trim()) return;
+    this.saving = true;
+    this.saveError = '';
+    const payload = {
+      name:          this.saveName.trim(),
+      mold_name:     this.selectedMold?.name || null,
+      wax_grams:     this.selectedMold?.wax_grams || null,
+      quantity:      this.quantity,
+      sell_price:    this.sellPrice,
+      cost_per_unit: this.totalCostPerCandle,
+      items:         this.lines
+        .filter(l => l.ingredient_id && l.subtotal > 0)
+        .map(l => ({
+          ingredient_id:   l.ingredient_id,
+          ingredient_name: l.ingredient_name,
+          grams:           l.grams,
+          is_unit:         l.is_unit,
+          unit_abbr:       l.unit_abbr,
+          unit_cost:       l.unit_cost,
+          subtotal:        l.subtotal,
+        }))
+    };
+    const request$ = this.editingPresetId
+      ? this.presets.update(this.editingPresetId, payload)
+      : this.presets.create(payload);
+
+    request$.subscribe({
+      next: () => {
+        this.saving = false;
+        const verb = this.editingPresetId ? 'actualizado' : 'guardado';
+        this.saveSuccess = `Cálculo "${this.saveName.trim()}" ${verb} correctamente`;
+        this.saveModal = false;
+        this.saveName = '';
+        this.editingPresetId = null;
+      },
+      error: err => {
+        this.saving = false;
+        this.saveError = err?.error?.message || 'Error al guardar';
+      }
+    });
+  }
+
+  openPresetsModal(): void {
+    this.presetsModal = true;
+    this.loadingPresets = true;
+    this.loadPresetError = '';
+    this.presets.getAllIncludingInactive().subscribe({
+      next: r => {
+        this.allPresets = r.data;
+        this.loadingPresets = false;
+      },
+      error: () => {
+        this.loadPresetError = 'Error al cargar los cálculos guardados';
+        this.loadingPresets = false;
+      }
+    });
+  }
+
+  closePresetsModal(): void {
+    this.presetsModal = false;
+  }
+
+  loadPreset(preset: any): void {
+    // Load the preset with items from backend
+    this.presets.getById(preset.id).subscribe({
+      next: r => {
+        const p = r.data;
+        // Set mold by matching name if possible
+        const matchingMold = this.molds.find(m => m.name === p.mold_name);
+        if (matchingMold) {
+          this.selectedMoldId = matchingMold.id;
+          this.selectedMold = matchingMold;
+        } else {
+          this.selectedMoldId = null;
+          this.selectedMold = null;
+        }
+
+        this.quantity  = p.quantity || 1;
+        this.sellPrice = Number(p.sell_price) || 0;
+        this.marginTarget = 0;
+
+        // Rebuild lines from preset items
+        this.lines = (p.items || []).map((item: any, idx: number) => {
+          const ing = this.ingredients.find(i => i.id === item.product_id);
+          return {
+            ingredient_id:   item.product_id || null,
+            ingredient_name: item.ingredient_name || '',
+            grams:           Number(item.grams) || 0,
+            unit_cost:       Number(item.unit_cost) || 0,
+            unit_abbr:       item.unit_abbr || 'g',
+            is_unit:         !!item.is_unit,
+            subtotal:        Number(item.subtotal) || 0,
+            isWaxLine:       idx === 0 && !!matchingMold,
+          } as CalcLine;
+        });
+
+        this.editingPresetId = preset.id;
+        this.presetsModal = false;
+        this.saveSuccess = '';
+      },
+      error: () => {
+        this.loadPresetError = 'Error al cargar el cálculo';
+      }
+    });
+  }
+
   reset(): void {
     this.selectedMoldId = null;
     this.selectedMold = null;
@@ -217,6 +354,8 @@ export class CalculatorComponent implements OnInit {
     this.sellPrice = 0;
     this.quantity = 1;
     this.marginTarget = 0;
+    this.editingPresetId = null;
+    this.saveSuccess = '';
   }
 
   getCategories(): string[] {

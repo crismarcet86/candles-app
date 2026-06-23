@@ -1,4 +1,5 @@
 const Unit = require('../models/Unit');
+const Settings = require('../models/Settings');
 const { success, created, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
@@ -10,7 +11,9 @@ exports.remove  = async (req, res, next) => { try { const ok = await Unit.delete
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const units = await Unit.findAll();
+    const [units, settings] = await Promise.all([Unit.findAll(), Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = units.map(u => [
       u.name,
@@ -18,7 +21,7 @@ exports.getPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Unidades de Medida',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'ABREVIATURA'],
       widths:  [250, 245],
       aligns:  ['left', 'left'],

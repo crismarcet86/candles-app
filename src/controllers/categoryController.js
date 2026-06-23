@@ -1,4 +1,5 @@
 const Category = require('../models/Category');
+const Settings = require('../models/Settings');
 const { success, created, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
@@ -10,7 +11,9 @@ exports.remove    = async (req, res, next) => { try { const ok = await Category.
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const categories = await Category.findAll();
+    const [categories, settings] = await Promise.all([Category.findAll(), Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = categories.map(cat => [
       cat.name,
@@ -19,7 +22,7 @@ exports.getPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Categorías',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'DESCRIPCIÓN', 'ESTADO'],
       widths:  [200, 235, 60],
       aligns:  ['left', 'left', 'left'],

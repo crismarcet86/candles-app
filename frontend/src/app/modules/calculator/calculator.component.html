@@ -4,7 +4,10 @@
       <h1 class="page-title">🧮 Calculadora de costos</h1>
       <p class="page-subtitle">Calculá el costo de tus velas para definir el precio de venta</p>
     </div>
-    <button class="btn-outline" (click)="reset()">↺ Limpiar</button>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="openPresetsModal()">📋 Ver presets</button>
+      <button class="btn-outline" (click)="reset()">↺ Limpiar</button>
+    </div>
   </div>
 
   <div class="loading-msg" *ngIf="loading">Cargando datos...</div>
@@ -182,6 +185,17 @@
           💡 Ingresá el precio de venta para ver tu margen de ganancia
         </div>
 
+        <div class="alert-success-small" *ngIf="saveSuccess">{{ saveSuccess }}</div>
+
+        <div class="editing-banner" *ngIf="editingPresetId">
+          ✏️ Editando preset cargado — al guardar se actualizará
+          <button class="btn-link" (click)="editingPresetId = null">✕ Cancelar edición</button>
+        </div>
+
+        <button class="btn-save" (click)="openSaveModal()">
+          {{ editingPresetId ? '💾 Actualizar cálculo' : '💾 Guardar cálculo' }}
+        </button>
+
         <button class="btn-pdf" (click)="downloadPdf()" [disabled]="pdfLoading">
           <span *ngIf="!pdfLoading">⬇️ Descargar PDF</span>
           <span *ngIf="pdfLoading" class="spinner-small"></span>
@@ -197,5 +211,82 @@
       <span>Los gramos de cera se cargarán automáticamente</span>
     </div>
 
+  </div>
+</div>
+
+<!-- Modal ver presets -->
+<div class="modal-backdrop" *ngIf="presetsModal">
+  <div class="modal modal-wide">
+    <div class="modal-header-row">
+      <h3>Cálculos guardados</h3>
+      <button class="btn-close-modal" (click)="closePresetsModal()">✕</button>
+    </div>
+    <p class="modal-sub">Cargá un cálculo para modificarlo. Al guardar se actualizará el preset existente.</p>
+
+    <div class="alert-error-small" *ngIf="loadPresetError">{{ loadPresetError }}</div>
+    <div class="loading-msg" *ngIf="loadingPresets">Cargando...</div>
+
+    <div class="presets-list" *ngIf="!loadingPresets">
+      <div class="empty-state-sm" *ngIf="allPresets.length === 0">No hay cálculos guardados.</div>
+
+      <div class="preset-list-item" *ngFor="let p of allPresets">
+        <div class="preset-list-info">
+          <div class="preset-list-name">
+            {{ p.name }}
+            <span class="badge-active" *ngIf="p.is_active === 1">activo</span>
+            <span class="badge-used" *ngIf="p.is_active === 0">usado</span>
+          </div>
+          <div class="preset-list-meta">
+            <span *ngIf="p.mold_name">🕯️ {{ p.mold_name }}</span>
+            <span>S/ {{ p.cost_per_unit | number:'1.2-2' }}/vela</span>
+            <span *ngIf="p.sell_price > 0">Venta: S/ {{ p.sell_price | number:'1.2-2' }}</span>
+            <span>{{ p.item_count }} ingrediente{{ p.item_count !== 1 ? 's' : '' }}</span>
+          </div>
+        </div>
+        <button class="btn-primary-sm" (click)="loadPreset(p)">⬆️ Cargar</button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline-sm" (click)="closePresetsModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal guardar cálculo -->
+<div class="modal-backdrop" *ngIf="saveModal">
+  <div class="modal">
+    <h3>{{ editingPresetId ? 'Actualizar cálculo' : 'Guardar cálculo' }}</h3>
+    <p class="modal-sub">Quedará disponible para insertar en una proforma. Al confirmarla se descontará el stock de todos los ingredientes usados.</p>
+
+    <div class="alert-error-small" *ngIf="saveError">{{ saveError }}</div>
+
+    <div class="field">
+      <label>Nombre del cálculo</label>
+      <input type="text" [(ngModel)]="saveName" placeholder="Ej: Vela lavanda 200g" class="modal-input" />
+    </div>
+
+    <div class="preset-summary">
+      <div class="preset-row" *ngIf="selectedMold">
+        <span>Molde</span><span>{{ selectedMold.name }}</span>
+      </div>
+      <div class="preset-row">
+        <span>Costo por vela</span><span>S/ {{ totalCostPerCandle | number:'1.2-2' }}</span>
+      </div>
+      <div class="preset-row" *ngIf="sellPrice > 0">
+        <span>Precio de venta sugerido</span><span>S/ {{ sellPrice | number:'1.2-2' }}</span>
+      </div>
+      <div class="preset-row">
+        <span>Ingredientes registrados</span><span>{{ lines.length }}</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline-sm" (click)="closeSaveModal()" [disabled]="saving">Cancelar</button>
+      <button class="btn-primary-sm" (click)="savePreset()"
+              [disabled]="!saveName.trim() || saving">
+        {{ saving ? 'Guardando...' : 'Guardar' }}
+      </button>
+    </div>
   </div>
 </div>

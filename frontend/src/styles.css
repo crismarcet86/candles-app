@@ -48,7 +48,7 @@
 html, body {
   height: 100%;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  font-size: 16px;
+  font-size: 15px;
   background: var(--bg-page);
   color: var(--text-primary);
 }
@@ -142,3 +142,28 @@ input, textarea, select { font-family: inherit; }
 .badge-user   { background: #dbeafe; color: #1d4ed8; }
 .badge-active { background: var(--success-bg); color: var(--success); }
 .badge-inactive { background: #f3f4f6; color: #9ca3af; }
+
+/* ── Header actions group ── */
+.header-actions { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+
+/* ── Compact UI overrides (aplica a todos los módulos vía !important) ── */
+
+/* Botones principales y de borde: menos padding */
+.btn-primary { padding: 0.42rem 0.85rem !important; font-size: 0.84rem !important; }
+.btn-outline  { padding: 0.4rem  0.82rem !important; font-size: 0.84rem !important; }
+.btn-danger   { padding: 0.4rem  0.82rem !important; font-size: 0.84rem !important; }
+
+/* Botones de acción en tablas (ícono/emoji): padding mínimo */
+.btn-action { padding: 0.18rem 0.3rem !important; font-size: 0.95rem !important; }
+
+/* Celda de acciones: flex para que los botones queden pegados */
+.td-actions {
+  display: flex !important;
+  gap: 0.15rem !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+}
+
+/* Filas de tabla: un poco más densas */
+.data-table td { padding: 0.6rem 0.9rem !important; }
+.data-table th { padding: 0.55rem 0.9rem !important; }

@@ -14,6 +14,16 @@ class Client {
     return rows[0] || null;
   }
 
+  /** Busca cliente activo con esa cédula/RUC. excludeId excluye al propio registro en edición. */
+  static async findByCedula(cedula, excludeId = null) {
+    const [rows] = await pool.query(
+      `SELECT id, name FROM clients
+       WHERE cedula = ? AND is_active = 1 ${excludeId ? 'AND id != ?' : ''} LIMIT 1`,
+      excludeId ? [cedula, excludeId] : [cedula]
+    );
+    return rows[0] || null;
+  }
+
   static async create({ name, cedula, email, phone, address, notes }) {
     const [result] = await pool.query(
       'INSERT INTO clients (name, cedula, email, phone, address, notes) VALUES (?, ?, ?, ?, ?, ?)',

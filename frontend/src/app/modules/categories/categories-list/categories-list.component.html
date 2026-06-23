@@ -6,8 +6,11 @@
       <h1 class="page-title">🏷️ Categorías</h1>
       <p class="page-subtitle">Administra las categorías de productos</p>
     </div>
-    <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
-    <button class="btn-primary" (click)="goToNew()">+ Nueva categoría</button>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="loadCategories()">🔄 Buscar</button>
+      <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
+      <button class="btn-primary" (click)="goToNew()">+ Nueva categoría</button>
+    </div>
   </div>
 
   <!-- Alerts -->

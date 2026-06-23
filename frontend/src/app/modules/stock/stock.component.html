@@ -1,0 +1,111 @@
+<div class="page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">📦 Stock</h1>
+      <p class="page-subtitle">Visualiza y ajusta el inventario de ingredientes</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="downloadPdf()" [disabled]="pdfLoading">
+        <span *ngIf="!pdfLoading">⬇️ PDF</span>
+        <span *ngIf="pdfLoading">...</span>
+      </button>
+      <button class="btn-outline" (click)="load()">🔄 Buscar</button>
+    </div>
+  </div>
+
+  <!-- Alerts -->
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg && !modalProduct">{{ errorMsg }}</div>
+
+  <!-- Loading skeleton -->
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ingrediente</th>
+            <th>Categoría</th>
+            <th>Unidad</th>
+            <th class="th-num">Stock actual</th>
+            <th class="th-num">Stock mínimo</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="items.length === 0">
+            <td colspan="7" class="empty-state">No hay ingredientes registrados</td>
+          </tr>
+          <tr *ngFor="let p of items" [class.row-inactive]="p.is_active === 0">
+            <td>{{ p.name }}</td>
+            <td>{{ p.category_name }}</td>
+            <td>{{ p.unit_abbr }}</td>
+            <td class="td-num">
+              <span [class.stock-low]="isLowStock(p)">{{ p.stock | number:'1.0-3' }}</span>
+            </td>
+            <td class="td-num">{{ p.min_stock | number:'1.0-3' }}</td>
+            <td>
+              <span class="badge" [ngClass]="isLowStock(p) ? 'badge-warning' : 'badge-ok'">
+                {{ isLowStock(p) ? 'Stock bajo' : 'OK' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button class="btn-add" (click)="openModal(p)"
+                      [disabled]="p.is_active === 0"
+                      title="Agregar stock">
+                + Agregar
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal agregar stock -->
+<div class="modal-backdrop" *ngIf="modalProduct">
+  <div class="modal">
+    <h3>Agregar stock</h3>
+    <p class="modal-subtitle">
+      <strong>{{ modalProduct.name }}</strong> —
+      Stock actual: <strong>{{ modalProduct.stock | number:'1.0-3' }} {{ modalProduct.unit_abbr }}</strong>
+    </p>
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <div class="field">
+      <label>Cantidad a agregar ({{ modalProduct.unit_abbr }})</label>
+      <input
+        type="number"
+        min="0.001"
+        step="any"
+        [(ngModel)]="addQty"
+        (keydown)="blockInvalidKey($event)"
+        placeholder="Ej: 500"
+        class="input"
+        autofocus
+      />
+    </div>
+
+    <div class="new-stock" *ngIf="addQty && addQty > 0">
+      Nuevo stock: <strong>{{ (+modalProduct.stock + +addQty) | number:'1.0-3' }} {{ modalProduct.unit_abbr }}</strong>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline" (click)="closeModal()" [disabled]="saving">Cancelar</button>
+      <button class="btn-primary" (click)="confirm()"
+              [disabled]="!addQty || addQty <= 0 || saving">
+        {{ saving ? 'Guardando...' : 'Confirmar' }}
+      </button>
+    </div>
+  </div>
+</div>

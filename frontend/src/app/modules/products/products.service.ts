@@ -35,4 +35,8 @@ export class ProductsService {
   delete(id: number): Observable<ApiResponse<Product>> {
     return this.http.delete<ApiResponse<Product>>(`${this.base}/${id}`);
   }
+
+  addStock(id: number, quantity: number): Observable<ApiResponse<Product>> {
+    return this.http.patch<ApiResponse<Product>>(`${this.base}/${id}/stock`, { quantity });
+  }
 }

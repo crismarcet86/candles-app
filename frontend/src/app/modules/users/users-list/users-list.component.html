@@ -6,8 +6,11 @@
       <h1 class="page-title">👤 Usuarios</h1>
       <p class="page-subtitle">Administra los accesos al sistema</p>
     </div>
-    <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
-    <button class="btn-primary" (click)="goToNew()">+ Nuevo usuario</button>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="loadUsers()">🔄 Buscar</button>
+      <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
+      <button class="btn-primary" (click)="goToNew()">+ Nuevo usuario</button>
+    </div>
   </div>
 
   <!-- Alerts -->

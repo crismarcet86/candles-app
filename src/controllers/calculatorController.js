@@ -1,4 +1,5 @@
 const { generateListPDF } = require('../utils/pdfList');
+const Settings = require('../models/Settings');
 const { badRequest } = require('../utils/response');
 
 exports.getPdf = async (req, res, next) => {
@@ -6,6 +7,10 @@ exports.getPdf = async (req, res, next) => {
     const { moldName, waxGrams, quantity, sellPrice, lines } = req.body;
 
     if (!lines || !Array.isArray(lines)) return badRequest(res, 'Datos inválidos');
+
+    const [settings] = await Promise.all([Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
 
     const date = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
@@ -52,7 +57,7 @@ exports.getPdf = async (req, res, next) => {
 
     const pdf = await generateListPDF({
       title: 'Calculadora de Costos',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['INGREDIENTE', 'CANTIDAD', 'COSTO UNIT.', 'SUBTOTAL'],
       widths:  [220,           100,         100,           75],
       aligns:  ['left',       'right',     'right',      'right'],

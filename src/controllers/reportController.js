@@ -1,4 +1,5 @@
 const Report = require('../models/Report');
+const Settings = require('../models/Settings');
 const { success } = require('../utils/response');
 const { generateReportPDF } = require('../utils/pdfReport');
 
@@ -34,13 +35,16 @@ exports.getTopClients = async (req, res, next) => {
 exports.getPdf = async (req, res, next) => {
   try {
     const { from, to } = req.query;
-    const [summary, orders, lowStock, topClients] = await Promise.all([
+    const [summary, orders, lowStock, topClients, settings] = await Promise.all([
       Report.getSummary(),
       Report.getOrdersByPeriod({ from, to }),
       Report.getLowStock(),
       Report.getTopClients(),
+      Settings.get(),
     ]);
-    const pdf = await generateReportPDF({ summary, orders, lowStock, topClients, from, to });
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
+    const pdf = await generateReportPDF({ summary, orders, lowStock, topClients, from, to, businessName, logoPath });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="reporte.pdf"');
     res.send(pdf);

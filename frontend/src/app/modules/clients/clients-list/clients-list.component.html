@@ -6,8 +6,11 @@
       <h1 class="page-title">👥 Clientes</h1>
       <p class="page-subtitle">Gestiona la cartera de clientes</p>
     </div>
-    <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
-    <button class="btn-primary" (click)="goToNew()">+ Nuevo cliente</button>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="load()">🔄 Buscar</button>
+      <button class="btn-outline" (click)="downloadPdf()">⬇️ PDF</button>
+      <button class="btn-primary" (click)="goToNew()">+ Nuevo cliente</button>
+    </div>
   </div>
 
   <!-- Alerts -->

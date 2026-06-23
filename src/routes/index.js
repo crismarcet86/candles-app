@@ -12,5 +12,6 @@ router.use('/molds',    require('./moldRoutes'));
 router.use('/reports',  require('./reportRoutes'));
 router.use('/settings',   require('./settingsRoutes'));
 router.use('/calculator', require('./calculatorRoutes'));
+router.use('/presets',   require('./calculationPresetRoutes'));
 
 module.exports = router;

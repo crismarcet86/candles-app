@@ -53,7 +53,10 @@
       <div class="card items-card">
         <div class="items-header">
           <h3 class="section-title">Detalle de productos / servicios</h3>
-          <button type="button" class="btn-add-item" (click)="addItem()">+ Agregar línea</button>
+          <div class="items-header-actions">
+            <button type="button" class="btn-preset" (click)="openPresetsModal()">🧮 Desde calculadora</button>
+            <button type="button" class="btn-add-item" (click)="addItem()">+ Agregar línea</button>
+          </div>
         </div>
 
         <div class="items-table-wrapper">
@@ -68,11 +71,15 @@
               </tr>
             </thead>
             <tbody formArrayName="items">
-              <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
+              <tr *ngFor="let item of items.controls; let i = index" [formGroupName]="i"
+                  [class.row-preset]="item.get('preset_id')?.value">
                 <td>
-                  <input type="text" formControlName="description"
-                         placeholder="Ej: 12 velas aromáticas lavanda, Mano de obra..."
-                         [class.invalid]="itemField(i,'description')?.invalid && itemField(i,'description')?.touched">
+                  <div class="desc-cell">
+                    <span class="badge-preset" *ngIf="item.get('preset_id')?.value" title="Calculado — al confirmar descuenta ingredientes">🧮</span>
+                    <input type="text" formControlName="description"
+                           placeholder="Ej: 12 velas aromáticas lavanda, Mano de obra..."
+                           [class.invalid]="itemField(i,'description')?.invalid && itemField(i,'description')?.touched">
+                  </div>
                   <span class="field-error" *ngIf="itemField(i,'description')?.hasError('required') && itemField(i,'description')?.touched">
                     Requerido
                   </span>
@@ -128,5 +135,38 @@
       </div>
 
     </form>
+  </div>
+</div>
+
+<!-- Modal: seleccionar cálculo guardado -->
+<div class="modal-backdrop" *ngIf="presetsModal">
+  <div class="modal modal-presets">
+    <div class="modal-header">
+      <h3>Seleccionar cálculo guardado</h3>
+      <button class="btn-close-modal" (click)="presetsModal = false">✕</button>
+    </div>
+    <p class="modal-hint">Al insertar, los ingredientes se descontarán del stock cuando confirmes la proforma.</p>
+
+    <div class="preset-loading" *ngIf="loadingPresets">Cargando...</div>
+
+    <div class="preset-empty" *ngIf="!loadingPresets && presets.length === 0">
+      No hay cálculos guardados. Andá a la calculadora y guardá uno primero.
+    </div>
+
+    <div class="preset-list" *ngIf="!loadingPresets && presets.length > 0">
+      <div class="preset-card" *ngFor="let p of presets" (click)="addFromPreset(p)">
+        <div class="preset-card-title">{{ p.name }}</div>
+        <div class="preset-card-meta">
+          <span *ngIf="p.mold_name">🫙 {{ p.mold_name }}</span>
+          <span>{{ p.item_count }} ingrediente(s)</span>
+          <span>Costo: S/ {{ p.cost_per_unit | number:'1.2-2' }}/u</span>
+          <span *ngIf="p.sell_price > 0" class="price-tag">Precio: S/ {{ p.sell_price | number:'1.2-2' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-outline-sm" (click)="presetsModal = false">Cerrar</button>
+    </div>
   </div>
 </div>

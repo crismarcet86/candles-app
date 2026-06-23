@@ -1,4 +1,5 @@
 const Order = require('../models/Order');
+const Settings = require('../models/Settings');
 const { pool } = require('../config/database');
 const { success, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
@@ -15,13 +16,18 @@ exports.updateStatus = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const [orders] = await pool.query(`
-      SELECT o.*, c.name AS client_name,
-        (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
-      FROM orders o
-      JOIN clients c ON o.client_id = c.id
-      ORDER BY o.created_at DESC
-    `);
+    const [[orders], settings] = await Promise.all([
+      pool.query(`
+        SELECT o.*, c.name AS client_name,
+          (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
+        FROM orders o
+        JOIN clients c ON o.client_id = c.id
+        ORDER BY o.created_at DESC
+      `),
+      Settings.get(),
+    ]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = orders.map(o => [
       String(o.id).padStart(4, '0'),
@@ -33,7 +39,7 @@ exports.getPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Pedidos',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['ID', 'CLIENTE', 'ÍTEMS', 'TOTAL', 'ESTADO', 'FECHA'],
       widths:  [40, 175, 50, 80, 70, 80],
       aligns:  ['left', 'left', 'right', 'right', 'left', 'left'],

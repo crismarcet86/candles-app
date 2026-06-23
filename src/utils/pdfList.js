@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
+const { drawPdfHeader } = require('./pdfHeader');
 
-function generateListPDF({ title, subtitle, headers, widths, aligns, rows }) {
+function generateListPDF({ title, subtitle, headers, widths, aligns, rows, businessName, logoPath }) {
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: 'A4' });
     const buffers = [];
@@ -14,8 +15,7 @@ function generateListPDF({ title, subtitle, headers, widths, aligns, rows }) {
     const lightGray = '#f3f4f6';
 
     // Header
-    doc.fillColor(brown).fontSize(20).font('Helvetica-Bold')
-       .text('Velas Artesanales', 50, 50, { align: 'center', width: W });
+    drawPdfHeader(doc, { businessName, logoPath });
     doc.fillColor(gray).fontSize(12).font('Helvetica')
        .text(title.toUpperCase(), 50, doc.y + 4, { align: 'center', width: W });
     if (subtitle) {

@@ -1,4 +1,5 @@
 const Proforma = require('../models/Proforma');
+const Settings = require('../models/Settings');
 const { generateProformaPDF } = require('../utils/pdfProforma');
 const { generateListPDF } = require('../utils/pdfList');
 const { success, created, notFound, error } = require('../utils/response');
@@ -53,7 +54,9 @@ exports.cancel = async (req, res, next) => {
 // GET /api/proformas/pdf — listado PDF de todas las proformas
 exports.getListPdf = async (req, res, next) => {
   try {
-    const proformas = await Proforma.findAll();
+    const [proformas, settings] = await Promise.all([Proforma.findAll(), Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = proformas.map(p => [
       String(p.id).padStart(4, '0'),
@@ -64,7 +67,7 @@ exports.getListPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Proformas',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['ID', 'CLIENTE', 'TOTAL', 'ESTADO', 'NOTAS'],
       widths:  [40, 175, 80, 80, 120],
       aligns:  ['left', 'left', 'right', 'left', 'left'],
@@ -82,8 +85,10 @@ exports.getPdf = async (req, res, next) => {
     const proforma = await Proforma.findById(req.params.id);
     if (!proforma) return notFound(res, 'Proforma no encontrada');
 
-    const businessName = process.env.BUSINESS_NAME || 'Velas Artesanales';
-    const pdfBuffer = await generateProformaPDF(proforma, businessName);
+    const settings = await Settings.get();
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
+    const pdfBuffer = await generateProformaPDF(proforma, businessName, logoPath);
 
     const filename = `proforma-${String(proforma.id).padStart(4, '0')}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');

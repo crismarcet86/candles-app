@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Settings = require('../models/Settings');
 const { success, created, notFound, badRequest } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
@@ -41,7 +42,9 @@ exports.remove = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const users = await User.findAll();
+    const [users, settings] = await Promise.all([User.findAll(), Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = users.map(u => [
       u.name,
@@ -51,7 +54,7 @@ exports.getPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Usuarios',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'EMAIL', 'ROL', 'ESTADO'],
       widths:  [160, 200, 75, 60],
       aligns:  ['left', 'left', 'left', 'left'],

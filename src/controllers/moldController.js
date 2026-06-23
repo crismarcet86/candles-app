@@ -1,4 +1,5 @@
 const Mold = require('../models/Mold');
+const Settings = require('../models/Settings');
 const { success, created, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
@@ -38,7 +39,9 @@ exports.remove = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const molds = await Mold.findAll();
+    const [molds, settings] = await Promise.all([Mold.findAll(), Settings.get()]);
+    const businessName = settings?.name || 'Mi Negocio';
+    const logoPath     = settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = molds.map(m => [
       m.name,
@@ -48,7 +51,7 @@ exports.getPdf = async (req, res, next) => {
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Moldes',
-      subtitle,
+      subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'CERA (g)', 'DESCRIPCIÓN', 'ESTADO'],
       widths:  [200, 90, 145, 60],
       aligns:  ['left', 'right', 'left', 'left'],

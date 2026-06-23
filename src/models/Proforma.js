@@ -27,10 +27,12 @@ class Proforma {
       SELECT
         pi.*,
         pr.name          AS product_name,
-        u.abbreviation   AS unit_abbr
+        u.abbreviation   AS unit_abbr,
+        cp.name          AS preset_name
       FROM proforma_items pi
-      LEFT JOIN products pr ON pi.product_id = pr.id
-      LEFT JOIN units    u  ON pr.unit_id    = u.id
+      LEFT JOIN products            pr ON pi.product_id = pr.id
+      LEFT JOIN units               u  ON pr.unit_id    = u.id
+      LEFT JOIN calculation_presets cp ON pi.preset_id  = cp.id
       WHERE pi.proforma_id = ?
       ORDER BY pi.id
     `, [id]);
@@ -59,6 +61,7 @@ class Proforma {
         subtotal += lineSubtotal;
         enrichedItems.push({
           product_id:  item.product_id  || null,
+          preset_id:   item.preset_id   || null,
           description: item.description || null,
           quantity:    item.quantity,
           unit_price:  item.unit_price,
@@ -89,9 +92,9 @@ class Proforma {
       for (const item of enrichedItems) {
         await conn.query(
           `INSERT INTO proforma_items
-           (proforma_id, product_id, description, quantity, unit_price, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [proformaId, item.product_id, item.description, item.quantity, item.unit_price, item.subtotal]
+           (proforma_id, product_id, preset_id, description, quantity, unit_price, subtotal)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [proformaId, item.product_id, item.preset_id, item.description, item.quantity, item.unit_price, item.subtotal]
         );
       }
 
@@ -122,7 +125,7 @@ class Proforma {
 
       const stockItems = proforma.items.filter(i => i.product_id);
 
-      // Verificar stock suficiente para ítems con ingrediente
+      // Verificar stock suficiente para ítems directos con producto
       for (const item of stockItems) {
         const [[product]] = await conn.query(
           'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
@@ -130,6 +133,31 @@ class Proforma {
         );
         if (Number(product.stock) < Number(item.quantity)) {
           throw new Error(`Stock insuficiente para "${product.name}": disponible ${product.stock}, requerido ${item.quantity}`);
+        }
+      }
+
+      // Verificar stock para ítems de preset (ingredientes calculados)
+      const presetItems = proforma.items.filter(i => i.preset_id);
+      const presetIngredientDeltas = []; // { product_id, delta, name }
+      for (const item of presetItems) {
+        const [ingredients] = await conn.query(
+          'SELECT * FROM calculation_preset_items WHERE preset_id = ? AND product_id IS NOT NULL',
+          [item.preset_id]
+        );
+        for (const pi of ingredients) {
+          // delta por vela: kg → gramos/1000, g → gramos, unidades → cantidad directa
+          const deltaPerUnit = pi.unit_abbr.toLowerCase() === 'kg'
+            ? Number(pi.grams) / 1000
+            : Number(pi.grams);
+          const totalDelta = deltaPerUnit * Number(item.quantity);
+          const [[product]] = await conn.query(
+            'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
+            [pi.product_id]
+          );
+          if (Number(product.stock) < totalDelta) {
+            throw new Error(`Stock insuficiente para "${pi.ingredient_name}": disponible ${product.stock}, requerido ${totalDelta.toFixed(4)}`);
+          }
+          presetIngredientDeltas.push({ product_id: pi.product_id, delta: totalDelta, name: pi.ingredient_name });
         }
       }
 
@@ -147,7 +175,7 @@ class Proforma {
       );
       const orderId = orderResult.insertId;
 
-      // Copiar ítems y descontar stock donde aplica
+      // Copiar ítems y descontar stock directo
       for (const item of proforma.items) {
         await conn.query(
           `INSERT INTO order_items (order_id, product_id, description, quantity, unit_price, subtotal)
@@ -160,6 +188,23 @@ class Proforma {
             [item.quantity, item.product_id]
           );
         }
+      }
+
+      // Descontar stock de ingredientes de presets
+      for (const { product_id, delta } of presetIngredientDeltas) {
+        await conn.query(
+          'UPDATE products SET stock = stock - ?, updated_at=NOW() WHERE id=?',
+          [delta, product_id]
+        );
+      }
+
+      // Anular presets usados (ya no están disponibles para nuevas proformas)
+      const usedPresetIds = [...new Set(presetItems.map(i => i.preset_id))];
+      for (const presetId of usedPresetIds) {
+        await conn.query(
+          'UPDATE calculation_presets SET is_active = 0 WHERE id = ?',
+          [presetId]
+        );
       }
 
       await conn.commit();

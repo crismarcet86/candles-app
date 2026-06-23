@@ -6,9 +6,10 @@
       <h1 class="page-title">📈 Reportes</h1>
       <p class="page-subtitle">Resumen de actividad y métricas del negocio</p>
     </div>
-    <button class="btn btn-pdf" (click)="downloadPdf()">
-      ⬇️ Descargar PDF
-    </button>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="loadAll()">🔄 Buscar</button>
+      <button class="btn btn-pdf" (click)="downloadPdf()">⬇️ Descargar PDF</button>
+    </div>
   </div>
 
   <!-- ── Error Alert ─────────────────────────────────────────── -->

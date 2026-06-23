@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { ProformasService } from '../proformas.service';
 import { environment } from '../../../../environments/environment';
+import { CalculationPresetsService, CalcPreset } from '../../calculator/calculation-presets.service';
 
 @Component({
   selector: 'app-proformas-form',
@@ -19,12 +20,18 @@ export class ProformasFormComponent implements OnInit {
   errorMsg = '';
   clients: any[] = [];
 
+  // Presets de calculadora
+  presets: CalcPreset[] = [];
+  presetsModal = false;
+  loadingPresets = false;
+
   constructor(
     private fb: FormBuilder,
     private service: ProformasService,
     private router: Router,
     private route: ActivatedRoute,
-    private http: HttpClient
+    private http: HttpClient,
+    private presetsService: CalculationPresetsService
   ) {}
 
   ngOnInit(): void {
@@ -66,9 +73,10 @@ export class ProformasFormComponent implements OnInit {
         while (this.items.length) this.items.removeAt(0);
         (p.items || []).forEach((item: any) => {
           this.items.push(this.fb.group({
-            description: [item.description || item.product_name || '', Validators.required],
+            description: [item.description || item.preset_name || item.product_name || '', Validators.required],
             quantity:    [item.quantity, [Validators.required, Validators.min(0.001)]],
-            unit_price:  [item.unit_price, [Validators.required, Validators.min(0)]]
+            unit_price:  [item.unit_price, [Validators.required, Validators.min(0)]],
+            preset_id:   [item.preset_id || null]
           }));
         });
         this.loadingData = false;
@@ -83,8 +91,28 @@ export class ProformasFormComponent implements OnInit {
     this.items.push(this.fb.group({
       description: ['', Validators.required],
       quantity:    [1,  [Validators.required, Validators.min(0.001)]],
-      unit_price:  [0,  [Validators.required, Validators.min(0)]]
+      unit_price:  [0,  [Validators.required, Validators.min(0)]],
+      preset_id:   [null]
     }));
+  }
+
+  openPresetsModal(): void {
+    this.presetsModal = true;
+    this.loadingPresets = true;
+    this.presetsService.getAll().subscribe({
+      next: r => { this.presets = r.data; this.loadingPresets = false; },
+      error: () => { this.loadingPresets = false; }
+    });
+  }
+
+  addFromPreset(preset: CalcPreset): void {
+    this.items.push(this.fb.group({
+      description: [preset.name, Validators.required],
+      quantity:    [preset.quantity, [Validators.required, Validators.min(0.001)]],
+      unit_price:  [preset.sell_price, [Validators.required, Validators.min(0)]],
+      preset_id:   [preset.id]
+    }));
+    this.presetsModal = false;
   }
 
   removeItem(i: number): void {
@@ -120,7 +148,8 @@ export class ProformasFormComponent implements OnInit {
       items: val.items.map((it: any) => ({
         description: it.description,
         quantity:    +it.quantity,
-        unit_price:  +it.unit_price
+        unit_price:  +it.unit_price,
+        preset_id:   it.preset_id || null
       }))
     };
     const req = this.isEdit
