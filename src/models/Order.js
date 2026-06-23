@@ -27,9 +27,10 @@ class Order {
         p.name         AS product_name,
         u.abbreviation AS unit_abbr
       FROM order_items oi
-      JOIN products p ON oi.product_id = p.id
-      JOIN units    u ON p.unit_id     = u.id
+      LEFT JOIN products p ON oi.product_id = p.id
+      LEFT JOIN units    u ON p.unit_id     = u.id
       WHERE oi.order_id = ?
+      ORDER BY oi.id
     `, [id]);
 
     return { ...orders[0], items };

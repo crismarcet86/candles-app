@@ -50,9 +50,9 @@
           </thead>
           <tbody>
             <tr *ngFor="let item of order.items">
-              <td>{{ item.product_name }}</td>
-              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }} / {{ item.unit_abbr }}</td>
-              <td class="td-num">{{ item.quantity | number:'1.0-3' }} {{ item.unit_abbr }}</td>
+              <td>{{ item.description || item.product_name || '—' }}</td>
+              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }}</td>
+              <td class="td-num">{{ item.quantity | number:'1.0-3' }}</td>
               <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
             </tr>
           </tbody>
