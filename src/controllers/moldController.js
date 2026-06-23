@@ -45,6 +45,8 @@ exports.getPdf = async (req, res, next) => {
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = molds.map(m => [
       m.name,
+      m.mold_type_name || '—',
+      m.total_grams != null ? m.total_grams : '—',
       m.wax_grams,
       m.description || '—',
       m.is_active === 1 ? 'Activo' : 'Inactivo',
@@ -52,9 +54,9 @@ exports.getPdf = async (req, res, next) => {
     const pdf = await generateListPDF({
       title: 'Listado de Moldes',
       subtitle, businessName, logoPath,
-      headers: ['NOMBRE', 'CERA (g)', 'DESCRIPCIÓN', 'ESTADO'],
-      widths:  [200, 90, 145, 60],
-      aligns:  ['left', 'right', 'left', 'left'],
+      headers: ['NOMBRE', 'TIPO', 'PESO TOTAL (g)', 'CERA (g)', 'DESCRIPCIÓN', 'ESTADO'],
+      widths:  [130, 80, 75, 65, 100, 55],
+      aligns:  ['left', 'left', 'right', 'right', 'left', 'left'],
       rows,
     });
     res.setHeader('Content-Type', 'application/pdf');

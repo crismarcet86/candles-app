@@ -6,8 +6,9 @@ class Product {
     const [rows] = await pool.query(`
       SELECT
         p.*,
-        c.name   AS category_name,
-        u.name   AS unit_name,
+        c.name         AS category_name,
+        c.is_fragrance AS is_fragrance,
+        u.name         AS unit_name,
         u.abbreviation AS unit_abbr
       FROM products p
       JOIN categories c ON p.category_id = c.id
@@ -22,8 +23,9 @@ class Product {
     const [rows] = await pool.query(`
       SELECT
         p.*,
-        c.name   AS category_name,
-        u.name   AS unit_name,
+        c.name         AS category_name,
+        c.is_fragrance AS is_fragrance,
+        u.name         AS unit_name,
         u.abbreviation AS unit_abbr
       FROM products p
       JOIN categories c ON p.category_id = c.id
@@ -67,6 +69,14 @@ class Product {
     if (result.affectedRows === 0) {
       throw new Error(`Stock insuficiente para el producto id=${id}`);
     }
+    return this.findById(id);
+  }
+
+  static async setStock(id, newStock) {
+    await pool.query(
+      'UPDATE products SET stock = ?, updated_at = NOW() WHERE id = ?',
+      [newStock, id]
+    );
     return this.findById(id);
   }
 

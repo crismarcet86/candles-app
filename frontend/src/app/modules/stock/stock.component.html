@@ -4,28 +4,39 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">📦 Stock</h1>
-      <p class="page-subtitle">Visualiza y ajusta el inventario de ingredientes</p>
+      <p class="page-subtitle" *ngIf="!inventoryMode">Visualizá y ajustá el inventario de ingredientes</p>
+      <p class="page-subtitle" *ngIf="inventoryMode">Ingresá el stock real contado de cada ítem</p>
     </div>
-    <div class="header-actions">
+    <div class="header-actions" *ngIf="!inventoryMode">
       <button class="btn-outline" (click)="downloadPdf()" [disabled]="pdfLoading">
         <span *ngIf="!pdfLoading">⬇️ PDF</span>
         <span *ngIf="pdfLoading">...</span>
       </button>
       <button class="btn-outline" (click)="load()">🔄 Buscar</button>
+      <button class="btn-inventory" (click)="openInventory()">📋 Toma de inventario</button>
+    </div>
+    <div class="header-actions" *ngIf="inventoryMode">
+      <span class="inventory-counter">{{ inventoryFilledCount }} / {{ countRows.length }} contados</span>
+      <button class="btn-outline" (click)="cancelInventory()" [disabled]="inventorySaving">Cancelar</button>
+      <button class="btn-primary" (click)="saveInventory()"
+              [disabled]="inventoryFilledCount === 0 || inventorySaving">
+        <span *ngIf="!inventorySaving">💾 Guardar inventario</span>
+        <span *ngIf="inventorySaving" class="spinner"></span>
+      </button>
     </div>
   </div>
 
   <!-- Alerts -->
   <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
-  <div class="alert alert-error"   *ngIf="errorMsg && !modalProduct">{{ errorMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg && !modalProduct && !writeOffProduct">{{ errorMsg }}</div>
 
   <!-- Loading skeleton -->
   <div class="card" *ngIf="loading">
     <div class="skeleton-row" *ngFor="let i of [1,2,3,4,5]"></div>
   </div>
 
-  <!-- Table -->
-  <div class="card" *ngIf="!loading">
+  <!-- ── Stock normal ───────────────────────────────────── -->
+  <div class="card" *ngIf="!loading && !inventoryMode">
     <div class="table-wrapper">
       <table class="data-table">
         <thead>
@@ -43,7 +54,7 @@
           <tr *ngIf="items.length === 0">
             <td colspan="7" class="empty-state">No hay ingredientes registrados</td>
           </tr>
-          <tr *ngFor="let p of items" [class.row-inactive]="p.is_active === 0">
+          <tr *ngFor="let p of items">
             <td>{{ p.name }}</td>
             <td>{{ p.category_name }}</td>
             <td>{{ p.unit_abbr }}</td>
@@ -57,11 +68,60 @@
               </span>
             </td>
             <td class="td-actions">
-              <button class="btn-add" (click)="openModal(p)"
-                      [disabled]="p.is_active === 0"
-                      title="Agregar stock">
-                + Agregar
-              </button>
+              <button class="btn-add" (click)="openModal(p)" title="Agregar stock">+ Agregar</button>
+              <button class="btn-writeoff" (click)="openWriteOff(p)" title="Dar de baja por daño">↓ Baja</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Toma de inventario ─────────────────────────────── -->
+  <div class="card" *ngIf="!loading && inventoryMode">
+    <div class="inventory-hint">
+      Completá solo los ítems que contaste. Los que dejes vacíos no se modificarán.
+    </div>
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ingrediente</th>
+            <th>Categoría</th>
+            <th>Unidad</th>
+            <th class="th-num">Stock registrado</th>
+            <th class="th-num">Stock contado</th>
+            <th class="th-num">Diferencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of countRows"
+              [class.row-filled]="row.realStock !== null"
+              [class.row-diff-pos]="getDiff(row) !== null && getDiff(row)! > 0"
+              [class.row-diff-neg]="getDiff(row) !== null && getDiff(row)! < 0">
+            <td><strong>{{ row.product.name }}</strong></td>
+            <td>{{ row.product.category_name }}</td>
+            <td>{{ row.product.unit_abbr }}</td>
+            <td class="td-num">{{ row.product.stock | number:'1.0-3' }}</td>
+            <td class="td-num td-input">
+              <input type="number"
+                     [(ngModel)]="row.realStock"
+                     min="0" step="0.001"
+                     (keydown)="blockInvalidKey($event)"
+                     placeholder="—"
+                     class="count-input">
+            </td>
+            <td class="td-num">
+              <span *ngIf="getDiff(row) === null" class="text-muted">—</span>
+              <span *ngIf="getDiff(row) !== null && getDiff(row)! > 0" class="diff-pos">
+                +{{ getDiff(row)! | number:'1.0-3' }}
+              </span>
+              <span *ngIf="getDiff(row) !== null && getDiff(row)! === 0" class="diff-zero">
+                =
+              </span>
+              <span *ngIf="getDiff(row) !== null && getDiff(row)! < 0" class="diff-neg">
+                {{ getDiff(row)! | number:'1.0-3' }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -71,7 +131,7 @@
 
 </div>
 
-<!-- Modal agregar stock -->
+<!-- ── Modal agregar stock ───────────────────────────────── -->
 <div class="modal-backdrop" *ngIf="modalProduct">
   <div class="modal">
     <h3>Agregar stock</h3>
@@ -84,16 +144,11 @@
 
     <div class="field">
       <label>Cantidad a agregar ({{ modalProduct.unit_abbr }})</label>
-      <input
-        type="number"
-        min="0.001"
-        step="any"
-        [(ngModel)]="addQty"
-        (keydown)="blockInvalidKey($event)"
-        placeholder="Ej: 500"
-        class="input"
-        autofocus
-      />
+      <input type="number" min="0.001" step="any"
+             [(ngModel)]="addQty"
+             (keydown)="blockInvalidKey($event)"
+             placeholder="Ej: 500"
+             class="input" autofocus />
     </div>
 
     <div class="new-stock" *ngIf="addQty && addQty > 0">
@@ -105,6 +160,41 @@
       <button class="btn-primary" (click)="confirm()"
               [disabled]="!addQty || addQty <= 0 || saving">
         {{ saving ? 'Guardando...' : 'Confirmar' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal dar de baja ──────────────────────────────────── -->
+<div class="modal-backdrop" *ngIf="writeOffProduct">
+  <div class="modal">
+    <h3>🗑️ Dar de baja por daño</h3>
+    <p class="modal-subtitle">
+      <strong>{{ writeOffProduct.name }}</strong> —
+      Stock actual: <strong>{{ writeOffProduct.stock | number:'1.0-3' }} {{ writeOffProduct.unit_abbr }}</strong>
+    </p>
+
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <div class="field">
+      <label>Cantidad dañada a dar de baja ({{ writeOffProduct.unit_abbr }})</label>
+      <input type="number" min="0.001" step="any"
+             [(ngModel)]="writeOffQty"
+             (keydown)="blockInvalidKey($event)"
+             placeholder="Ej: 50"
+             class="input" autofocus />
+    </div>
+
+    <div class="new-stock writeoff-preview" *ngIf="writeOffQty && writeOffQty > 0">
+      Stock restante: <strong>{{ (+writeOffProduct.stock - +writeOffQty) | number:'1.0-3' }} {{ writeOffProduct.unit_abbr }}</strong>
+      <span *ngIf="writeOffQty > +writeOffProduct.stock" class="warn-text"> — ⚠️ supera el stock disponible</span>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline" (click)="closeWriteOff()" [disabled]="writeOffSaving">Cancelar</button>
+      <button class="btn-danger" (click)="confirmWriteOff()"
+              [disabled]="!writeOffQty || writeOffQty <= 0 || writeOffQty > +writeOffProduct.stock || writeOffSaving">
+        {{ writeOffSaving ? 'Registrando...' : 'Registrar baja' }}
       </button>
     </div>
   </div>

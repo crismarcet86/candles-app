@@ -42,6 +42,22 @@
                   rows="3"></textarea>
       </div>
 
+      <!-- is_fragrance toggle (always visible) -->
+      <div class="form-group form-toggle">
+        <label class="toggle-label">
+          <span>Es fragancia / esencia</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" formControlName="is_fragrance"
+                   [checked]="field('is_fragrance')?.value === 1"
+                   (change)="form.get('is_fragrance')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_fragrance')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_fragrance')?.value === 1 ? 'Sí' : 'No' }}</span>
+          </div>
+        </label>
+      </div>
+
       <!-- is_active toggle (only in edit mode) -->
       <div class="form-group form-toggle" *ngIf="isEdit">
         <label class="toggle-label">

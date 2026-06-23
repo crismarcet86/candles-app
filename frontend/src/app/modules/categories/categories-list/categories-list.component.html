@@ -30,6 +30,7 @@
           <tr>
             <th>Nombre</th>
             <th>Descripción</th>
+            <th>Fragancia</th>
             <th>Estado</th>
             <th>Fecha</th>
             <th class="th-actions">Acciones</th>
@@ -37,13 +38,17 @@
         </thead>
         <tbody>
           <tr *ngIf="categories.length === 0">
-            <td colspan="5" class="empty-state">No hay categorías registradas</td>
+            <td colspan="6" class="empty-state">No hay categorías registradas</td>
           </tr>
           <tr *ngFor="let category of categories" [class.row-inactive]="category.is_active === 0">
             <td>{{ category.name }}</td>
             <td>
               <span *ngIf="category.description">{{ category.description }}</span>
               <span *ngIf="!category.description" class="text-muted">—</span>
+            </td>
+            <td>
+              <span *ngIf="category.is_fragrance === 1" class="badge-fragrance">🌸 Sí</span>
+              <span *ngIf="category.is_fragrance !== 1" class="text-muted">—</span>
             </td>
             <td>
               <span class="badge"

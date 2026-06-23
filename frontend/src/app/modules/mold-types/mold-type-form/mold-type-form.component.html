@@ -1,0 +1,48 @@
+<div class="page">
+  <div class="page-header">
+    <button class="btn-back" (click)="cancel()">← Volver</button>
+    <h1 class="page-title">{{ isEdit ? 'Editar tipo de molde' : 'Nuevo tipo de molde' }}</h1>
+  </div>
+
+  <div class="card skeleton-card" *ngIf="loadingData">
+    <div class="skeleton-field" *ngFor="let i of [1,2]"></div>
+  </div>
+
+  <div class="card" *ngIf="!loadingData">
+    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+
+      <div class="form-group">
+        <label>Nombre del tipo <span class="required">*</span></label>
+        <input type="text" formControlName="name" placeholder="Ej: Cilíndrico, Cuadrado, Corazón"
+               [class.invalid]="field('name')?.invalid && field('name')?.touched">
+        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">Requerido</span>
+        <span class="field-error" *ngIf="field('name')?.hasError('minlength') && field('name')?.touched">Mínimo 2 caracteres</span>
+      </div>
+
+      <div class="form-group form-toggle" *ngIf="isEdit">
+        <label class="toggle-label">
+          <span>Estado</span>
+          <div class="toggle-wrapper">
+            <input type="checkbox" formControlName="is_active"
+                   [checked]="field('is_active')?.value === 1"
+                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+              <span class="toggle-knob"></span>
+            </span>
+            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+          </div>
+        </label>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">Cancelar</button>
+        <button type="submit" class="btn-primary" [disabled]="loading">
+          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear tipo' }}</span>
+          <span *ngIf="loading" class="spinner"></span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

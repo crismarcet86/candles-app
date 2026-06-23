@@ -14,18 +14,18 @@ class Category {
     return rows[0] || null;
   }
 
-  static async create({ name, description }) {
+  static async create({ name, description, is_fragrance }) {
     const [result] = await pool.query(
-      'INSERT INTO categories (name, description) VALUES (?, ?)',
-      [name, description || null]
+      'INSERT INTO categories (name, description, is_fragrance) VALUES (?, ?, ?)',
+      [name, description || null, is_fragrance ? 1 : 0]
     );
     return this.findById(result.insertId);
   }
 
-  static async update(id, { name, description, is_active }) {
+  static async update(id, { name, description, is_active, is_fragrance }) {
     await pool.query(
-      'UPDATE categories SET name = ?, description = ?, is_active = ?, updated_at = NOW() WHERE id = ?',
-      [name, description ?? null, is_active ?? 1, id]
+      'UPDATE categories SET name = ?, description = ?, is_active = ?, is_fragrance = ?, updated_at = NOW() WHERE id = ?',
+      [name, description ?? null, is_active ?? 1, is_fragrance ? 1 : 0, id]
     );
     return this.findById(id);
   }

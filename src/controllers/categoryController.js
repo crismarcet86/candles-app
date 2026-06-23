@@ -18,14 +18,15 @@ exports.getPdf = async (req, res, next) => {
     const rows = categories.map(cat => [
       cat.name,
       cat.description || '—',
+      cat.is_fragrance === 1 ? 'Sí' : 'No',
       cat.is_active === 1 ? 'Activa' : 'Inactiva',
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Categorías',
       subtitle, businessName, logoPath,
-      headers: ['NOMBRE', 'DESCRIPCIÓN', 'ESTADO'],
-      widths:  [200, 235, 60],
-      aligns:  ['left', 'left', 'left'],
+      headers: ['NOMBRE', 'DESCRIPCIÓN', 'FRAGANCIA', 'ESTADO'],
+      widths:  [170, 190, 65, 60],
+      aligns:  ['left', 'left', 'center', 'left'],
       rows,
     });
     res.setHeader('Content-Type', 'application/pdf');

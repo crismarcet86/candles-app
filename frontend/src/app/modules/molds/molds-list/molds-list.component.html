@@ -24,6 +24,8 @@
         <thead>
           <tr>
             <th>Nombre</th>
+            <th>Tipo</th>
+            <th class="th-num">Peso total (g)</th>
             <th class="th-num">Cera (g)</th>
             <th>Descripción</th>
             <th>Estado</th>
@@ -32,10 +34,18 @@
         </thead>
         <tbody>
           <tr *ngIf="molds.length === 0">
-            <td colspan="5" class="empty-state">No hay moldes registrados</td>
+            <td colspan="7" class="empty-state">No hay moldes registrados</td>
           </tr>
           <tr *ngFor="let m of molds" [class.row-inactive]="m.is_active === 0">
             <td><strong>{{ m.name }}</strong></td>
+            <td>
+              <span *ngIf="m.mold_type_name" class="type-badge">{{ m.mold_type_name }}</span>
+              <span *ngIf="!m.mold_type_name" class="text-muted">—</span>
+            </td>
+            <td class="td-num">
+              <span *ngIf="m.total_grams">{{ m.total_grams | number:'1.0-1' }} g</span>
+              <span *ngIf="!m.total_grams" class="text-muted">—</span>
+            </td>
             <td class="td-num">
               <span class="wax-badge">{{ m.wax_grams | number:'1.0-1' }} g</span>
             </td>

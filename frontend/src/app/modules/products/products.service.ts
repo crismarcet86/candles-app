@@ -39,4 +39,12 @@ export class ProductsService {
   addStock(id: number, quantity: number): Observable<ApiResponse<Product>> {
     return this.http.patch<ApiResponse<Product>>(`${this.base}/${id}/stock`, { quantity });
   }
+
+  writeOffStock(id: number, quantity: number): Observable<ApiResponse<Product>> {
+    return this.http.patch<ApiResponse<Product>>(`${this.base}/${id}/writeoff`, { quantity });
+  }
+
+  inventoryCount(items: { product_id: number; real_stock: number }[]): Observable<ApiResponse<Product[]>> {
+    return this.http.post<ApiResponse<Product[]>>(`${this.base}/inventory-count`, { items });
+  }
 }

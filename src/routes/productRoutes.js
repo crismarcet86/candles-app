@@ -24,5 +24,15 @@ router.patch('/:id/stock', requireAuth,
   validate,
   ctrl.addStock
 );
+router.patch('/:id/writeoff', requireAuth,
+  body('quantity').isFloat({ min: 0.001 }).withMessage('Cantidad debe ser mayor a 0'),
+  validate,
+  ctrl.writeOffStock
+);
+router.post('/inventory-count', requireAuth,
+  body('items').isArray({ min: 1 }).withMessage('Se requieren ítems'),
+  validate,
+  ctrl.inventoryCount
+);
 
 module.exports = router;

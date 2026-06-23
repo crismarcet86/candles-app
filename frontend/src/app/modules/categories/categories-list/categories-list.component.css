@@ -210,3 +210,5 @@
   gap: 0.75rem;
   justify-content: flex-end;
 }
+
+.badge-fragrance { display: inline-block; background: #fdf4ff; color: #a21caf; border: 1px solid #f0abfc; border-radius: 20px; padding: 0.1rem 0.55rem; font-size: 0.75rem; font-weight: 600; }

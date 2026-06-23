@@ -1,0 +1,62 @@
+<div class="page">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">🫧 Tipos de molde</h1>
+      <p class="page-subtitle">Clasifica los moldes por tipo (cilíndrico, cuadrado, etc.)</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-outline" (click)="load()">🔄 Buscar</button>
+      <button class="btn-primary" (click)="goToNew()">+ Nuevo tipo</button>
+    </div>
+  </div>
+
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
+
+  <div class="card" *ngIf="loading">
+    <div class="skeleton-row" *ngFor="let i of [1,2,3,4]"></div>
+  </div>
+
+  <div class="card" *ngIf="!loading">
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Estado</th>
+            <th class="th-actions">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="types.length === 0">
+            <td colspan="3" class="empty-state">No hay tipos de molde registrados</td>
+          </tr>
+          <tr *ngFor="let t of types" [class.row-inactive]="t.is_active === 0">
+            <td><strong>{{ t.name }}</strong></td>
+            <td>
+              <span class="badge" [class.badge-active]="t.is_active === 1" [class.badge-inactive]="t.is_active === 0">
+                {{ t.is_active === 1 ? 'Activo' : 'Inactivo' }}
+              </span>
+            </td>
+            <td class="td-actions">
+              <button class="btn-action" (click)="goToEdit(t.id)" title="Editar">✏️</button>
+              <button class="btn-action" (click)="askDeactivate(t.id)"
+                      [disabled]="t.is_active === 0" title="Desactivar">🚫</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null">
+    <div class="modal">
+      <h3>¿Desactivar tipo de molde?</h3>
+      <p>Los moldes con este tipo conservarán su asignación. Podés reactivarlo editándolo.</p>
+      <div class="modal-actions">
+        <button class="btn-outline" (click)="cancelDeactivate()">Cancelar</button>
+        <button class="btn-danger"  (click)="confirmDeactivate()">Sí, desactivar</button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -26,9 +26,10 @@ export class SidebarComponent implements OnInit {
     {
       title: 'Mantenimiento',
       items: [
-        { label: 'Categorías',   icon: '🏷️',  route: '/dashboard/categories' },
-        { label: 'Unidades',     icon: '📏',  route: '/dashboard/units' },
-        { label: 'Moldes',       icon: '🫙',  route: '/dashboard/molds' },
+        { label: 'Categorías',    icon: '🏷️',  route: '/dashboard/categories' },
+        { label: 'Unidades',      icon: '📏',  route: '/dashboard/units' },
+        { label: 'Tipos de molde',icon: '🫧',  route: '/dashboard/mold-types' },
+        { label: 'Moldes',        icon: '🫙',  route: '/dashboard/molds' },
         { label: 'Ingredientes', icon: '📦',  route: '/dashboard/products' },
         { label: 'Stock',        icon: '🏭',  route: '/dashboard/stock' },
         { label: 'Clientes',     icon: '👥',  route: '/dashboard/clients' }

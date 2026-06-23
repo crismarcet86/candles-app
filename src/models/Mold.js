@@ -2,38 +2,50 @@ const { pool } = require('../config/database');
 
 class Mold {
   static async findAll() {
-    const [rows] = await pool.query(
-      'SELECT * FROM molds ORDER BY name'
-    );
+    const [rows] = await pool.query(`
+      SELECT m.*, mt.name AS mold_type_name
+      FROM molds m
+      LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
+      ORDER BY m.name
+    `);
     return rows;
   }
 
   static async findAllActive() {
-    const [rows] = await pool.query(
-      'SELECT * FROM molds WHERE is_active = 1 ORDER BY name'
-    );
+    const [rows] = await pool.query(`
+      SELECT m.*, mt.name AS mold_type_name
+      FROM molds m
+      LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
+      WHERE m.is_active = 1
+      ORDER BY m.name
+    `);
     return rows;
   }
 
   static async findById(id) {
-    const [[row]] = await pool.query('SELECT * FROM molds WHERE id = ?', [id]);
+    const [[row]] = await pool.query(`
+      SELECT m.*, mt.name AS mold_type_name
+      FROM molds m
+      LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
+      WHERE m.id = ?
+    `, [id]);
     return row || null;
   }
 
-  static async create({ name, wax_grams, description }) {
+  static async create({ name, wax_grams, total_grams, mold_type_id, description }) {
     const [result] = await pool.query(
-      'INSERT INTO molds (name, wax_grams, description) VALUES (?, ?, ?)',
-      [name, wax_grams, description || null]
+      'INSERT INTO molds (name, wax_grams, total_grams, mold_type_id, description) VALUES (?, ?, ?, ?, ?)',
+      [name, wax_grams, total_grams || null, mold_type_id || null, description || null]
     );
     return this.findById(result.insertId);
   }
 
-  static async update(id, { name, wax_grams, description, is_active }) {
+  static async update(id, { name, wax_grams, total_grams, mold_type_id, description, is_active }) {
     await pool.query(
       `UPDATE molds
-       SET name=?, wax_grams=?, description=?, is_active=?, updated_at=NOW()
+       SET name=?, wax_grams=?, total_grams=?, mold_type_id=?, description=?, is_active=?, updated_at=NOW()
        WHERE id=?`,
-      [name, wax_grams, description || null, is_active ?? 1, id]
+      [name, wax_grams, total_grams || null, mold_type_id || null, description || null, is_active ?? 1, id]
     );
     return this.findById(id);
   }

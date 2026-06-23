@@ -37,9 +37,10 @@ export class CategoriesFormComponent implements OnInit {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      name:        ['', [Validators.required, Validators.minLength(2)]],
-      description: [''],
-      is_active:   [1]
+      name:         ['', [Validators.required, Validators.minLength(2)]],
+      description:  [''],
+      is_fragrance: [0],
+      is_active:    [1]
     });
   }
 
@@ -49,9 +50,10 @@ export class CategoriesFormComponent implements OnInit {
       next: res => {
         const c = res.data;
         this.form.patchValue({
-          name:        c.name,
-          description: c.description ?? '',
-          is_active:   c.is_active
+          name:         c.name,
+          description:  c.description ?? '',
+          is_fragrance: c.is_fragrance ?? 0,
+          is_active:    c.is_active
         });
         this.loadingData = false;
       },
@@ -69,8 +71,9 @@ export class CategoriesFormComponent implements OnInit {
 
     const value = this.form.value;
     const payload: any = {
-      name:        value.name,
-      description: value.description || null
+      name:         value.name,
+      description:  value.description || null,
+      is_fragrance: value.is_fragrance ? 1 : 0
     };
 
     if (this.isEdit) {

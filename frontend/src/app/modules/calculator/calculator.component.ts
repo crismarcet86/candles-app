@@ -10,6 +10,7 @@ interface Ingredient {
   unit_abbr: string;
   unit_name: string;
   category_name: string;
+  is_fragrance: number;  // 1 si su categoría es fragancia
 }
 
 interface Mold {
@@ -27,6 +28,7 @@ interface CalcLine {
   is_unit: boolean;      // true si se cobra por unidad (pabilo), false si por gramo
   subtotal: number;
   isWaxLine?: boolean;   // true = línea de cera, recibe gramos del molde automáticamente
+  fragrance_pct?: number | null; // % de fragancia aplicado sobre wax_grams del molde
 }
 
 @Component({
@@ -47,6 +49,7 @@ export class CalculatorComponent implements OnInit {
   sellPrice: number = 0;
   quantity: number  = 1;  // cuántas velas se calcula
   marginTarget: number = 0; // % de margen deseado
+  includesColor: boolean = false;
 
   loadingMolds = true;
   loadingIngredients = true;
@@ -82,7 +85,8 @@ export class CalculatorComponent implements OnInit {
           price: Number(p.price),
           unit_abbr: p.unit_abbr,
           unit_name: p.unit_name,
-          category_name: p.category_name
+          category_name: p.category_name,
+          is_fragrance: p.is_fragrance ?? 0
         }));
       this.loadingIngredients = false;
     });
@@ -106,7 +110,8 @@ export class CalculatorComponent implements OnInit {
       unit_abbr: 'g',
       is_unit: false,
       subtotal: 0,
-      isWaxLine: false
+      isWaxLine: false,
+      fragrance_pct: null
     };
   }
 
@@ -116,14 +121,25 @@ export class CalculatorComponent implements OnInit {
 
   removeLine(i: number): void {
     this.lines.splice(i, 1);
+    this.recalcWaxLine();
   }
 
   onIngredientChange(line: CalcLine): void {
+    const hadFragrance = (line.fragrance_pct || 0) > 0;
+
     const ing = this.ingredients.find(i => i.id === +line.ingredient_id!);
     if (!ing) return;
 
     line.ingredient_name = ing.name;
     line.unit_abbr       = ing.unit_abbr;
+
+    // Si el nuevo ingrediente no es fragancia, limpiar el % y los gramos calculados
+    if (!ing.is_fragrance) {
+      line.fragrance_pct = null;
+      if (hadFragrance) {
+        line.grams = 0;
+      }
+    }
 
     // Determinar si es por gramo (kg/g) o por unidad
     const unitLower = ing.unit_abbr.toLowerCase();
@@ -139,12 +155,40 @@ export class CalculatorComponent implements OnInit {
       line.unit_cost = ing.price;
     }
 
-    // Línea de cera: auto-llenar con los gramos del molde
+    // Línea de cera: auto-llenar con los gramos del molde menos fragrancias ya definidas
     if (line.isWaxLine && this.selectedMold) {
-      line.grams = this.selectedMold.wax_grams;
+      const fragranceGrams = this.lines
+        .filter(l => !l.isWaxLine && (l.fragrance_pct || 0) > 0)
+        .reduce((sum, l) => sum + (l.grams || 0), 0);
+      line.grams = Math.round((this.selectedMold.wax_grams - fragranceGrams) * 100) / 100;
     }
 
     this.recalcLine(line);
+    // Recalcular cera si había fragancia y fue removida
+    if (hadFragrance && !ing.is_fragrance) {
+      this.recalcWaxLine();
+    }
+  }
+
+  onFragrancePctChange(line: CalcLine): void {
+    if (!this.selectedMold) return;
+    const pct = Number(line.fragrance_pct) || 0;
+    if (pct > 0) {
+      line.grams = Math.round(this.selectedMold.wax_grams * (pct / 100) * 100) / 100;
+    }
+    this.recalcLine(line);
+    this.recalcWaxLine();
+  }
+
+  recalcWaxLine(): void {
+    if (!this.selectedMold) return;
+    const waxLine = this.lines.find(l => l.isWaxLine);
+    if (!waxLine) return;
+    const fragranceGrams = this.lines
+      .filter(l => !l.isWaxLine && (l.fragrance_pct || 0) > 0)
+      .reduce((sum, l) => sum + (l.grams || 0), 0);
+    waxLine.grams = Math.round((this.selectedMold.wax_grams - fragranceGrams) * 100) / 100;
+    this.recalcLine(waxLine);
   }
 
   recalcLine(line: CalcLine): void {
@@ -156,7 +200,8 @@ export class CalculatorComponent implements OnInit {
   }
 
   get totalCostPerCandle(): number {
-    return this.lines.reduce((sum, l) => sum + (l.subtotal || 0), 0);
+    const linesCost = this.lines.reduce((sum, l) => sum + (l.subtotal || 0), 0);
+    return linesCost + (this.includesColor ? 0.10 : 0);
   }
 
   get totalCost(): number {
@@ -356,6 +401,13 @@ export class CalculatorComponent implements OnInit {
     this.marginTarget = 0;
     this.editingPresetId = null;
     this.saveSuccess = '';
+    this.includesColor = false;
+  }
+
+  isFragranceLine(line: CalcLine): boolean {
+    if (!line.ingredient_id || line.isWaxLine || line.is_unit) return false;
+    const ing = this.ingredients.find(i => i.id === +line.ingredient_id!);
+    return !!ing && ing.is_fragrance === 1;
   }
 
   getCategories(): string[] {

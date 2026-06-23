@@ -19,6 +19,33 @@ exports.addStock = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+exports.writeOffStock = async (req, res, next) => {
+  try {
+    const { quantity } = req.body; // positivo desde el cliente, se resta
+    const p = await Product.findById(req.params.id);
+    if (!p) return notFound(res, 'Producto no encontrado');
+    if (+quantity <= 0) return res.status(400).json({ ok: false, message: 'La cantidad debe ser mayor a 0' });
+    const updated = await Product.adjustStock(req.params.id, -Math.abs(+quantity));
+    success(res, updated, 'Baja de stock registrada');
+  } catch (e) { next(e); }
+};
+
+exports.inventoryCount = async (req, res, next) => {
+  try {
+    const { items } = req.body; // [{product_id, real_stock}]
+    if (!Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ ok: false, message: 'Se requieren ítems para la toma de inventario' });
+    }
+    const results = [];
+    for (const item of items) {
+      if (item.real_stock == null || +item.real_stock < 0) continue;
+      const updated = await Product.setStock(item.product_id, +item.real_stock);
+      if (updated) results.push(updated);
+    }
+    success(res, results, `Inventario actualizado: ${results.length} ítems`);
+  } catch (e) { next(e); }
+};
+
 exports.getStockPdf = async (req, res, next) => {
   try {
     const [products, settings] = await Promise.all([Product.findAll(), Settings.get()]);
