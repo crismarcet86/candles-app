@@ -1,6 +1,6 @@
 # 🕯️ Candles App
 
-Sistema de gestión para un emprendimiento de velas artesanales. Permite gestionar ingredientes (cera, esencia, pabilos), moldes, clientes, cotizaciones (proformas) con mano de obra y descuentos, confirmar pedidos descontando stock, calcular costos y exportar reportes en PDF.
+Sistema de gestión para un emprendimiento de velas artesanales. Permite gestionar ingredientes (cera, esencia, pabilos), moldes con tipo y capacidad en gramos, clientes, cotizaciones (proformas) con mano de obra y descuentos, confirmar pedidos descontando stock, calcular costos con fragrancias y color, ajustar inventario y exportar reportes en PDF.
 
 - **Backend:** Node.js + Express + MySQL — puerto 3000
 - **Frontend:** Angular 16 SPA — puerto 4200
@@ -44,12 +44,17 @@ CORS_ORIGIN=http://localhost:4200
 npm install
 ```
 
-### 5. Inicializar la base de datos
+### 5. Inicializar la base de datos (ejecutar en orden)
 ```bash
 npm run db:migrate
 node src/config/migrate-v2.js
 node src/config/migrate-cedula.js
+node src/config/migrate-settings.js
+node src/config/migrate-presets.js
+node src/config/migrate-mold-types.js
 ```
+
+> **Nota:** cada script verifica si la columna/tabla ya existe antes de crearla, por lo que son idempotentes y pueden ejecutarse más de una vez sin error.
 
 ### 6. Instalar dependencias del frontend
 ```bash
@@ -96,22 +101,29 @@ candles-app/
 │   │   ├── database.js        # Pool MySQL
 │   │   ├── migrate.js         # Schema inicial + seeding
 │   │   ├── migrate-v2.js      # Adapta al modelo de velas
-│   │   └── migrate-cedula.js  # Agrega cédula a clientes
-│   ├── models/                # Queries SQL directas
+│   │   ├── migrate-cedula.js  # Agrega cédula a clientes
+│   │   ├── migrate-settings.js # Configuración del negocio (nombre, RUC, logo)
+│   │   ├── migrate-presets.js  # Presets de calculadora vinculados a proformas
+│   │   └── migrate-mold-types.js # Tipos de molde + total_grams en molds
+│   ├── models/                # Queries SQL directas (sin ORM)
 │   ├── controllers/           # Manejo de req/res
-│   ├── routes/                # Rutas + validaciones
+│   ├── routes/                # Rutas + validaciones express-validator
 │   ├── middlewares/           # auth, errorHandler, validate
-│   └── utils/                 # logger, response, pdfProforma, pdfReport
+│   └── utils/                 # logger, response, pdfProforma, pdfReport, pdfList
 ├── frontend/                  # Angular 16 SPA
 │   └── src/app/modules/
 │       ├── auth/              # Login y registro
-│       ├── dashboard/         # Inicio con accesos rápidos
+│       ├── dashboard/         # Inicio con accesos rápidos y métricas
+│       ├── categories/        # Categorías de ingredientes (con flag is_fragrance)
+│       ├── units/             # Unidades de medida
 │       ├── products/          # Ingredientes (cera, esencia, pabilo…)
-│       ├── molds/             # Moldes con capacidad en gramos
+│       ├── stock/             # Stock: agregar, dar de baja, toma de inventario
+│       ├── mold-types/        # Tipos de molde (CRUD)
+│       ├── molds/             # Moldes con tipo, agua y cera en gramos
 │       ├── clients/           # Clientes
 │       ├── proformas/         # Cotizaciones → PDF
 │       ├── orders/            # Pedidos confirmados
-│       ├── calculator/        # Calculadora de costos con margen
+│       ├── calculator/        # Calculadora de costos: fragancia %, color, margen
 │       └── reports/           # Reportes KPI + PDF exportable
 ├── .env.example
 ├── .gitignore
@@ -120,18 +132,35 @@ candles-app/
 
 ---
 
+## Migraciones — detalle
+
+| Script | Qué hace |
+|---|---|
+| `migrate.js` | Schema inicial: users, categories, units, products, clients, proformas, orders |
+| `migrate-v2.js` | Adapta al modelo de velas: molds, labor_cost, items opcionales |
+| `migrate-cedula.js` | Agrega campo `cedula` a clients |
+| `migrate-settings.js` | Tabla `business_settings` (nombre, RUC, teléfono, logo) |
+| `migrate-presets.js` | Tablas `calculation_presets` y `calculation_preset_items`; columna `preset_id` en proforma_items |
+| `migrate-mold-types.js` | Tabla `mold_types`; columnas `total_grams` y `mold_type_id` en molds |
+
+> Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.
+
+---
+
 ## Modelo de datos
 
 ```
 users (autenticación y roles)
 
-categories ←── products (ingredientes) ───→ units
-                        │
-                 proforma_items ──────────→ proformas ───→ clients
-                        │                    (labor_cost, discount)
-                  order_items   ──────────→ orders
+categories (is_fragrance) ←── products (ingredientes) ───→ units
+                                        │
+                                 proforma_items ──────────→ proformas ───→ clients
+                                        │   (preset_id)       (labor_cost, discount)
+                                  order_items   ──────────→ orders
 
-molds (capacidad en gramos — usados en calculadora)
+mold_types ←── molds (total_grams, wax_grams — calculadora)
+
+calculation_presets ←── calculation_preset_items (product_id, grams, unit_abbr)
 ```
 
 ---
@@ -146,12 +175,16 @@ Prefijo base: `/api` | Auth: `Authorization: Bearer <token>`
 | Usuarios | `GET/POST/PUT/DELETE /users` (solo admin) |
 | Categorías | `GET/POST/PUT/DELETE /categories` |
 | Unidades | `GET/POST/PUT/DELETE /units` |
-| Productos | `GET/POST/PUT/DELETE /products` |
-| Moldes | `GET/POST/PUT/DELETE /molds` |
+| Productos | `GET/POST/PUT/DELETE /products` · `GET /products/stock/pdf` |
+| Stock | `PATCH /products/:id/stock` · `PATCH /products/:id/writeoff` · `POST /products/inventory-count` |
+| Tipos de molde | `GET/POST/PUT/DELETE /mold-types` |
+| Moldes | `GET/POST/PUT/DELETE /molds` · `GET /molds/pdf` |
 | Clientes | `GET/POST/PUT/DELETE /clients` |
-| Proformas | `GET/POST/PUT /proformas` · `POST /:id/confirm` · `GET /:id/pdf` |
+| Proformas | `GET/POST/PUT /proformas` · `POST /:id/confirm` · `POST /:id/cancel` · `GET /:id/pdf` |
 | Órdenes | `GET /orders` · `GET /orders/:id` |
+| Calculadora | `GET/POST/PUT/DELETE /calculation-presets` |
 | Reportes | `GET /reports/summary` · `/orders` · `/low-stock` · `/top-clients` · `/pdf` |
+| Configuración | `GET/PUT /settings` |
 
 ---
 
@@ -165,8 +198,6 @@ Prefijo base: `/api` | Auth: `Authorization: Bearer <token>`
 
 ## Resetear contraseña desde consola
 
-Desde la raíz del proyecto (con el `.env` configurado):
-
 ```bash
 node -e "
 const bcrypt = require('bcryptjs');
@@ -179,8 +210,6 @@ bcrypt.hash('NUEVA_CONTRASEÑA', 10).then(hash => {
 }).catch(e => { console.error(e.message); process.exit(1); });
 "
 ```
-
-Reemplazá `NUEVA_CONTRASEÑA` y `EMAIL_DEL_USUARIO` con los valores reales.
 
 Para ver los usuarios registrados:
 ```bash
