@@ -30,7 +30,7 @@
 
       <div class="form-row-two">
         <div class="form-group">
-          <label>Peso total del molde (g)</label>
+          <label>Peso total de agua (g)</label>
           <div class="input-suffix-wrapper">
             <input type="number" formControlName="total_grams"
                    (input)="onTotalGramsChange()"
@@ -39,7 +39,7 @@
                    [class.invalid]="field('total_grams')?.invalid && field('total_grams')?.touched">
             <span class="input-suffix">g</span>
           </div>
-          <span class="field-hint">Peso total incluyendo cera + fragancia + otros</span>
+          <span class="field-hint">Peso del agua al llenar el molde (desplazamiento)</span>
         </div>
 
         <div class="form-group">
@@ -51,7 +51,7 @@
                    [class.invalid]="field('wax_grams')?.invalid && field('wax_grams')?.touched">
             <span class="input-suffix">g</span>
           </div>
-          <span class="field-hint">Se auto-calcula al 90% del peso total</span>
+          <span class="field-hint">Se auto-calcula: agua × 0.90 × 1.05</span>
           <span class="field-error" *ngIf="field('wax_grams')?.hasError('required') && field('wax_grams')?.touched">Requerido</span>
           <span class="field-error" *ngIf="field('wax_grams')?.hasError('min') && field('wax_grams')?.touched">Debe ser mayor a 0</span>
         </div>

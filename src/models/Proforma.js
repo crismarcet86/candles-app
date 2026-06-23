@@ -1,5 +1,24 @@
 const { pool } = require('../config/database');
 
+/**
+ * Convierte gramos (valor del preset) a la unidad nativa del producto.
+ * El stock siempre se guarda en la unidad del producto.
+ * Ejemplos:
+ *   kg : 177.66 g  → 177.66 / 1000 = 0.17766 kg
+ *   lb : 100 g     → 100 / 453.592 = 0.2205 lb
+ *   oz : 50 g      → 50 / 28.3495  = 1.764 oz
+ *   g, ml, u: sin conversión
+ */
+function gramsToNativeUnit(grams, unitAbbr) {
+  const unit = (unitAbbr || '').toLowerCase().trim();
+  switch (unit) {
+    case 'kg': return grams / 1000;
+    case 'lb': return grams / 453.592;
+    case 'oz': return grams / 28.3495;
+    default:   return grams; // g, ml, u, l, etc.
+  }
+}
+
 class Proforma {
   // ── Lectura ──────────────────────────────────────────────────
 
@@ -128,11 +147,19 @@ class Proforma {
       // Verificar stock suficiente para ítems directos con producto
       for (const item of stockItems) {
         const [[product]] = await conn.query(
-          'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
+          `SELECT p.stock, p.name, u.abbreviation AS unit_abbr
+           FROM products p JOIN units u ON p.unit_id = u.id
+           WHERE p.id = ? FOR UPDATE`,
           [item.product_id]
         );
-        if (Number(product.stock) < Number(item.quantity)) {
-          throw new Error(`Stock insuficiente para "${product.name}": disponible ${product.stock}, requerido ${item.quantity}`);
+        // item.quantity se guarda en gramos (o unidades); convertir a unidad nativa
+        const required = gramsToNativeUnit(Number(item.quantity), product.unit_abbr);
+        if (Number(product.stock) < required) {
+          throw new Error(
+            `Stock insuficiente para "${product.name}": ` +
+            `disponible ${Number(product.stock).toFixed(4)} ${product.unit_abbr}, ` +
+            `requerido ${required.toFixed(4)} ${product.unit_abbr}`
+          );
         }
       }
 
@@ -145,17 +172,20 @@ class Proforma {
           [item.preset_id]
         );
         for (const pi of ingredients) {
-          // delta por vela: kg → gramos/1000, g → gramos, unidades → cantidad directa
-          const deltaPerUnit = pi.unit_abbr.toLowerCase() === 'kg'
-            ? Number(pi.grams) / 1000
-            : Number(pi.grams);
+          // grams en el preset siempre son gramos reales; convertir a unidad nativa del producto
+          const deltaPerUnit = gramsToNativeUnit(Number(pi.grams), pi.unit_abbr);
           const totalDelta = deltaPerUnit * Number(item.quantity);
           const [[product]] = await conn.query(
             'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
             [pi.product_id]
           );
           if (Number(product.stock) < totalDelta) {
-            throw new Error(`Stock insuficiente para "${pi.ingredient_name}": disponible ${product.stock}, requerido ${totalDelta.toFixed(4)}`);
+            throw new Error(
+              `Stock insuficiente para "${pi.ingredient_name}": ` +
+              `disponible ${Number(product.stock).toFixed(4)} ${pi.unit_abbr}, ` +
+              `requerido ${totalDelta.toFixed(4)} ${pi.unit_abbr} ` +
+              `(${Number(pi.grams).toFixed(4)} g × ${item.quantity} und.)`
+            );
           }
           presetIngredientDeltas.push({ product_id: pi.product_id, delta: totalDelta, name: pi.ingredient_name });
         }
@@ -183,9 +213,15 @@ class Proforma {
           [orderId, item.product_id, item.description, item.quantity, item.unit_price, item.subtotal]
         );
         if (item.product_id) {
+          // Convertir grams a unidad nativa antes de descontar
+          const [[prod]] = await conn.query(
+            'SELECT u.abbreviation AS unit_abbr FROM products p JOIN units u ON p.unit_id = u.id WHERE p.id = ?',
+            [item.product_id]
+          );
+          const deduction = gramsToNativeUnit(Number(item.quantity), prod?.unit_abbr || 'g');
           await conn.query(
             'UPDATE products SET stock = stock - ?, updated_at=NOW() WHERE id=?',
-            [item.quantity, item.product_id]
+            [deduction, item.product_id]
           );
         }
       }

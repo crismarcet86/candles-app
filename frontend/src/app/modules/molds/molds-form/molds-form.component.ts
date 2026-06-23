@@ -59,7 +59,7 @@ export class MoldsFormComponent implements OnInit {
   onTotalGramsChange(): void {
     const total = Number(this.form.get('total_grams')?.value);
     if (total > 0) {
-      this.form.get('wax_grams')?.setValue(Math.round(total * 0.9 * 100) / 100, { emitEvent: false });
+      this.form.get('wax_grams')?.setValue(Math.round(total * 0.9 * 1.05 * 100) / 100, { emitEvent: false });
     }
   }
 
