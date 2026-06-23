@@ -26,6 +26,7 @@
 .badge-active { background: #f0fdf4; color: #16a34a; }
 .badge-inactive { background: #f3f4f6; color: #9ca3af; }
 .badge-warning { background: #fef3c7; color: #d97706; }
+.badge-fragrance { background: #fdf4ff; color: #a21caf; }
 .text-muted { color: #9ca3af; }
 .empty-state { text-align: center; padding: 3rem 1rem; color: #9ca3af; font-size: 0.9rem; }
 .btn-action { background: none; border: none; cursor: pointer; font-size: 1rem; padding: 0.3rem; border-radius: 4px; transition: background 0.15s; line-height: 1; }

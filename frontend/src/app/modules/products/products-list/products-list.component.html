@@ -43,7 +43,10 @@
           </tr>
           <tr *ngFor="let product of items" [class.row-inactive]="product.is_active === 0">
             <td>{{ product.name }}</td>
-            <td>{{ product.category_name }}</td>
+            <td>
+              {{ product.category_name }}
+              <span class="badge badge-fragrance" *ngIf="product.is_fragrance === 1">Esencia</span>
+            </td>
             <td>{{ product.unit_abbr }}</td>
             <td>${{ product.price | number:'1.2-2' }}</td>
             <td>

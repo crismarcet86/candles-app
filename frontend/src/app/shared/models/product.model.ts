@@ -11,5 +11,6 @@ export interface Product {
   stock: number;
   min_stock: number;
   is_active: number;
+  is_fragrance: number;
   created_at: string;
 }
