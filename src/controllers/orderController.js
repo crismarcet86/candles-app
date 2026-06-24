@@ -27,7 +27,7 @@ exports.getPdf = async (req, res, next) => {
       Settings.get(),
     ]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = orders.map(o => [
       String(o.id).padStart(4, '0'),

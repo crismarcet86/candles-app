@@ -13,7 +13,7 @@ exports.getPdf = async (req, res, next) => {
   try {
     const [categories, settings] = await Promise.all([Category.findAll(), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = categories.map(cat => [
       cat.name,

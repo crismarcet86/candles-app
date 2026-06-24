@@ -50,7 +50,7 @@ exports.getStockPdf = async (req, res, next) => {
   try {
     const [products, settings] = await Promise.all([Product.findAll(), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = products.map(p => {
       const low = Number(p.min_stock) > 0 && Number(p.stock) <= Number(p.min_stock);
@@ -81,7 +81,7 @@ exports.getPdf = async (req, res, next) => {
   try {
     const [products, settings] = await Promise.all([Product.findAll(), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = products.map(p => [
       p.name,

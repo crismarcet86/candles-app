@@ -10,13 +10,17 @@ const buildLogoUrl = (req, logo_path) => {
 
 const formatSettings = (req, row) => {
   if (!row) return null;
-  return { ...row, logo_url: buildLogoUrl(req, row.logo_path) };
+  return {
+    ...row,
+    logo_url:        buildLogoUrl(req, row.logo_path),
+    report_logo_url: buildLogoUrl(req, row.report_logo_path),
+  };
 };
 
 exports.getSettings = async (req, res, next) => {
   try {
     const row = await Settings.get();
-    success(res, formatSettings(req, row) || { id: 1, name: 'Mi Negocio', ruc: null, phone: null, observations: null, logo_path: null, logo_url: null });
+    success(res, formatSettings(req, row) || { id: 1, name: 'Mi Negocio', ruc: null, phone: null, observations: null, logo_path: null, logo_url: null, report_logo_path: null, report_logo_url: null });
   } catch (err) { next(err); }
 };
 
@@ -33,6 +37,14 @@ exports.uploadLogo = async (req, res, next) => {
   try {
     if (!req.file) return badRequest(res, 'No se recibió ningún archivo');
     const row = await Settings.updateLogo(req.file.filename);
+    success(res, formatSettings(req, row));
+  } catch (err) { next(err); }
+};
+
+exports.uploadReportLogo = async (req, res, next) => {
+  try {
+    if (!req.file) return badRequest(res, 'No se recibió ningún archivo');
+    const row = await Settings.updateReportLogo(req.file.filename);
     success(res, formatSettings(req, row));
   } catch (err) { next(err); }
 };

@@ -27,6 +27,15 @@ class Settings {
     `, [logo_path]);
     return this.get();
   }
+
+  static async updateReportLogo(report_logo_path) {
+    await pool.query(`
+      INSERT INTO business_settings (id, report_logo_path)
+      VALUES (1, ?)
+      ON DUPLICATE KEY UPDATE report_logo_path = VALUES(report_logo_path)
+    `, [report_logo_path]);
+    return this.get();
+  }
 }
 
 module.exports = Settings;

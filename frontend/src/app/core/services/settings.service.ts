@@ -19,6 +19,7 @@ export class SettingsService {
   get current() { return this._settings.value; }
   get businessName(): string { return this.current?.name || 'Mi Negocio'; }
   get logoUrl(): string | null { return this.current?.logo_url || null; }
+  get reportLogoUrl(): string | null { return this.current?.report_logo_url || null; }
 
   update(data: { name: string; ruc?: string; phone?: string; observations?: string }): Observable<any> {
     return this.http.put<any>(`${environment.apiUrl}/settings`, data).pipe(
@@ -30,6 +31,14 @@ export class SettingsService {
     const fd = new FormData();
     fd.append('logo', file);
     return this.http.post<any>(`${environment.apiUrl}/settings/logo`, fd).pipe(
+      tap(res => { if (res.ok) this._settings.next(res.data); })
+    );
+  }
+
+  uploadReportLogo(file: File): Observable<any> {
+    const fd = new FormData();
+    fd.append('report_logo', file);
+    return this.http.post<any>(`${environment.apiUrl}/settings/report-logo`, fd).pipe(
       tap(res => { if (res.ok) this._settings.next(res.data); })
     );
   }

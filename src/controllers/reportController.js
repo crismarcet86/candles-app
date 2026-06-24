@@ -43,7 +43,7 @@ exports.getPdf = async (req, res, next) => {
       Settings.get(),
     ]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const pdf = await generateReportPDF({ summary, orders, lowStock, topClients, from, to, businessName, logoPath });
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename="reporte.pdf"');

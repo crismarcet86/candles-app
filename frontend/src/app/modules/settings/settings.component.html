@@ -14,20 +14,40 @@
     <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
     <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
 
-    <!-- Logo -->
+    <!-- Logo icono -->
     <div class="card logo-card">
-      <h3 class="section-title">Logo del negocio</h3>
+      <h3 class="section-title">Logo del negocio (icono)</h3>
       <div class="logo-section">
         <div class="logo-preview">
           <img *ngIf="previewUrl" [src]="previewUrl" alt="Logo" class="logo-img">
           <div *ngIf="!previewUrl" class="logo-placeholder">🕯️</div>
         </div>
         <div class="logo-actions">
-          <p class="logo-hint">Se mostrará en el login y la barra lateral. Máx. 2 MB, formatos: PNG, JPG, SVG.</p>
+          <p class="logo-hint">Se mostrará en el login, la barra lateral y como ícono del tab. Máx. 2 MB, formatos: PNG, JPG, SVG.</p>
           <label class="btn-upload" [class.uploading]="uploadingLogo">
             <span *ngIf="!uploadingLogo">📁 Elegir imagen</span>
             <span *ngIf="uploadingLogo" class="spinner"></span>
             <input type="file" accept="image/*" (change)="onFileChange($event)" style="display:none">
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Logo reportes -->
+    <div class="card logo-card">
+      <h3 class="section-title">Imagen para PDFs y reportes</h3>
+      <div class="logo-section">
+        <div class="logo-preview">
+          <img *ngIf="reportPreviewUrl" [src]="reportPreviewUrl" alt="Imagen reportes" class="logo-img">
+          <div *ngIf="!reportPreviewUrl" class="logo-placeholder">📄</div>
+        </div>
+        <div class="logo-actions">
+          <p class="logo-hint">Se mostrará en el encabezado de todos los PDFs generados (proformas, reportes, listados). Máx. 2 MB, formatos: PNG, JPG, SVG.</p>
+          <p class="logo-hint" *ngIf="!reportPreviewUrl" style="color:#6b7280; font-style:italic;">Si no se configura, se usará el logo de icono como imagen de reporte.</p>
+          <label class="btn-upload" [class.uploading]="uploadingReportLogo">
+            <span *ngIf="!uploadingReportLogo">📁 Elegir imagen</span>
+            <span *ngIf="uploadingReportLogo" class="spinner"></span>
+            <input type="file" accept="image/*" (change)="onReportLogoChange($event)" style="display:none">
           </label>
         </div>
       </div>

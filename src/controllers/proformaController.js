@@ -56,7 +56,7 @@ exports.getListPdf = async (req, res, next) => {
   try {
     const [proformas, settings] = await Promise.all([Proforma.findAll(), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = proformas.map(p => [
       String(p.id).padStart(4, '0'),
@@ -87,7 +87,7 @@ exports.getPdf = async (req, res, next) => {
 
     const settings = await Settings.get();
     const businessName = settings?.name || 'Mi Negocio';
-    const logoPath     = settings?.logo_path || null;
+    const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const pdfBuffer = await generateProformaPDF(proforma, businessName, logoPath);
 
     const filename = `proforma-${String(proforma.id).padStart(4, '0')}.pdf`;

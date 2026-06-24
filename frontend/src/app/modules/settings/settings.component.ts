@@ -12,9 +12,11 @@ export class SettingsComponent implements OnInit {
   loading = true;
   saving = false;
   uploadingLogo = false;
+  uploadingReportLogo = false;
   successMsg = '';
   errorMsg = '';
   previewUrl: string | null = null;
+  reportPreviewUrl: string | null = null;
 
   constructor(private fb: FormBuilder, private settings: SettingsService) {}
 
@@ -31,6 +33,7 @@ export class SettingsComponent implements OnInit {
         if (s) {
           this.form.patchValue({ name: s.name, ruc: s.ruc || '', phone: s.phone || '', observations: s.observations || '' });
           this.previewUrl = s.logo_url || null;
+          this.reportPreviewUrl = s.report_logo_url || null;
         }
         this.loading = false;
       },
@@ -40,21 +43,39 @@ export class SettingsComponent implements OnInit {
 
   field(name: string) { return this.form.get(name); }
 
+  private validateImageFile(file: File): boolean {
+    if (!file.type.startsWith('image/')) { this.errorMsg = 'Solo se permiten imágenes'; return false; }
+    if (file.size > 2 * 1024 * 1024)    { this.errorMsg = 'La imagen no puede superar 2 MB'; return false; }
+    return true;
+  }
+
   onFileChange(event: any): void {
     const file: File = event.target.files?.[0];
     if (!file) return;
-    if (!file.type.startsWith('image/')) { this.errorMsg = 'Solo se permiten imágenes'; return; }
-    if (file.size > 2 * 1024 * 1024) { this.errorMsg = 'La imagen no puede superar 2 MB'; return; }
     this.errorMsg = '';
-    // Preview
+    if (!this.validateImageFile(file)) return;
     const reader = new FileReader();
     reader.onload = e => this.previewUrl = e.target?.result as string;
     reader.readAsDataURL(file);
-    // Upload
     this.uploadingLogo = true;
     this.settings.uploadLogo(file).subscribe({
-      next: () => { this.uploadingLogo = false; this.successMsg = 'Logo actualizado'; setTimeout(() => this.successMsg = '', 3000); },
+      next: () => { this.uploadingLogo = false; this.successMsg = 'Logo de icono actualizado'; setTimeout(() => this.successMsg = '', 3000); },
       error: () => { this.uploadingLogo = false; this.errorMsg = 'Error al subir logo'; }
+    });
+  }
+
+  onReportLogoChange(event: any): void {
+    const file: File = event.target.files?.[0];
+    if (!file) return;
+    this.errorMsg = '';
+    if (!this.validateImageFile(file)) return;
+    const reader = new FileReader();
+    reader.onload = e => this.reportPreviewUrl = e.target?.result as string;
+    reader.readAsDataURL(file);
+    this.uploadingReportLogo = true;
+    this.settings.uploadReportLogo(file).subscribe({
+      next: () => { this.uploadingReportLogo = false; this.successMsg = 'Imagen de reportes actualizada'; setTimeout(() => this.successMsg = '', 3000); },
+      error: () => { this.uploadingReportLogo = false; this.errorMsg = 'Error al subir imagen de reportes'; }
     });
   }
 

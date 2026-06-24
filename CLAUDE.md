@@ -27,6 +27,7 @@ node src/config/migrate-presets-v2.js  # includes_color en presets; fragrance_pc
 node src/config/migrate-presets-v3.js  # labor_cost en calculation_presets
 node src/config/migrate-presets-v4.js  # labor_hours en calculation_presets (default 1)
 node src/config/migrate-username.js    # Columna username en users (reemplaza email para login)
+node src/config/migrate-report-logo.js # Columna report_logo_path en business_settings para imagen de PDFs
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -68,6 +69,7 @@ src/
     migrate-presets-v3.js # labor_cost en calculation_presets
     migrate-presets-v4.js # labor_hours en calculation_presets
     migrate-username.js   # Agrega username NOT NULL UNIQUE a users; poblado desde prefijo de email
+    migrate-report-logo.js # Agrega report_logo_path a business_settings
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
@@ -240,9 +242,10 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 ## Configuración del Negocio
 
 - `GET/PUT /api/settings` — nombre del negocio, RUC, teléfono, logo (ruta pública — no requiere auth)
-- El logo se sube como multipart a `POST /api/settings/logo` y se guarda en `public/uploads/`
+- **Logo icono** (`POST /api/settings/logo`): guarda `logo.<ext>` en `public/uploads/`; aparece en login, sidebar y favicon del tab.
+- **Logo de PDFs** (`POST /api/settings/report-logo`): guarda `report-logo.<ext>` en `public/uploads/`; aparece en el encabezado de todos los PDFs. Si no está configurado, hace fallback al logo icono.
 - El `businessName` también se guarda en `localStorage` bajo `candles_business_name` para el topbar
-- El logo aparece en todos los PDFs generados y como favicon del tab del navegador (dinámico vía `AppComponent.setFavicon`)
+- Todos los controllers de PDF usan `settings.report_logo_path || settings.logo_path` como `logoPath`
 
 ## Validaciones Frontend
 

@@ -56,6 +56,7 @@ node src/config/migrate-presets-v2.js
 node src/config/migrate-presets-v3.js
 node src/config/migrate-presets-v4.js
 node src/config/migrate-username.js
+node src/config/migrate-report-logo.js
 ```
 
 > **Nota:** cada script verifica si la columna/tabla ya existe antes de crearla, por lo que son idempotentes y pueden ejecutarse más de una vez sin error.
@@ -154,6 +155,7 @@ candles-app/
 | `migrate-presets-v3.js` | Columna `labor_cost` en `calculation_presets` |
 | `migrate-presets-v4.js` | Columna `labor_hours` en `calculation_presets` (default 1) |
 | `migrate-username.js` | Columna `username VARCHAR(100) NOT NULL UNIQUE` en `users`; poblada desde prefijo de email |
+| `migrate-report-logo.js` | Columna `report_logo_path` en `business_settings` para imagen exclusiva de PDFs |
 
 > Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.
 
