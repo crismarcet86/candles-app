@@ -5,7 +5,7 @@
       <p class="page-subtitle">Calculá el costo de tus velas para definir el precio de venta</p>
     </div>
     <div class="header-actions">
-      <button class="btn-outline" (click)="openPresetsModal()">📋 Ver presets</button>
+      <button class="btn-outline" (click)="openPresetsModal()">📋 Ver Calculos Anteriores</button>
       <button class="btn-outline" (click)="reset()">↺ Limpiar</button>
     </div>
   </div>
@@ -55,7 +55,7 @@
         <!-- Ingredientes -->
         <div class="panel-section" *ngIf="selectedMold">
           <div class="section-header">
-            <h3 class="section-title">Ingredientes</h3>
+            <h3 class="section-title">Productos</h3>
             <button class="btn-add" (click)="addLine()">+ Agregar</button>
           </div>
 
@@ -65,7 +65,7 @@
                 <div class="form-group flex-grow">
                   <label>
                     <span *ngIf="line.isWaxLine">🕯️ Cera a usar</span>
-                    <span *ngIf="!line.isWaxLine">Ingrediente</span>
+                    <span *ngIf="!line.isWaxLine">Producto</span>
                   </label>
                   <select [(ngModel)]="line.ingredient_id" (ngModelChange)="onIngredientChange(line)">
                     <option [ngValue]="null">Seleccionar...</option>
@@ -212,7 +212,7 @@
         <div class="alert-success-small" *ngIf="saveSuccess">{{ saveSuccess }}</div>
 
         <div class="editing-banner" *ngIf="editingPresetId">
-          ✏️ Editando preset cargado — al guardar se actualizará
+          ✏️ Editando cálculo cargado — al guardar se actualizará
           <button class="btn-link" (click)="editingPresetId = null">✕ Cancelar edición</button>
         </div>
 
@@ -245,7 +245,7 @@
       <h3>Cálculos guardados</h3>
       <button class="btn-close-modal" (click)="closePresetsModal()">✕</button>
     </div>
-    <p class="modal-sub">Cargá un cálculo para modificarlo. Al guardar se actualizará el preset existente.</p>
+    <p class="modal-sub">Cargá un cálculo para modificarlo. Al guardar se actualizará el cálculo existente.</p>
 
     <div class="alert-error-small" *ngIf="loadPresetError">{{ loadPresetError }}</div>
     <div class="loading-msg" *ngIf="loadingPresets">Cargando...</div>
@@ -281,7 +281,7 @@
 <div class="modal-backdrop" *ngIf="saveModal">
   <div class="modal">
     <h3>{{ editingPresetId ? 'Actualizar cálculo' : 'Guardar cálculo' }}</h3>
-    <p class="modal-sub">Quedará disponible para insertar en una proforma. Al confirmarla se descontará el stock de todos los ingredientes usados.</p>
+    <p class="modal-sub">Quedará disponible para insertar en una proforma. Al confirmarla se descontará el stock de todos los productos usados.</p>
 
     <div class="alert-error-small" *ngIf="saveError">{{ saveError }}</div>
 
