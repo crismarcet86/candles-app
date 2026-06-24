@@ -7,7 +7,7 @@ const JWT_EXPIRES = process.env.JWT_EXPIRES || '8h';
 
 function signToken(user) {
   return jwt.sign(
-    { id: user.id, email: user.email, role: user.role, name: user.name },
+    { id: user.id, username: user.username, role: user.role, name: user.name },
     JWT_SECRET,
     { expiresIn: JWT_EXPIRES }
   );
@@ -16,10 +16,10 @@ function signToken(user) {
 // POST /api/auth/register
 exports.register = async (req, res, next) => {
   try {
-    const { name, email, password, role } = req.body;
-    const existing = await User.findByEmail(email);
-    if (existing) return badRequest(res, 'El correo ya está registrado');
-    const user = await User.create({ name, email, password, role });
+    const { name, username, password, role } = req.body;
+    const existing = await User.findByUsername(username);
+    if (existing) return badRequest(res, 'El usuario ya está registrado');
+    const user = await User.create({ name, username, password, role });
     const token = signToken(user);
     created(res, { user, token }, 'Usuario creado exitosamente');
   } catch (err) { next(err); }
@@ -28,8 +28,8 @@ exports.register = async (req, res, next) => {
 // POST /api/auth/login
 exports.login = async (req, res, next) => {
   try {
-    const { email, password } = req.body;
-    const user = await User.findByEmail(email);
+    const { username, password } = req.body;
+    const user = await User.findByUsername(username);
     if (!user) return error(res, 'Credenciales inválidas', 401);
     const valid = await User.verifyPassword(password, user.password);
     if (!valid) return error(res, 'Credenciales inválidas', 401);
@@ -53,7 +53,7 @@ exports.me = async (req, res, next) => {
 exports.changePassword = async (req, res, next) => {
   try {
     const { current_password, new_password } = req.body;
-    const user = await User.findByEmail(req.user.email);
+    const user = await User.findByUsername(req.user.username);
     const valid = await User.verifyPassword(current_password, user.password);
     if (!valid) return badRequest(res, 'Contraseña actual incorrecta');
     await User.changePassword(req.user.id, new_password);

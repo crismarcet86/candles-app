@@ -36,12 +36,10 @@ export class UsersFormComponent implements OnInit {
     }
   }
 
-  private readonly emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
-
   private buildForm(): void {
     this.form = this.fb.group({
       name:      ['', [Validators.required, Validators.minLength(2)]],
-      email:     ['', [Validators.required, Validators.pattern(this.emailPattern)]],
+      username:  ['', [Validators.required]],
       password:  ['', this.isEdit ? [] : [Validators.required, Validators.minLength(6)]],
       role:      ['user', Validators.required],
       is_active: [1]
@@ -55,7 +53,7 @@ export class UsersFormComponent implements OnInit {
         const u = res.data;
         this.form.patchValue({
           name:      u.name,
-          email:     u.email,
+          username:  u.username,
           role:      u.role,
           is_active: u.is_active
         });
@@ -76,7 +74,7 @@ export class UsersFormComponent implements OnInit {
     const value = this.form.value;
     const payload: any = {
       name:      value.name,
-      email:     value.email,
+      username:  value.username,
       role:      value.role,
       is_active: value.is_active ? 1 : 0
     };

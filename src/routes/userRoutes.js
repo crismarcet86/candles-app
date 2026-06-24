@@ -6,7 +6,7 @@ const validate = require('../middlewares/validate');
 
 const rules = [
   body('name').notEmpty().withMessage('Nombre requerido'),
-  body('email').isEmail().withMessage('Email inválido'),
+  body('username').notEmpty().trim().withMessage('Usuario requerido'),
   body('password').isLength({ min: 6 }).withMessage('Mínimo 6 caracteres'),
 ];
 

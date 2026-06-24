@@ -12,17 +12,13 @@
     <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
       <div class="form-group">
-        <label for="email">Correo electrónico</label>
-        <input id="email" type="email" formControlName="email"
-               placeholder="correo@ejemplo.com"
-               [class.invalid]="field('email')?.invalid && field('email')?.touched">
+        <label for="username">Usuario</label>
+        <input id="username" type="text" formControlName="username"
+               placeholder="Nombre de usuario"
+               [class.invalid]="field('username')?.invalid && field('username')?.touched">
         <span class="field-error"
-              *ngIf="field('email')?.hasError('required') && field('email')?.touched">
-          El correo es requerido
-        </span>
-        <span class="field-error"
-              *ngIf="field('email')?.hasError('pattern') && field('email')?.touched">
-          Ingresa un correo válido (ej: usuario@dominio.com)
+              *ngIf="field('username')?.hasError('required') && field('username')?.touched">
+          El usuario es requerido
         </span>
       </div>
 

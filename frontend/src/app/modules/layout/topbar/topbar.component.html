@@ -22,7 +22,7 @@
       <div class="dropdown" *ngIf="userMenuOpen" (click)="userMenuOpen = false">
         <div class="dropdown-header">
           <strong>{{ user?.name }}</strong>
-          <small>{{ user?.email }}</small>
+          <small>{{ user?.username }}</small>
           <span class="role-badge" [class.role-admin]="user?.role === 'admin'">
             {{ user?.role === 'admin' ? 'Administrador' : 'Usuario' }}
           </span>

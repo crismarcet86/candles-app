@@ -18,8 +18,8 @@ exports.getById = async (req, res, next) => {
 
 exports.create = async (req, res, next) => {
   try {
-    const existing = await User.findByEmail(req.body.email);
-    if (existing) return badRequest(res, 'El correo ya está registrado');
+    const existing = await User.findByUsername(req.body.username);
+    if (existing) return badRequest(res, 'El usuario ya está registrado');
     const user = await User.create(req.body);
     created(res, user, 'Usuario creado');
   } catch (e) { next(e); }
@@ -48,14 +48,14 @@ exports.getPdf = async (req, res, next) => {
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = users.map(u => [
       u.name,
-      u.email,
+      u.username,
       u.role,
       u.is_active === 1 ? 'Activo' : 'Inactivo',
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Usuarios',
       subtitle, businessName, logoPath,
-      headers: ['NOMBRE', 'EMAIL', 'ROL', 'ESTADO'],
+      headers: ['NOMBRE', 'USERNAME', 'ROL', 'ESTADO'],
       widths:  [160, 200, 75, 60],
       aligns:  ['left', 'left', 'left', 'left'],
       rows,

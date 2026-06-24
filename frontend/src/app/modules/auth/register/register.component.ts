@@ -23,10 +23,9 @@ export class RegisterComponent {
     private auth: AuthService,
     private router: Router
   ) {
-    const emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     this.form = this.fb.group({
       name:     ['', Validators.required],
-      email:    ['', [Validators.required, Validators.pattern(emailPattern)]],
+      username: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirm:  ['', Validators.required]
     }, { validators: passwordMatch });
@@ -36,8 +35,8 @@ export class RegisterComponent {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading = true;
     this.errorMsg = '';
-    const { name, email, password } = this.form.value;
-    this.auth.register({ name, email, password, role: 'admin' }).subscribe({
+    const { name, username, password } = this.form.value;
+    this.auth.register({ name, username, password, role: 'admin' }).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
         this.errorMsg = err.error?.message || 'Error al registrar';

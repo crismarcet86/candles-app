@@ -29,7 +29,7 @@
         <thead>
           <tr>
             <th>Nombre</th>
-            <th>Correo</th>
+            <th>Usuario</th>
             <th>Rol</th>
             <th>Estado</th>
             <th>Registro</th>
@@ -48,7 +48,7 @@
                 <span class="you-badge" *ngIf="isCurrentUser(user.id)">Tú</span>
               </div>
             </td>
-            <td>{{ user.email }}</td>
+            <td>{{ user.username }}</td>
             <td>
               <span class="badge" [class.badge-admin]="user.role === 'admin'" [class.badge-user]="user.role === 'user'">
                 {{ user.role === 'admin' ? 'Admin' : 'Usuario' }}

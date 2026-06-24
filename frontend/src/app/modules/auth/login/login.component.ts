@@ -23,9 +23,8 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private settings: SettingsService
   ) {
-    const emailPattern = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
     this.form = this.fb.group({
-      email:    ['', [Validators.required, Validators.pattern(emailPattern)]],
+      username: ['', [Validators.required]],
       password: ['', Validators.required]
     });
   }
@@ -41,8 +40,8 @@ export class LoginComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading = true;
     this.errorMsg = '';
-    const { email, password } = this.form.value;
-    this.auth.login(email, password).subscribe({
+    const { username, password } = this.form.value;
+    this.auth.login(username, password).subscribe({
       next: () => this.router.navigate(['/dashboard']),
       error: err => {
         this.errorMsg = err.error?.message || 'Error al iniciar sesión';

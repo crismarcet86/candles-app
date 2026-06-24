@@ -29,12 +29,12 @@ export class AuthService {
   }
 
   // ── Auth ───────────────────────────────────────────────────
-  login(email: string, password: string): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { email, password })
+  login(username: string, password: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, { username, password })
       .pipe(tap(res => this.saveSession(res)));
   }
 
-  register(data: { name: string; email: string; password: string; role?: string }): Observable<AuthResponse> {
+  register(data: { name: string; username: string; password: string; role?: string }): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, data)
       .pipe(tap(res => this.saveSession(res)));
   }

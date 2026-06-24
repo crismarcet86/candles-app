@@ -34,17 +34,14 @@
         </span>
       </div>
 
-      <!-- Email -->
+      <!-- Username -->
       <div class="form-group">
-        <label for="email">Correo electrónico <span class="required">*</span></label>
-        <input id="email" type="email" formControlName="email"
-               placeholder="correo@ejemplo.com"
-               [class.invalid]="field('email')?.invalid && field('email')?.touched">
-        <span class="field-error" *ngIf="field('email')?.hasError('required') && field('email')?.touched">
-          El correo es requerido
-        </span>
-        <span class="field-error" *ngIf="field('email')?.hasError('pattern') && field('email')?.touched">
-          Ingresa un correo válido (ej: usuario@dominio.com)
+        <label for="username">Usuario <span class="required">*</span></label>
+        <input id="username" type="text" formControlName="username"
+               placeholder="Nombre de usuario"
+               [class.invalid]="field('username')?.invalid && field('username')?.touched">
+        <span class="field-error" *ngIf="field('username')?.hasError('required') && field('username')?.touched">
+          El usuario es requerido
         </span>
       </div>
 

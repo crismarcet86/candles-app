@@ -5,13 +5,13 @@ const { body } = require('express-validator');
 const validate = require('../middlewares/validate');
 
 const loginRules = [
-  body('email').isEmail().withMessage('Email inválido'),
+  body('username').notEmpty().trim().withMessage('Usuario requerido'),
   body('password').notEmpty().withMessage('Contraseña requerida'),
 ];
 
 const registerRules = [
   body('name').notEmpty().withMessage('Nombre requerido'),
-  body('email').isEmail().withMessage('Email inválido'),
+  body('username').notEmpty().trim().withMessage('Usuario requerido'),
   body('password').isLength({ min: 6 }).withMessage('Mínimo 6 caracteres'),
 ];
 
