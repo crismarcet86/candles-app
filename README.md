@@ -156,7 +156,7 @@ candles-app/
 | `migrate-presets-v3.js` | Columna `labor_cost` en `calculation_presets` |
 | `migrate-presets-v4.js` | Columna `labor_hours` en `calculation_presets` (default 1) |
 | `migrate-username.js` | Columna `username VARCHAR(100) NOT NULL UNIQUE` en `users`; poblada desde prefijo de email |
-| `migrate-report-logo.js` | Columna `report_logo_path` en `business_settings` para imagen exclusiva de PDFs |
+| `migrate-report-logo.js` | Columna `report_logo_path` en `business_settings` para imagen exclusiva de PDFs (banner rectangular, se muestra a ancho completo sobre el título) |
 | `migrate-mold-type-image.js` | Columna `image_path` en `mold_types` para imagen referencial del tipo |
 
 > Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.

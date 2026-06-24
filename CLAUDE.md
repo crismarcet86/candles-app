@@ -248,6 +248,7 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 - **Logo de PDFs** (`POST /api/settings/report-logo`): guarda `report-logo.<ext>` en `public/uploads/`; aparece en el encabezado de todos los PDFs. Si no está configurado, hace fallback al logo icono.
 - El `businessName` también se guarda en `localStorage` bajo `candles_business_name` para el topbar
 - Todos los controllers de PDF usan `settings.report_logo_path || settings.logo_path` como `logoPath`
+- **Layout del encabezado PDF** (`src/utils/pdfHeader.js`): si hay imagen, se dibuja a ancho completo (495 px) con `fit: [495, 70]` respetando proporciones (ideal para banners rectangulares con el nombre de la empresa); el título del negocio se imprime **debajo** de la imagen. Sin imagen, solo el título centrado.
 
 ## Imágenes de Tipos de Molde
 
