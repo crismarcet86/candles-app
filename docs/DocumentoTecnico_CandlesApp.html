@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documento Técnico — Candles App</title>
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #1a1a1a; margin: 2.5cm 2.5cm; line-height: 1.5; }
+  h1 { font-size: 22pt; color: #8B5E3C; border-bottom: 3px solid #8B5E3C; padding-bottom: 6px; margin-top: 40px; }
+  h2 { font-size: 16pt; color: #6B4423; border-bottom: 1px solid #d6b89a; padding-bottom: 4px; margin-top: 32px; }
+  h3 { font-size: 13pt; color: #8B5E3C; margin-top: 22px; }
+  h4 { font-size: 11pt; color: #555; margin-top: 16px; font-style: italic; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0 20px 0; font-size: 10pt; }
+  th { background-color: #8B5E3C; color: white; padding: 7px 10px; text-align: left; }
+  td { padding: 6px 10px; border: 1px solid #d6b89a; vertical-align: top; }
+  tr:nth-child(even) td { background-color: #fdf6f0; }
+  code { font-family: Consolas, Courier New, monospace; background: #f5f5f5; padding: 1px 4px; border-radius: 3px; font-size: 9.5pt; color: #c0392b; }
+  pre { font-family: Consolas, Courier New, monospace; background: #f8f8f8; border: 1px solid #ddd; border-left: 4px solid #8B5E3C; padding: 12px 16px; font-size: 9pt; overflow-x: auto; margin: 10px 0; line-height: 1.4; }
+  .portada { text-align: center; padding: 80px 0 60px 0; page-break-after: always; }
+  .portada h1 { font-size: 32pt; border: none; }
+  .portada .subtitulo { font-size: 16pt; color: #6B4423; margin-top: 8px; }
+  .portada .meta { margin-top: 60px; font-size: 11pt; color: #666; }
+  .portada .emoji { font-size: 60pt; }
+  .toc { background: #fdf6f0; border: 1px solid #d6b89a; padding: 18px 24px; margin: 20px 0; border-radius: 4px; }
+  .toc h2 { border: none; margin-top: 0; font-size: 14pt; }
+  .toc ol { margin: 0; padding-left: 22px; }
+  .toc li { margin: 4px 0; }
+  .toc a { color: #6B4423; text-decoration: none; }
+  .alerta { background: #fff8e1; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 12px 0; font-size: 10.5pt; }
+  .info { background: #e8f4fd; border-left: 4px solid #3b82f6; padding: 10px 14px; margin: 12px 0; font-size: 10.5pt; }
+  ul li { margin: 3px 0; }
+  .page-break { page-break-before: always; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 9pt; font-weight: bold; }
+  .badge-get { background: #dcfce7; color: #166534; }
+  .badge-post { background: #dbeafe; color: #1e40af; }
+  .badge-put { background: #fef9c3; color: #854d0e; }
+  .badge-delete { background: #fee2e2; color: #991b1b; }
+  .badge-patch { background: #f3e8ff; color: #6b21a8; }
+  .version { font-size: 9pt; color: #888; margin-left: 8px; }
+  footer { margin-top: 60px; border-top: 1px solid #d6b89a; padding-top: 10px; font-size: 9pt; color: #888; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PORTADA
+═══════════════════════════════════════════════════════════ -->
+<div class="portada">
+  <div class="emoji">🕯️</div>
+  <h1>Candles App</h1>
+  <div class="subtitulo">Documento Técnico del Sistema</div>
+  <div class="subtitulo" style="font-size:13pt; margin-top:6px;">Sistema de Gestión para Negocio de Velas Artesanales</div>
+  <div class="meta">
+    <table style="width:auto; margin:0 auto; border:none;">
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Versión:</td><td style="border:none; padding:3px 12px;">1.0</td></tr>
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Fecha:</td><td style="border:none; padding:3px 12px;">Junio 2026</td></tr>
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Plataforma:</td><td style="border:none; padding:3px 12px;">Node.js + Angular 16 + MySQL</td></tr>
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Repositorio:</td><td style="border:none; padding:3px 12px;">github.com/crismarcet86/candles-app</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TABLA DE CONTENIDOS
+═══════════════════════════════════════════════════════════ -->
+<div class="toc">
+  <h2>Tabla de Contenidos</h2>
+  <ol>
+    <li><a href="#s1">Descripción General del Sistema</a></li>
+    <li><a href="#s2">Arquitectura del Sistema</a></li>
+    <li><a href="#s3">Stack Tecnológico y Dependencias</a></li>
+    <li><a href="#s4">Estructura del Proyecto</a></li>
+    <li><a href="#s5">Modelo de Base de Datos</a></li>
+    <li><a href="#s6">Migraciones de Base de Datos</a></li>
+    <li><a href="#s7">API REST — Endpoints</a></li>
+    <li><a href="#s8">Autenticación y Seguridad</a></li>
+    <li><a href="#s9">Módulos del Backend</a></li>
+    <li><a href="#s10">Módulos del Frontend (Angular)</a></li>
+    <li><a href="#s11">Lógica de Negocio Crítica</a></li>
+    <li><a href="#s12">Generación de PDFs</a></li>
+    <li><a href="#s13">Configuración y Variables de Entorno</a></li>
+    <li><a href="#s14">Instalación y Despliegue</a></li>
+    <li><a href="#s15">Guía de Operación</a></li>
+  </ol>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     1. DESCRIPCIÓN GENERAL
+═══════════════════════════════════════════════════════════ -->
+<h1 id="s1">1. Descripción General del Sistema</h1>
+
+<p><strong>Candles App</strong> es un sistema web de gestión orientado a emprendimientos de <strong>velas artesanales</strong>. Cubre el ciclo completo del negocio: desde la gestión de ingredientes y stock, pasando por la calculadora de costos, hasta la emisión de cotizaciones (proformas) y la confirmación de pedidos con descuento automático de inventario.</p>
+
+<h2>1.1 Objetivos del Sistema</h2>
+<ul>
+  <li>Gestionar el catálogo de ingredientes (cera, esencia, pabilos, colorantes) con sus unidades de medida y stock.</li>
+  <li>Administrar moldes y tipos de molde con cálculo automático de gramos de cera.</li>
+  <li>Calcular el costo de fabricación por vela usando ingredientes, % de fragancia, color y mano de obra.</li>
+  <li>Emitir proformas/cotizaciones a clientes con descuentos y exportación en PDF.</li>
+  <li>Confirmar pedidos descontando stock automáticamente con conversión de unidades.</li>
+  <li>Generar reportes gerenciales: ventas por período, stock bajo, top clientes, KPIs.</li>
+  <li>Gestionar la configuración del negocio (nombre, RUC, logo) que aparece en todos los PDFs.</li>
+</ul>
+
+<h2>1.2 Roles de Usuario</h2>
+<table>
+  <tr><th>Rol</th><th>Acceso</th></tr>
+  <tr><td><strong>admin</strong></td><td>Acceso completo: CRUD de usuarios, configuración del negocio, todas las funcionalidades.</td></tr>
+  <tr><td><strong>user</strong></td><td>Acceso operativo: gestión de inventario, proformas, calculadora y reportes. Sin gestión de usuarios ni configuración.</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════
+     2. ARQUITECTURA
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s2">2. Arquitectura del Sistema</h1>
+
+<h2>2.1 Arquitectura General</h2>
+<p>El sistema sigue una arquitectura de <strong>cliente-servidor de dos capas</strong> con separación completa entre frontend y backend:</p>
+
+<pre>
+┌─────────────────────────────────────────────────────────────────┐
+│                        CLIENTE (Navegador)                       │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           Angular 16 SPA — Puerto 4200                   │   │
+│  │  Lazy loading · Reactive Forms · HttpClient · Guards     │   │
+│  └────────────────────────┬─────────────────────────────────┘   │
+└───────────────────────────│─────────────────────────────────────┘
+                            │ HTTP REST (JSON)
+                            │ Authorization: Bearer &lt;JWT&gt;
+┌───────────────────────────▼─────────────────────────────────────┐
+│                      SERVIDOR (Node.js)                          │
+│  ┌──────────────────────────────────────────────────────────┐   │
+│  │           Express 4 API REST — Puerto 3000               │   │
+│  │  Routes → Controllers → Models → MySQL                   │   │
+│  │  Middlewares: CORS · JWT · Validator · ErrorHandler      │   │
+│  └────────────────────────┬─────────────────────────────────┘   │
+└───────────────────────────│─────────────────────────────────────┘
+                            │ mysql2 pool
+┌───────────────────────────▼─────────────────────────────────────┐
+│                    BASE DE DATOS (MySQL 8)                        │
+│  13 tablas · DECIMAL para stock/montos · Transacciones ACID      │
+└─────────────────────────────────────────────────────────────────┘
+</pre>
+
+<h2>2.2 Flujo de Request Backend</h2>
+<pre>
+HTTP Request
+    │
+    ▼
+Express Router (src/routes/index.js)
+    │
+    ▼
+Middlewares: CORS → morgan → express.json()
+    │
+    ▼
+Route file (ej: proformaRoutes.js)
+    │  express-validator rules
+    ▼
+validate middleware → 400 si hay errores
+    │
+    ▼
+requireAuth / requireAdmin (JWT verify)
+    │
+    ▼
+Controller (req/res handling)
+    │
+    ▼
+Model (SQL queries / transacciones)
+    │
+    ▼
+MySQL Pool (mysql2)
+    │
+    ▼
+Response: { ok, message, data }
+</pre>
+
+<h2>2.3 Flujo de Autenticación</h2>
+<pre>
+[Login] POST /api/auth/login { username, password }
+    │
+    ▼
+User.findByUsername(username) → bcrypt.compare(password, hash)
+    │
+    ▼
+jwt.sign({ id, username, role, name }, JWT_SECRET, expires: 8h)
+    │
+    ▼
+Respuesta: { user, token }
+    │
+    ▼
+Frontend guarda token en localStorage
+    │
+    ▼
+HTTP Interceptor inyecta: Authorization: Bearer &lt;token&gt;
+    │
+    ▼
+requireAuth: jwt.verify(token) → req.user = payload
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════
+     3. STACK TECNOLÓGICO
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s3">3. Stack Tecnológico y Dependencias</h1>
+
+<h2>3.1 Backend</h2>
+<table>
+  <tr><th>Paquete</th><th>Versión</th><th>Propósito</th></tr>
+  <tr><td><code>node.js</code></td><td>18+</td><td>Runtime de JavaScript en servidor</td></tr>
+  <tr><td><code>express</code></td><td>^4.19.2</td><td>Framework web HTTP</td></tr>
+  <tr><td><code>mysql2</code></td><td>^3.9.7</td><td>Driver MySQL con soporte de Promises y pool de conexiones</td></tr>
+  <tr><td><code>jsonwebtoken</code></td><td>^9.0.3</td><td>Generación y verificación de tokens JWT</td></tr>
+  <tr><td><code>bcryptjs</code></td><td>^3.0.3</td><td>Hashing de contraseñas (salt 10)</td></tr>
+  <tr><td><code>express-validator</code></td><td>^7.1.0</td><td>Validación declarativa de parámetros de entrada</td></tr>
+  <tr><td><code>pdfkit</code></td><td>^0.19.1</td><td>Generación programática de documentos PDF</td></tr>
+  <tr><td><code>multer</code></td><td>^2.2.0</td><td>Manejo de uploads multipart (logo del negocio)</td></tr>
+  <tr><td><code>winston</code></td><td>^3.13.0</td><td>Logger estructurado con niveles y archivos de log</td></tr>
+  <tr><td><code>morgan</code></td><td>^1.10.0</td><td>Logger de requests HTTP</td></tr>
+  <tr><td><code>dotenv</code></td><td>^16.4.5</td><td>Carga de variables de entorno desde .env</td></tr>
+  <tr><td><code>cors</code></td><td>^2.8.5</td><td>Habilitación de CORS para el frontend Angular</td></tr>
+  <tr><td><code>nodemon</code></td><td>^3.1.0</td><td>[dev] Auto-reload del servidor en desarrollo</td></tr>
+</table>
+
+<h2>3.2 Frontend</h2>
+<table>
+  <tr><th>Paquete</th><th>Versión</th><th>Propósito</th></tr>
+  <tr><td><code>@angular/core</code></td><td>^16.2.0</td><td>Framework frontend SPA</td></tr>
+  <tr><td><code>@angular/router</code></td><td>^16.2.0</td><td>Enrutamiento con lazy loading</td></tr>
+  <tr><td><code>@angular/forms</code></td><td>^16.2.0</td><td>Reactive Forms para formularios</td></tr>
+  <tr><td><code>@angular/common/http</code></td><td>^16.2.0</td><td>HttpClient con interceptores</td></tr>
+  <tr><td><code>rxjs</code></td><td>~7.8.0</td><td>Programación reactiva (BehaviorSubject, Observable)</td></tr>
+  <tr><td><code>typescript</code></td><td>~5.1.3</td><td>Tipado estático sobre JavaScript</td></tr>
+  <tr><td><code>zone.js</code></td><td>~0.13.0</td><td>Detección de cambios de Angular</td></tr>
+</table>
+
+<h2>3.3 Base de Datos</h2>
+<table>
+  <tr><th>Motor</th><th>Versión</th><th>Configuración relevante</th></tr>
+  <tr><td>MySQL</td><td>8.x</td><td>Charset <code>utf8mb4</code>, Collation <code>utf8mb4_unicode_ci</code>, columnas monetarias en <code>DECIMAL</code></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════
+     4. ESTRUCTURA DEL PROYECTO
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s4">4. Estructura del Proyecto</h1>
+
+<pre>
+candles-app/
+├── src/                            Backend Node.js + Express
+│   ├── server.js                   Entry point: carga .env, prueba DB, inicia servidor
+│   ├── app.js                      Express setup: CORS, middlewares, rutas
+│   ├── config/
+│   │   ├── database.js             Pool de conexiones MySQL (mysql2)
+│   │   ├── migrate.js              Schema inicial + datos semilla
+│   │   ├── migrate-v2.js           Moldes, labor_cost, ítems libres en proforma
+│   │   ├── migrate-cedula.js       Campo cedula en clients
+│   │   ├── migrate-settings.js     Tabla business_settings
+│   │   ├── migrate-presets.js      Tablas calculation_presets y preset_items
+│   │   ├── migrate-mold-types.js   Tabla mold_types + total_grams en molds
+│   │   ├── migrate-presets-v2.js   includes_color en presets; fragrance_pct en items
+│   │   ├── migrate-presets-v3.js   labor_cost en calculation_presets
+│   │   ├── migrate-presets-v4.js   labor_hours en calculation_presets
+│   │   └── migrate-username.js     username NOT NULL UNIQUE en users
+│   ├── controllers/
+│   │   ├── authController.js       Login, register, me, change-password
+│   │   ├── userController.js       CRUD usuarios (solo admin)
+│   │   ├── categoryController.js   CRUD categorías
+│   │   ├── unitController.js       CRUD unidades de medida
+│   │   ├── productController.js    CRUD productos + stock + writeoff + inventario
+│   │   ├── clientController.js     CRUD clientes
+│   │   ├── moldTypeController.js   CRUD tipos de molde
+│   │   ├── moldController.js       CRUD moldes
+│   │   ├── proformaController.js   CRUD proformas + confirm + cancel + PDF
+│   │   ├── orderController.js      Lectura de órdenes
+│   │   ├── calculationPresetController.js  CRUD presets calculadora
+│   │   ├── reportController.js     KPIs, órdenes, stock bajo, top clientes, PDF
+│   │   └── settingsController.js   Configuración negocio + upload logo
+│   ├── models/
+│   │   ├── User.js                 findById, findByUsername, create, update, changePassword
+│   │   ├── Category.js             CRUD + soft delete
+│   │   ├── Unit.js                 CRUD + hard delete
+│   │   ├── Product.js              CRUD + adjustStock + writeoff + inventoryCount
+│   │   ├── Client.js               CRUD + soft delete
+│   │   ├── MoldType.js             CRUD + soft delete
+│   │   ├── Mold.js                 CRUD + soft delete
+│   │   ├── Proforma.js             save(), confirm() (transacción), cancel()
+│   │   ├── Order.js                findAll, findById, updateStatus
+│   │   ├── CalculationPreset.js    CRUD presets con items
+│   │   ├── Report.js               getSummary, getOrdersByPeriod, getLowStock, getTopClients
+│   │   └── Settings.js             get(), update(), updateLogo()
+│   ├── routes/
+│   │   ├── index.js                Agrupador central de todas las rutas
+│   │   ├── authRoutes.js           /api/auth/*
+│   │   ├── userRoutes.js           /api/users/*  (requireAdmin)
+│   │   ├── categoryRoutes.js       /api/categories/*
+│   │   ├── unitRoutes.js           /api/units/*
+│   │   ├── productRoutes.js        /api/products/*
+│   │   ├── clientRoutes.js         /api/clients/*
+│   │   ├── moldTypeRoutes.js       /api/mold-types/*
+│   │   ├── moldRoutes.js           /api/molds/*
+│   │   ├── proformaRoutes.js       /api/proformas/*
+│   │   ├── orderRoutes.js          /api/orders/*
+│   │   ├── calculationPresetRoutes.js  /api/presets/*
+│   │   ├── reportRoutes.js         /api/reports/*  (requireAuth)
+│   │   └── settingsRoutes.js       /api/settings/*
+│   ├── middlewares/
+│   │   ├── auth.js                 requireAuth (JWT verify) · requireAdmin (role check)
+│   │   ├── errorHandler.js         Captura global → respuesta JSON estandarizada
+│   │   └── validate.js             Verifica express-validator → 400 si hay errores
+│   └── utils/
+│       ├── logger.js               Winston: consola + archivos logs/
+│       ├── response.js             success(), created(), error(), notFound(), badRequest()
+│       ├── pdfHeader.js            Encabezado común con logo y nombre del negocio
+│       ├── pdfProforma.js          PDF proforma: cliente, ítems, totales
+│       ├── pdfReport.js            PDF reporte: KPIs, órdenes, stock bajo, top clientes
+│       └── pdfList.js              generateListPDF() — listados genéricos
+│
+├── frontend/                       Angular 16 SPA
+│   └── src/app/
+│       ├── app.component.ts        Raíz: aplica favicon dinámico del logo del negocio
+│       ├── app-routing.module.ts   Rutas: /auth (NoAuthGuard) y /dashboard (AuthGuard)
+│       ├── core/
+│       │   ├── guards/             auth.guard · no-auth.guard · admin.guard
+│       │   ├── services/           auth.service · settings.service
+│       │   └── interceptors/       auth.interceptor (inyecta Bearer token)
+│       ├── modules/
+│       │   ├── auth/               Login y registro — público
+│       │   ├── layout/             Shell app: sidebar + topbar
+│       │   ├── dashboard/          Inicio post-login con métricas rápidas
+│       │   ├── users/              CRUD usuarios (solo admin)
+│       │   ├── categories/         CRUD categorías (flag is_fragrance)
+│       │   ├── units/              CRUD unidades de medida
+│       │   ├── products/           CRUD ingredientes + badge Esencia
+│       │   ├── stock/              Agregar / dar de baja / toma de inventario
+│       │   ├── mold-types/         CRUD tipos de molde
+│       │   ├── molds/              CRUD moldes (cera auto-calculada)
+│       │   ├── clients/            CRUD clientes (cedula, correo, tel, dir)
+│       │   ├── proformas/          Cotizaciones → PDF (cliente + ítems + totales)
+│       │   ├── orders/             Pedidos confirmados — solo lectura
+│       │   ├── calculator/         Calculadora de costos: presets reutilizables
+│       │   ├── reports/            KPIs + gráficos + exportar PDF
+│       │   └── settings/           Nombre negocio · RUC · logo
+│       └── shared/models/          Interfaces TypeScript: User, Client, Product,
+│                                   Proforma, Order, Mold, MoldType, Category, Unit
+│
+├── public/uploads/                 Logos subidos (servidos como estáticos)
+├── set-env.js                      Genera environment.ts desde .env (SERVER_IP)
+├── .env.example                    Plantilla de variables de entorno
+└── package.json                    Scripts y dependencias del backend
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════
+     5. MODELO DE BASE DE DATOS
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s5">5. Modelo de Base de Datos</h1>
+
+<h2>5.1 Diagrama Entidad-Relación (Simplificado)</h2>
+<pre>
+users (id, name, username UNIQUE, password, role, is_active)
+
+categories (id, name, is_fragrance, is_active)
+    │
+    └──► products (id, category_id, unit_id, name, price, stock, min_stock, is_active)
+              │                    │
+              │               units (id, name, abbreviation)
+              │
+              ├──► proforma_items (id, proforma_id, product_id?, preset_id?, description, quantity, unit_price, subtotal)
+              │         │
+              │    proformas (id, client_id, notes, discount, labor_cost, subtotal, total, status)
+              │         │
+              │    clients (id, name, cedula, email, phone, address, is_active)
+              │
+              └──► order_items (id, order_id, product_id?, description, quantity, unit_price, subtotal)
+                        │
+                   orders (id, proforma_id UNIQUE, client_id, subtotal, discount, total, status)
+
+mold_types (id, name, is_active)
+    │
+    └──► molds (id, name, mold_type_id, total_grams, wax_grams, is_active)
+
+calculation_presets (id, name, mold_name, wax_grams, quantity, sell_price,
+                     cost_per_unit, includes_color, labor_cost, labor_hours, is_active)
+    │
+    └──► calculation_preset_items (id, preset_id, product_id?, ingredient_name,
+                                   grams, is_unit, unit_abbr, unit_cost, subtotal, fragrance_pct)
+
+business_settings (id=1, name, ruc, phone, observations, logo_path)
+</pre>
+
+<h2>5.2 Descripción de Tablas</h2>
+
+<h3>users</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK AUTO_INCREMENT</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(100) NOT NULL</td><td>Nombre completo</td></tr>
+  <tr><td>username</td><td>VARCHAR(100) NOT NULL UNIQUE</td><td>Identificador para login</td></tr>
+  <tr><td>password</td><td>VARCHAR(255) NOT NULL</td><td>Hash bcrypt (salt 10)</td></tr>
+  <tr><td>role</td><td>ENUM('admin','user') DEFAULT 'user'</td><td></td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+  <tr><td>created_at / updated_at</td><td>TIMESTAMP</td><td></td></tr>
+</table>
+
+<h3>categories</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(100) UNIQUE NOT NULL</td><td></td></tr>
+  <tr><td>description</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>is_fragrance</td><td>TINYINT(1) DEFAULT 0</td><td>Si 1: sus productos muestran campo % fragancia en calculadora</td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+</table>
+
+<h3>units</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(50) UNIQUE NOT NULL</td><td>Ej: "Gramos", "Kilogramos"</td></tr>
+  <tr><td>abbreviation</td><td>VARCHAR(10) UNIQUE NOT NULL</td><td>Ej: "g", "kg", "ml", "oz", "lb", "u"</td></tr>
+</table>
+
+<h3>products</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>category_id</td><td>INT FK → categories</td><td></td></tr>
+  <tr><td>unit_id</td><td>INT FK → units</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(150) NOT NULL</td><td></td></tr>
+  <tr><td>description</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>price</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Precio por unidad nativa</td></tr>
+  <tr><td>stock</td><td>DECIMAL(12,4) DEFAULT 0</td><td>DECIMAL para evitar errores de redondeo</td></tr>
+  <tr><td>min_stock</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Umbral de stock bajo</td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+</table>
+
+<h3>clients</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(150) NOT NULL</td><td></td></tr>
+  <tr><td>cedula</td><td>VARCHAR(20) NULL</td><td>CI o RUC</td></tr>
+  <tr><td>email</td><td>VARCHAR(150) NULL</td><td></td></tr>
+  <tr><td>phone</td><td>VARCHAR(30) NULL</td><td></td></tr>
+  <tr><td>address</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>notes</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+</table>
+
+<h3>mold_types</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(100) NOT NULL</td><td>Ej: "Redondo", "Cuadrado"</td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+</table>
+
+<h3>molds</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(150) NOT NULL</td><td></td></tr>
+  <tr><td>mold_type_id</td><td>INT FK → mold_types NULL</td><td></td></tr>
+  <tr><td>total_grams</td><td>DECIMAL(10,2) NULL</td><td>Peso del agua al llenar el molde (método de desplazamiento)</td></tr>
+  <tr><td>wax_grams</td><td>DECIMAL(10,2) NULL</td><td>Auto: total_grams × 0.90 × 1.05</td></tr>
+  <tr><td>description</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
+</table>
+
+<h3>proformas</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>client_id</td><td>INT FK → clients</td><td></td></tr>
+  <tr><td>notes</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>discount</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Descuento en monto fijo</td></tr>
+  <tr><td>labor_cost</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Absorbido en subtotal; no visible al cliente</td></tr>
+  <tr><td>subtotal</td><td>DECIMAL(12,2)</td><td>Suma de ítems (sin labor_cost)</td></tr>
+  <tr><td>total</td><td>DECIMAL(12,2)</td><td>subtotal + labor_cost - discount</td></tr>
+  <tr><td>status</td><td>ENUM('borrador','confirmada','cancelada') DEFAULT 'borrador'</td><td></td></tr>
+</table>
+
+<h3>proforma_items</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>proforma_id</td><td>INT FK → proformas</td><td></td></tr>
+  <tr><td>product_id</td><td>INT FK → products NULL</td><td>Nulo para ítems de texto libre</td></tr>
+  <tr><td>preset_id</td><td>INT FK → calculation_presets NULL</td><td>Nulo si no viene de calculadora</td></tr>
+  <tr><td>description</td><td>VARCHAR(255) NULL</td><td>Descripción libre (puede sobrescribir product_name)</td></tr>
+  <tr><td>quantity</td><td>DECIMAL(10,3) NOT NULL</td><td></td></tr>
+  <tr><td>unit_price</td><td>DECIMAL(10,2) NOT NULL</td><td>Precio ingresado manualmente</td></tr>
+  <tr><td>subtotal</td><td>DECIMAL(12,2) NOT NULL</td><td>quantity × unit_price</td></tr>
+</table>
+
+<h3>orders</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>proforma_id</td><td>INT UNIQUE FK → proformas</td><td>1:1 con proforma</td></tr>
+  <tr><td>client_id</td><td>INT FK → clients</td><td></td></tr>
+  <tr><td>notes</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>subtotal / discount / total</td><td>DECIMAL(12,2)</td><td>Copiados de la proforma al confirmar</td></tr>
+  <tr><td>status</td><td>ENUM('pendiente','entregado','cancelado') DEFAULT 'pendiente'</td><td></td></tr>
+</table>
+
+<h3>calculation_presets</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>name</td><td>VARCHAR(150) NOT NULL</td><td>Nombre del preset</td></tr>
+  <tr><td>mold_name</td><td>VARCHAR(100) NULL</td><td>Nombre del molde usado (snapshot)</td></tr>
+  <tr><td>wax_grams</td><td>DECIMAL(10,2) NULL</td><td>Gramos de cera del molde</td></tr>
+  <tr><td>quantity</td><td>INT DEFAULT 1</td><td>Cantidad de velas calculadas</td></tr>
+  <tr><td>sell_price</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Precio de venta sugerido</td></tr>
+  <tr><td>cost_per_unit</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Costo calculado por vela</td></tr>
+  <tr><td>includes_color</td><td>TINYINT(1) DEFAULT 0</td><td>Suma S/ 0.10 por vela</td></tr>
+  <tr><td>labor_cost</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Tarifa por hora de mano de obra</td></tr>
+  <tr><td>labor_hours</td><td>DECIMAL(6,2) DEFAULT 1</td><td>Horas de trabajo</td></tr>
+  <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Se pone a 0 al usar el preset en una orden confirmada</td></tr>
+</table>
+
+<h3>calculation_preset_items</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>preset_id</td><td>INT FK → calculation_presets</td><td></td></tr>
+  <tr><td>product_id</td><td>INT FK → products NULL</td><td>Null si el ingrediente ya no existe</td></tr>
+  <tr><td>ingredient_name</td><td>VARCHAR(150) NOT NULL</td><td>Snapshot del nombre en el momento del cálculo</td></tr>
+  <tr><td>grams</td><td>DECIMAL(12,4) NOT NULL</td><td>Siempre en gramos reales</td></tr>
+  <tr><td>is_unit</td><td>TINYINT(1) DEFAULT 0</td><td>1 si el ingrediente se mide por unidad (ej: pabilo)</td></tr>
+  <tr><td>unit_abbr</td><td>VARCHAR(20) NOT NULL</td><td>Unidad nativa del producto (g, kg, ml, u…)</td></tr>
+  <tr><td>unit_cost</td><td>DECIMAL(14,6) DEFAULT 0</td><td>Costo por unidad mínima en el momento del cálculo</td></tr>
+  <tr><td>subtotal</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Costo parcial de este ingrediente</td></tr>
+  <tr><td>fragrance_pct</td><td>DECIMAL(6,2) NULL</td><td>% de fragancia aplicado (solo para ingredientes is_fragrance=1)</td></tr>
+</table>
+
+<h3>business_settings</h3>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT DEFAULT 1</td><td>Siempre una sola fila</td></tr>
+  <tr><td>name</td><td>VARCHAR(100) NOT NULL DEFAULT 'Mi Negocio'</td><td>Nombre del negocio</td></tr>
+  <tr><td>ruc</td><td>VARCHAR(20) NULL</td><td>RUC o número fiscal</td></tr>
+  <tr><td>phone</td><td>VARCHAR(30) NULL</td><td></td></tr>
+  <tr><td>observations</td><td>TEXT NULL</td><td>Notas adicionales para PDFs</td></tr>
+  <tr><td>logo_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════
+     6. MIGRACIONES
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s6">6. Migraciones de Base de Datos</h1>
+
+<p>Cada script de migración es <strong>idempotente</strong>: verifica si la columna/tabla ya existe antes de crearla. Se ejecutan una sola vez en orden durante la instalación inicial.</p>
+
+<table>
+  <tr><th>Script</th><th>Qué hace</th><th>Tablas afectadas</th></tr>
+  <tr><td><code>migrate.js</code></td><td>Schema inicial completo + datos semilla (unidades y categorías base)</td><td>users, categories, units, products, clients, proformas, proforma_items, orders, order_items</td></tr>
+  <tr><td><code>migrate-v2.js</code></td><td>Adapta al modelo de velas: agrega tabla molds, columna labor_cost en proformas, ajusta proforma_items para ítems libres (product_id nullable)</td><td>molds, proformas, proforma_items</td></tr>
+  <tr><td><code>migrate-cedula.js</code></td><td>Agrega campo <code>cedula VARCHAR(20)</code> a clients</td><td>clients</td></tr>
+  <tr><td><code>migrate-settings.js</code></td><td>Crea tabla <code>business_settings</code> con fila inicial</td><td>business_settings</td></tr>
+  <tr><td><code>migrate-presets.js</code></td><td>Crea <code>calculation_presets</code> y <code>calculation_preset_items</code>; agrega <code>preset_id</code> a proforma_items</td><td>calculation_presets, calculation_preset_items, proforma_items</td></tr>
+  <tr><td><code>migrate-mold-types.js</code></td><td>Crea tabla <code>mold_types</code>; agrega <code>total_grams</code> y <code>mold_type_id</code> a molds</td><td>mold_types, molds</td></tr>
+  <tr><td><code>migrate-presets-v2.js</code></td><td>Agrega <code>includes_color</code> a calculation_presets y <code>fragrance_pct</code> a calculation_preset_items</td><td>calculation_presets, calculation_preset_items</td></tr>
+  <tr><td><code>migrate-presets-v3.js</code></td><td>Agrega <code>labor_cost DECIMAL(10,2)</code> a calculation_presets</td><td>calculation_presets</td></tr>
+  <tr><td><code>migrate-presets-v4.js</code></td><td>Agrega <code>labor_hours DECIMAL(6,2) DEFAULT 1</code> a calculation_presets</td><td>calculation_presets</td></tr>
+  <tr><td><code>migrate-username.js</code></td><td>Agrega <code>username VARCHAR(100) NOT NULL UNIQUE</code>; popula desde prefijo del email; crea índice único</td><td>users</td></tr>
+</table>
+
+<div class="info">
+  <strong>Nota:</strong> La columna <code>categories.is_fragrance</code> se agregó con ALTER TABLE directo (sin script dedicado).
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     7. API REST
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s7">7. API REST — Endpoints</h1>
+
+<p>Prefijo base: <code>/api</code> · Formato de respuesta: <code>{ ok, message, data?, errors? }</code></p>
+
+<h2>7.1 Autenticación <span class="version">— /api/auth</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Body / Descripción</th></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/auth/login</td><td>No</td><td><code>{ username, password }</code> → devuelve <code>{ user, token }</code></td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/auth/register</td><td>No</td><td><code>{ name, username, password, role? }</code> → devuelve <code>{ user, token }</code></td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/auth/me</td><td>Bearer</td><td>Retorna el usuario autenticado actual</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/auth/change-password</td><td>Bearer</td><td><code>{ current_password, new_password }</code></td></tr>
+</table>
+
+<h2>7.2 Usuarios <span class="version">— /api/users (solo admin)</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/users</td><td>Listar todos los usuarios</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/users/pdf</td><td>PDF del listado de usuarios</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/users/:id</td><td>Obtener usuario por ID</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/users</td><td><code>{ name, username, password, role }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/users/:id</td><td><code>{ name, username, role, is_active }</code></td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/users/:id</td><td>Desactivar (soft delete, <code>is_active = 0</code>)</td></tr>
+</table>
+
+<h2>7.3 Categorías <span class="version">— /api/categories</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/categories</td><td>Listar categorías activas</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/categories/pdf</td><td>PDF del listado</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/categories</td><td><code>{ name, description?, is_fragrance }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/categories/:id</td><td>Actualizar</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/categories/:id</td><td>Soft delete</td></tr>
+</table>
+
+<h2>7.4 Unidades <span class="version">— /api/units</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/units</td><td>Listar todas las unidades</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/units</td><td><code>{ name, abbreviation }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/units/:id</td><td>Actualizar</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/units/:id</td><td>Hard delete</td></tr>
+</table>
+
+<h2>7.5 Productos / Ingredientes <span class="version">— /api/products</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/products</td><td>Listar ingredientes activos (con category name, unit abbr, is_fragrance)</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/products/stock/pdf</td><td>PDF del reporte de stock</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/products</td><td><code>{ name, category_id, unit_id, price, stock, min_stock }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/products/:id</td><td>Actualizar</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/products/:id</td><td>Soft delete</td></tr>
+  <tr><td><span class="badge badge-patch">PATCH</span></td><td>/products/:id/stock</td><td><code>{ quantity }</code> — suma al stock actual</td></tr>
+  <tr><td><span class="badge badge-patch">PATCH</span></td><td>/products/:id/writeoff</td><td><code>{ quantity, reason? }</code> — resta del stock (baja por daño)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/products/inventory-count</td><td><code>[{ product_id, new_stock }]</code> — toma de inventario bulk</td></tr>
+</table>
+
+<h2>7.6 Clientes <span class="version">— /api/clients</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/clients</td><td>Listar clientes activos</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/clients</td><td><code>{ name, cedula?, email?, phone?, address? }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/clients/:id</td><td>Actualizar</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/clients/:id</td><td>Soft delete</td></tr>
+</table>
+
+<h2>7.7 Tipos de Molde <span class="version">— /api/mold-types</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types</td><td>Listar tipos activos</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types</td><td><code>{ name }</code> (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/mold-types/:id</td><td>Actualizar (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/mold-types/:id</td><td>Soft delete (requireAuth)</td></tr>
+</table>
+
+<h2>7.8 Moldes <span class="version">— /api/molds</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/molds</td><td>Listar moldes activos (con tipo y gramos)</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/molds/pdf</td><td>PDF del listado de moldes</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/molds</td><td><code>{ name, mold_type_id?, total_grams, wax_grams }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/molds/:id</td><td>Actualizar</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/molds/:id</td><td>Soft delete</td></tr>
+</table>
+
+<h2>7.9 Proformas <span class="version">— /api/proformas</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/proformas</td><td>Listar todas las proformas con nombre de cliente</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/proformas/:id</td><td>Detalle completo con ítems y datos del cliente</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/proformas/:id/pdf</td><td>Generar PDF de la proforma (descarga directa)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/proformas</td><td>Crear borrador: <code>{ client_id, notes?, discount?, items[] }</code></td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/proformas/:id</td><td>Actualizar borrador (borra y re-inserta ítems)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/proformas/:id/confirm</td><td>Confirmar proforma → crea orden + descuenta stock (transacción)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/proformas/:id/cancel</td><td>Cancelar borrador</td></tr>
+</table>
+
+<h2>7.10 Órdenes <span class="version">— /api/orders</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/orders</td><td>Listar órdenes confirmadas</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/orders/:id</td><td>Detalle de orden con ítems</td></tr>
+  <tr><td><span class="badge badge-patch">PATCH</span></td><td>/orders/:id/status</td><td><code>{ status: 'entregado'|'cancelado' }</code></td></tr>
+</table>
+
+<h2>7.11 Calculadora / Presets <span class="version">— /api/presets</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/presets</td><td>Listar presets activos con sus ítems</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/presets/:id</td><td>Detalle de un preset</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/presets</td><td>Crear preset (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/presets/:id</td><td>Actualizar preset (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-delete">DELETE</span></td><td>/presets/:id</td><td>Desactivar (soft, requireAuth)</td></tr>
+</table>
+
+<h2>7.12 Reportes <span class="version">— /api/reports (requireAuth)</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/reports/summary</td><td>5 KPIs: total_orders, total_revenue, active_clients, pending_proformas, low_stock_count</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/reports/orders?from=&amp;to=</td><td>Órdenes confirmadas por rango de fechas</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/reports/low-stock</td><td>Ingredientes donde stock ≤ min_stock</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/reports/top-clients</td><td>Top 10 clientes por total gastado</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/reports/pdf?from=&amp;to=</td><td>PDF con todas las secciones anteriores</td></tr>
+</table>
+
+<h2>7.13 Configuración <span class="version">— /api/settings</span></h2>
+<table>
+  <tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/settings</td><td>No</td><td>Obtener configuración del negocio (público)</td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/settings</td><td>Admin</td><td><code>{ name, ruc?, phone?, observations? }</code></td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/settings/logo</td><td>Admin</td><td>Multipart: sube imagen y actualiza <code>logo_path</code></td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════
+     8. AUTENTICACIÓN Y SEGURIDAD
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s8">8. Autenticación y Seguridad</h1>
+
+<h2>8.1 JWT</h2>
+<ul>
+  <li>Se genera con <code>jsonwebtoken</code> al hacer login o register.</li>
+  <li>El payload contiene: <code>{ id, username, role, name }</code></li>
+  <li>Expiración configurable vía <code>JWT_EXPIRES</code> (default: <code>8h</code>)</li>
+  <li>El frontend lo almacena en <code>localStorage</code> bajo la clave <code>candles_token</code></li>
+  <li>Un interceptor HTTP Angular lo inyecta automáticamente en cada request como <code>Authorization: Bearer &lt;token&gt;</code></li>
+</ul>
+
+<h2>8.2 Contraseñas</h2>
+<ul>
+  <li>Se hashean con <code>bcryptjs</code> con salt de 10 rondas antes de guardar en DB.</li>
+  <li>La comparación se hace con <code>bcrypt.compare(plain, hash)</code> — nunca se almacena la contraseña en texto claro.</li>
+  <li>El cambio de contraseña requiere el token activo y la contraseña actual como verificación.</li>
+</ul>
+
+<h2>8.3 Middlewares de Seguridad</h2>
+<table>
+  <tr><th>Middleware</th><th>Función</th></tr>
+  <tr><td><code>requireAuth</code></td><td>Verifica el token JWT. Si es inválido o expirado → 401. Carga el payload en <code>req.user</code>.</td></tr>
+  <tr><td><code>requireAdmin</code></td><td>Verifica que <code>req.user.role === 'admin'</code>. Si no → 403. Debe ir después de requireAuth.</td></tr>
+  <tr><td><code>validate</code></td><td>Ejecuta <code>validationResult(req)</code> de express-validator. Si hay errores → 400 con detalle.</td></tr>
+  <tr><td><code>errorHandler</code></td><td>Middleware final: captura cualquier error no manejado → JSON <code>{ ok: false, message }</code>.</td></tr>
+</table>
+
+<h2>8.4 Guards del Frontend</h2>
+<table>
+  <tr><th>Guard</th><th>Comportamiento</th></tr>
+  <tr><td><code>AuthGuard</code></td><td>Protege rutas de <code>/dashboard</code>. Redirige a <code>/auth/login</code> si no hay token.</td></tr>
+  <tr><td><code>NoAuthGuard</code></td><td>Protege rutas de <code>/auth</code>. Redirige a <code>/dashboard</code> si ya hay token activo.</td></tr>
+  <tr><td><code>AdminGuard</code></td><td>Restringe rutas a usuarios con <code>role === 'admin'</code>. Redirige al dashboard si no cumple.</td></tr>
+</table>
+
+<h2>8.5 CORS</h2>
+<p>El backend acepta requests solo del origen configurado en <code>CORS_ORIGIN</code> (típicamente <code>http://localhost:4200</code> o la IP LAN del servidor). Configurable en <code>src/app.js</code>.</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     9. MÓDULOS DEL BACKEND
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s9">9. Módulos del Backend</h1>
+
+<h2>9.1 Modelo User</h2>
+<p>Archivo: <code>src/models/User.js</code></p>
+<table>
+  <tr><th>Método estático</th><th>Descripción</th></tr>
+  <tr><td><code>findAll()</code></td><td>Retorna todos los usuarios (sin password)</td></tr>
+  <tr><td><code>findById(id)</code></td><td>Retorna un usuario por ID (sin password)</td></tr>
+  <tr><td><code>findByUsername(username)</code></td><td>Retorna usuario activo con password para login</td></tr>
+  <tr><td><code>create({ name, username, password, role })</code></td><td>Hashea password, inserta y retorna el usuario creado</td></tr>
+  <tr><td><code>update(id, { name, username, role, is_active })</code></td><td>Actualiza usuario</td></tr>
+  <tr><td><code>changePassword(id, newPassword)</code></td><td>Hashea y actualiza solo la contraseña</td></tr>
+  <tr><td><code>verifyPassword(plain, hash)</code></td><td>Compara contraseña ingresada con el hash almacenado</td></tr>
+  <tr><td><code>delete(id)</code></td><td>Soft delete: <code>is_active = 0</code></td></tr>
+</table>
+
+<h2>9.2 Modelo Proforma (Transacción Central)</h2>
+<p>Archivo: <code>src/models/Proforma.js</code></p>
+<table>
+  <tr><th>Método estático</th><th>Descripción</th></tr>
+  <tr><td><code>findAll()</code></td><td>Lista proformas con nombre del cliente</td></tr>
+  <tr><td><code>findById(id)</code></td><td>Proforma con ítems, nombre, cédula, teléfono y dirección del cliente</td></tr>
+  <tr><td><code>save({ id?, client_id, notes, discount, items })</code></td><td>Crea o actualiza borrador (borra y re-inserta ítems en transacción)</td></tr>
+  <tr><td><code>confirm(id)</code></td><td>Transacción completa (ver sección 11)</td></tr>
+  <tr><td><code>cancel(id)</code></td><td>Marca como cancelada si está en borrador</td></tr>
+</table>
+
+<h2>9.3 Modelo CalculationPreset</h2>
+<p>Archivo: <code>src/models/CalculationPreset.js</code></p>
+<ul>
+  <li>Guarda el estado completo de la calculadora: molde, ingredientes con gramos y %, color, mano de obra.</li>
+  <li>Al crear/actualizar: borra y re-inserta los items del preset en la misma transacción.</li>
+  <li>Al confirmarse una orden que usa un preset: <code>is_active</code> se pone a 0 (preset ya consumido).</li>
+</ul>
+
+<h2>9.4 Modelo Report</h2>
+<p>Archivo: <code>src/models/Report.js</code>. Todas las queries son de solo lectura (sin transacciones):</p>
+<ul>
+  <li><code>getSummary()</code> — 5 KPIs en una sola llamada</li>
+  <li><code>getOrdersByPeriod(from, to)</code> — órdenes con detalle de cliente y total</li>
+  <li><code>getLowStock()</code> — JOIN products + categories + units donde stock ≤ min_stock</li>
+  <li><code>getTopClients()</code> — GROUP BY client_id con SUM(total) de órdenes</li>
+</ul>
+
+<h2>9.5 Utils — Helpers de Respuesta</h2>
+<p>Archivo: <code>src/utils/response.js</code>. Estandariza todas las respuestas HTTP:</p>
+<pre>
+success(res, data, msg)   → 200 { ok: true,  message, data }
+created(res, data, msg)   → 201 { ok: true,  message, data }
+error(res, msg, status)   → 4xx { ok: false, message }
+notFound(res, msg)        → 404 { ok: false, message }
+badRequest(res, msg)      → 400 { ok: false, message }
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════
+     10. MÓDULOS DEL FRONTEND
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s10">10. Módulos del Frontend (Angular 16)</h1>
+
+<h2>10.1 Enrutamiento</h2>
+<p>Todas las rutas privadas viven bajo <code>/dashboard</code> y están protegidas por <code>AuthGuard</code>. Cada módulo se carga con <strong>lazy loading</strong> para optimizar el tiempo de carga inicial.</p>
+
+<table>
+  <tr><th>Ruta</th><th>Módulo</th><th>Guard</th></tr>
+  <tr><td>/auth/login</td><td>AuthModule</td><td>NoAuthGuard</td></tr>
+  <tr><td>/auth/register</td><td>AuthModule</td><td>NoAuthGuard</td></tr>
+  <tr><td>/dashboard</td><td>DashboardModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/users</td><td>UsersModule</td><td>AuthGuard + AdminGuard</td></tr>
+  <tr><td>/dashboard/categories</td><td>CategoriesModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/units</td><td>UnitsModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/products</td><td>ProductsModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/stock</td><td>StockModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/mold-types</td><td>MoldTypesModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/molds</td><td>MoldsModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/clients</td><td>ClientsModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/proformas</td><td>ProformasModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/orders</td><td>OrdersModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/calculator</td><td>CalculatorModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/reports</td><td>ReportsModule</td><td>AuthGuard</td></tr>
+  <tr><td>/dashboard/settings</td><td>SettingsModule</td><td>AuthGuard + AdminGuard</td></tr>
+</table>
+
+<h2>10.2 AuthService</h2>
+<p>Archivo: <code>frontend/src/app/core/services/auth.service.ts</code></p>
+<ul>
+  <li>Usa <code>BehaviorSubject&lt;User | null&gt;</code> para estado reactivo del usuario actual</li>
+  <li><code>login(username, password)</code> → POST /auth/login → guarda token y user en localStorage</li>
+  <li><code>register({ name, username, password, role? })</code> → POST /auth/register</li>
+  <li><code>changePassword(current, new)</code> → POST /auth/change-password</li>
+  <li><code>logout()</code> → limpia localStorage y redirige a /auth/login</li>
+  <li><code>businessName</code> persiste en localStorage bajo <code>candles_business_name</code></li>
+</ul>
+
+<h2>10.3 Módulo Calculator</h2>
+<p>Es el módulo más complejo del frontend. Permite calcular el costo exacto de fabricación de una vela:</p>
+<ol>
+  <li>Seleccionar un molde → auto-rellena los gramos de cera (<code>wax_grams</code>)</li>
+  <li>Agregar líneas de ingredientes con cantidad en gramos</li>
+  <li>Si el ingrediente tiene <code>is_fragrance = 1</code> (vía categoría): aparece campo de % fragancia. Al ingresarlo, calcula los ml y reduce la cera automáticamente</li>
+  <li>Checkbox "Incluye color" → suma S/ 0.10 al costo por vela</li>
+  <li>Campo tarifa/hora × horas = mano de obra total</li>
+  <li>Ingresando precio de venta → calcula ganancia y margen %</li>
+  <li>El cálculo se guarda como preset (con todos los campos) y puede cargarse/reutilizarse</li>
+</ol>
+
+<h2>10.4 Módulo Proformas</h2>
+<p>Flujo completo de cotización:</p>
+<ol>
+  <li><strong>Lista</strong>: muestra proformas con estado (borrador/confirmada/cancelada), botones de ver, editar, PDF</li>
+  <li><strong>Formulario</strong>: agregar ítems libres (descripción + cantidad + precio) o cargar desde un preset de calculadora. Descuento aplicable. Totales en tiempo real.</li>
+  <li><strong>Detalle</strong>: muestra la proforma completa. Desde aquí se puede confirmar (genera orden + descuenta stock) o cancelar.</li>
+  <li><strong>PDF</strong>: descarga directa. Incluye logo, datos del negocio, datos del cliente (cédula, teléfono, dirección), tabla de ítems y totales.</li>
+</ol>
+
+<h2>10.5 Módulo Stock</h2>
+<p>Tres modos de operación en una sola pantalla:</p>
+<ul>
+  <li><strong>Agregar stock</strong>: seleccionar ingrediente + cantidad → suma al stock</li>
+  <li><strong>Dar de baja</strong>: seleccionar ingrediente + cantidad + motivo → resta del stock (para material dañado)</li>
+  <li><strong>Toma de inventario</strong>: modo bulk — ingresar el stock real contado para múltiples ingredientes. El sistema calcula la diferencia y actualiza solo los completados.</li>
+</ul>
+
+<h2>10.6 Layout (Sidebar + Topbar)</h2>
+<ul>
+  <li><strong>Sidebar</strong>: menú lateral con todas las rutas. En móvil se convierte en overlay full-screen con backdrop.</li>
+  <li><strong>Topbar</strong>: muestra nombre del negocio, nombre de usuario y rol. Dropdown con: cambiar contraseña y cerrar sesión.</li>
+  <li><strong>Responsive</strong>: a menos de 768px, el sidebar se oculta y se abre con el botón ☰. Se cierra automáticamente al navegar.</li>
+</ul>
+
+<!-- ═══════════════════════════════════════════════════════════
+     11. LÓGICA DE NEGOCIO CRÍTICA
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s11">11. Lógica de Negocio Crítica</h1>
+
+<h2>11.1 Confirmación de Proforma — Transacción Central</h2>
+<p>Método: <code>Proforma.confirm(id)</code> en <code>src/models/Proforma.js</code></p>
+<p>Este método es la operación más crítica del sistema. Se ejecuta en una sola transacción ACID:</p>
+
+<pre>
+BEGIN TRANSACTION
+│
+├── 1. Cargar proforma con ítems (findById)
+│      └── Verifica que status === 'borrador'
+│
+├── 2. Verificar stock para ítems directos (product_id no nulo)
+│      ├── FOR UPDATE (bloqueo pesimista)
+│      └── gramsToNativeUnit(quantity, unit_abbr) → compara con stock
+│
+├── 3. Verificar stock para ítems de preset (preset_id no nulo)
+│      ├── Cargar calculation_preset_items
+│      ├── FOR UPDATE en cada producto
+│      └── delta = gramsToNativeUnit(grams, unit_abbr) × quantity
+│
+├── 4. Marcar proforma como 'confirmada'
+│
+├── 5. Crear registro en orders (copia de subtotal/discount/total)
+│
+├── 6. Copiar proforma_items → order_items
+│      └── Descontar stock de ítems directos (con conversión)
+│
+├── 7. Descontar stock de ingredientes de presets
+│      └── UPDATE products SET stock = stock - delta
+│
+└── 8. Marcar presets usados como is_active = 0
+         (ya fueron consumidos en esta orden)
+
+COMMIT (o ROLLBACK si cualquier paso falla)
+</pre>
+
+<h2>11.2 Conversión de Unidades</h2>
+<p>Los gramos en <code>calculation_preset_items</code> siempre son gramos reales. Al descontar del stock (que está en la unidad nativa del producto), se aplica:</p>
+<pre>
+function gramsToNativeUnit(grams, unitAbbr) {
+  switch (unitAbbr.toLowerCase()) {
+    case 'kg': return grams / 1000;
+    case 'lb': return grams / 453.592;
+    case 'oz': return grams / 28.3495;
+    default:   return grams; // g, ml, u, l, etc.
+  }
+}
+</pre>
+<p>Esta función se aplica tanto en la verificación de stock como en el descuento efectivo.</p>
+
+<h2>11.3 Fórmula de Cera en Moldes</h2>
+<pre>
+wax_grams = total_grams × 0.90 × 1.05
+</pre>
+<ul>
+  <li><code>total_grams</code>: peso del agua al llenar el molde (método de desplazamiento)</li>
+  <li><strong>× 0.90</strong>: densidad de la cera ≈ 90% del agua</li>
+  <li><strong>× 1.05</strong>: margen del 5% para compensar contracción al enfriarse</li>
+</ul>
+
+<h2>11.4 Cálculo de Costo en la Calculadora</h2>
+<pre>
+Para cada línea de ingrediente:
+  - En kg:  costoPorGramo = price / 1000;  lineaCosto = grams × costoPorGramo
+  - En ml:  costoPorMl   = price;          lineaCosto = ml × costoPorMl
+  - En u:   costoPorUnd  = price;          lineaCosto = cantidad × costoPorUnd
+  - En g:   costoPorGramo = price;         lineaCosto = grams × costoPorGramo
+
+% Fragancia (solo si is_fragrance = 1):
+  fragranceMl = wax_grams × (pct / 100)
+  cera reducida en fragranceMl (misma densidad)
+
+Costo total por vela:
+  totalCosto = ΣlineaCostos
+             + (includesColor ? 0.10 : 0)
+             + (laborCost × laborHours)
+
+Margen:
+  ganancia = sellPrice - totalCosto
+  margen % = (ganancia / sellPrice) × 100
+</pre>
+
+<h2>11.5 Visibilidad de Mano de Obra en Proforma</h2>
+<p>La mano de obra (<code>labor_cost</code>) se absorbe silenciosamente en el subtotal mostrado al cliente. En el PDF y en la vista de detalle:</p>
+<pre>
+displaySubtotal = proforma.subtotal + proforma.labor_cost
+total mostrado  = displaySubtotal - descuento
+</pre>
+<p>La línea "Mano de obra" <strong>no aparece</strong> en el desglose de ítems al cliente.</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     12. GENERACIÓN DE PDFs
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s12">12. Generación de PDFs</h1>
+
+<p>Todos los PDFs se generan en el backend con <strong>pdfkit</strong> y se retornan como Buffer en la respuesta HTTP. El frontend los descarga como blob o usa <code>&lt;a href&gt;</code> directo.</p>
+
+<h2>12.1 PDF de Proforma</h2>
+<p>Archivo: <code>src/utils/pdfProforma.js</code></p>
+<ul>
+  <li>Encabezado con logo del negocio + nombre (vía <code>drawPdfHeader</code>)</li>
+  <li>Datos del documento: número formateado (0001), fecha</li>
+  <li>Datos del cliente: nombre, CI/RUC, teléfono, dirección (si existen)</li>
+  <li>Tabla de ítems: descripción, cantidad, precio unitario, subtotal</li>
+  <li>Totales: subtotal (ítems + labor_cost absorbido), descuento (si existe), TOTAL</li>
+  <li>Pie de página con fecha de generación</li>
+</ul>
+
+<h2>12.2 PDF de Reporte Gerencial</h2>
+<p>Archivo: <code>src/utils/pdfReport.js</code></p>
+<ul>
+  <li>Sección 1: KPIs principales en una grilla visual</li>
+  <li>Sección 2: Tabla de órdenes del período (filtrada por <code>from</code> y <code>to</code>)</li>
+  <li>Sección 3: Tabla de ingredientes con stock bajo</li>
+  <li>Sección 4: Top 10 clientes por total gastado</li>
+</ul>
+
+<h2>12.3 Listados PDF Genéricos</h2>
+<p>Archivo: <code>src/utils/pdfList.js</code> — Función <code>generateListPDF({ title, headers, widths, aligns, rows, businessName, logoPath })</code></p>
+<p>Usada por: categorías, unidades, productos, clientes, moldes, tipos de molde, usuarios, órdenes.</p>
+
+<h2>12.4 Encabezado Común</h2>
+<p>Archivo: <code>src/utils/pdfHeader.js</code> — Función <code>drawPdfHeader(doc, { businessName, logoPath })</code></p>
+<p>Si <code>logoPath</code> existe, dibuja la imagen desde <code>public/uploads/</code>. El nombre del negocio siempre se muestra como título.</p>
+
+<!-- ═══════════════════════════════════════════════════════════
+     13. CONFIGURACIÓN Y VARIABLES DE ENTORNO
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s13">13. Configuración y Variables de Entorno</h1>
+
+<h2>13.1 Variables del Backend (.env)</h2>
+<table>
+  <tr><th>Variable</th><th>Descripción</th><th>Default</th></tr>
+  <tr><td><code>PORT</code></td><td>Puerto del servidor Express</td><td>3000</td></tr>
+  <tr><td><code>DB_HOST</code></td><td>Host de MySQL</td><td>localhost</td></tr>
+  <tr><td><code>DB_PORT</code></td><td>Puerto de MySQL</td><td>3306</td></tr>
+  <tr><td><code>DB_USER</code></td><td>Usuario de MySQL</td><td>—</td></tr>
+  <tr><td><code>DB_PASSWORD</code></td><td>Contraseña de MySQL</td><td>—</td></tr>
+  <tr><td><code>DB_NAME</code></td><td>Nombre de la base de datos</td><td>candles_db</td></tr>
+  <tr><td><code>JWT_SECRET</code></td><td>Clave secreta para firmar tokens JWT</td><td>—</td></tr>
+  <tr><td><code>JWT_EXPIRES</code></td><td>Duración del token JWT</td><td>8h</td></tr>
+  <tr><td><code>CORS_ORIGIN</code></td><td>URL permitida para CORS (frontend Angular)</td><td>http://localhost:4200</td></tr>
+  <tr><td><code>SERVER_IP</code></td><td>IP del servidor para acceso LAN (usado por set-env.js)</td><td>localhost</td></tr>
+</table>
+
+<h2>13.2 Generación de environment.ts (set-env.js)</h2>
+<p>El script <code>set-env.js</code> en la raíz lee <code>SERVER_IP</code> del <code>.env</code> y genera automáticamente <code>frontend/src/environments/environment.ts</code> antes de <code>ng serve</code>. Esto permite que el frontend apunte a la IP correcta del servidor en red LAN sin modificar archivos de código.</p>
+
+<h2>13.3 Acceso en Red LAN</h2>
+<p>Para acceder desde dispositivos en la misma red local:</p>
+<ol>
+  <li>Configurar <code>SERVER_IP=192.168.x.x</code> en <code>.env</code></li>
+  <li>Ejecutar <code>npm start</code> en el frontend (incluye <code>--host 0.0.0.0</code>)</li>
+  <li>Abrir reglas de firewall para los puertos 3000 y 4200 en Windows</li>
+</ol>
+<pre>
+netsh advfirewall firewall add rule name="Candles Backend" dir=in action=allow protocol=TCP localport=3000
+netsh advfirewall firewall add rule name="Candles Frontend" dir=in action=allow protocol=TCP localport=4200
+</pre>
+
+<!-- ═══════════════════════════════════════════════════════════
+     14. INSTALACIÓN Y DESPLIEGUE
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s14">14. Instalación y Despliegue</h1>
+
+<h2>14.1 Requisitos Previos</h2>
+<ul>
+  <li>Node.js 18+</li>
+  <li>MySQL 8.x corriendo localmente</li>
+  <li>npm 9+</li>
+</ul>
+
+<h2>14.2 Instalación desde Cero</h2>
+<pre>
+# 1. Clonar el repositorio
+git clone https://github.com/crismarcet86/candles-app.git
+cd candles-app
+
+# 2. Crear la base de datos
+mysql -u root -p -e "CREATE DATABASE candles_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+# 3. Configurar variables de entorno
+cp .env.example .env
+# Editar .env con las credenciales correctas
+
+# 4. Instalar dependencias del backend
+npm install
+
+# 5. Ejecutar migraciones en orden
+npm run db:migrate
+node src/config/migrate-v2.js
+node src/config/migrate-cedula.js
+node src/config/migrate-settings.js
+node src/config/migrate-presets.js
+node src/config/migrate-mold-types.js
+node src/config/migrate-presets-v2.js
+node src/config/migrate-presets-v3.js
+node src/config/migrate-presets-v4.js
+node src/config/migrate-username.js
+
+# 6. Instalar dependencias del frontend
+cd frontend && npm install && cd ..
+
+# 7. Iniciar servidores
+# Terminal 1 — Backend:
+npm run dev
+
+# Terminal 2 — Frontend:
+cd frontend && npm start
+</pre>
+
+<h2>14.3 Scripts npm Disponibles</h2>
+<table>
+  <tr><th>Script</th><th>Comando</th><th>Descripción</th></tr>
+  <tr><td>Backend dev</td><td><code>npm run dev</code></td><td>nodemon con auto-reload → puerto 3000</td></tr>
+  <tr><td>Backend prod</td><td><code>npm start</code></td><td>node directo → puerto 3000</td></tr>
+  <tr><td>Migración base</td><td><code>npm run db:migrate</code></td><td>Schema inicial + datos semilla</td></tr>
+  <tr><td>Frontend dev</td><td><code>cd frontend &amp;&amp; npm start</code></td><td>ng serve --host 0.0.0.0 → puerto 4200</td></tr>
+  <tr><td>Frontend build</td><td><code>cd frontend &amp;&amp; npm run build</code></td><td>Build de producción en dist/</td></tr>
+</table>
+
+<!-- ═══════════════════════════════════════════════════════════
+     15. GUÍA DE OPERACIÓN
+═══════════════════════════════════════════════════════════ -->
+<div class="page-break"></div>
+<h1 id="s15">15. Guía de Operación</h1>
+
+<h2>15.1 Consultar Usuarios Registrados</h2>
+<pre>
+node -e "
+require('dotenv').config();
+const { pool } = require('./src/config/database');
+pool.query('SELECT id, name, username, role, is_active FROM users')
+  .then(([r]) => { console.table(r); process.exit(0); });
+"
+</pre>
+
+<h2>15.2 Resetear Contraseña desde Consola</h2>
+<pre>
+node -e "
+const bcrypt = require('bcryptjs');
+require('dotenv').config();
+const { pool } = require('./src/config/database');
+bcrypt.hash('NUEVA_CONTRASEÑA', 10).then(hash => {
+  return pool.query('UPDATE users SET password = ? WHERE username = ?',
+    [hash, 'USERNAME_DEL_USUARIO']);
+}).then(([r]) => {
+  console.log('Filas actualizadas:', r.affectedRows);
+  process.exit(0);
+});
+"
+</pre>
+
+<h2>15.3 Verificar Estado de la API</h2>
+<pre>
+GET http://localhost:3000/health
+→ { "status": "ok", "app": "candles-app", "version": "1.0.0" }
+</pre>
+
+<h2>15.4 Primeros Pasos en el Sistema</h2>
+<ol>
+  <li><strong>Configurar el negocio</strong>: en Configuración (admin), ingresar nombre, RUC y subir logo. Este aparece en todos los PDFs.</li>
+  <li><strong>Crear categorías</strong>: marcar <code>is_fragrance = 1</code> para categorías de esencias/fragancias.</li>
+  <li><strong>Crear unidades</strong>: g, kg, ml, oz, lb, u (o las que use el negocio).</li>
+  <li><strong>Crear ingredientes</strong>: asignar categoría, unidad, precio y stock inicial.</li>
+  <li><strong>Crear tipos de molde y moldes</strong>: ingresar el peso total de agua para calcular automáticamente los gramos de cera.</li>
+  <li><strong>Usar la calculadora</strong>: seleccionar molde, agregar ingredientes, definir % de fragancia, mano de obra y precio de venta. Guardar como preset.</li>
+  <li><strong>Crear cliente y proforma</strong>: agregar ítems libres o desde un preset. Descargar PDF para enviar al cliente.</li>
+  <li><strong>Confirmar pedido</strong>: en el detalle de proforma, confirmar para generar la orden y descontar el stock automáticamente.</li>
+</ol>
+
+<h2>15.5 Logs del Sistema</h2>
+<p>El logger Winston escribe en:</p>
+<ul>
+  <li><strong>Consola</strong>: todos los niveles durante desarrollo</li>
+  <li><strong>logs/error.log</strong>: solo errores (nivel ERROR)</li>
+  <li><strong>logs/combined.log</strong>: todos los niveles (INFO, WARN, ERROR)</li>
+</ul>
+
+<h2>15.6 Soft Delete vs Hard Delete</h2>
+<table>
+  <tr><th>Entidad</th><th>Tipo de eliminación</th></tr>
+  <tr><td>Users, Categories, Products, Clients, Molds, MoldTypes</td><td>Soft delete (<code>is_active = 0</code>)</td></tr>
+  <tr><td>Units</td><td>Hard delete (eliminación real)</td></tr>
+  <tr><td>Orders</td><td>Sin eliminación (solo cambio de status)</td></tr>
+  <tr><td>Proformas</td><td>Sin eliminación (se cancelan)</td></tr>
+</table>
+
+<footer>
+  <p>Documento Técnico — Candles App v1.0 · Generado el 24 de junio de 2026</p>
+  <p>Sistema de gestión para negocio de velas artesanales · Node.js + Angular 16 + MySQL 8</p>
+</footer>
+
+</body>
+</html>
