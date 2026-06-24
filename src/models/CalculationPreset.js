@@ -35,18 +35,18 @@ class CalculationPreset {
 
   /**
    * Guarda un cálculo como preset reutilizable.
-   * items: [{ product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal }]
+   * items: [{ product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal, fragrance_pct }]
    */
-  static async create({ name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, items }) {
+  static async create({ name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, items }) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
       const [result] = await conn.query(
         `INSERT INTO calculation_presets
-          (name, mold_name, wax_grams, quantity, sell_price, cost_per_unit)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0]
+          (name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0]
       );
       const presetId = result.insertId;
 
@@ -54,8 +54,8 @@ class CalculationPreset {
         if (!item.ingredient_id && !item.ingredient_name) continue;
         await conn.query(
           `INSERT INTO calculation_preset_items
-            (preset_id, product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (preset_id, product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal, fragrance_pct)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             presetId,
             item.ingredient_id || null,
@@ -65,6 +65,7 @@ class CalculationPreset {
             item.unit_abbr || '',
             item.unit_cost || 0,
             item.subtotal || 0,
+            item.fragrance_pct != null ? item.fragrance_pct : null,
           ]
         );
       }
@@ -79,16 +80,16 @@ class CalculationPreset {
     }
   }
 
-  static async update(id, { name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, items }) {
+  static async update(id, { name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, items }) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
       await conn.query(
         `UPDATE calculation_presets
-         SET name=?, mold_name=?, wax_grams=?, quantity=?, sell_price=?, cost_per_unit=?, is_active=1, updated_at=NOW()
+         SET name=?, mold_name=?, wax_grams=?, quantity=?, sell_price=?, cost_per_unit=?, includes_color=?, is_active=1, updated_at=NOW()
          WHERE id=?`,
-        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, id]
+        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0, id]
       );
 
       await conn.query('DELETE FROM calculation_preset_items WHERE preset_id = ?', [id]);
@@ -97,8 +98,8 @@ class CalculationPreset {
         if (!item.ingredient_id && !item.ingredient_name) continue;
         await conn.query(
           `INSERT INTO calculation_preset_items
-            (preset_id, product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            (preset_id, product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal, fragrance_pct)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id,
             item.ingredient_id || null,
@@ -108,6 +109,7 @@ class CalculationPreset {
             item.unit_abbr || '',
             item.unit_cost || 0,
             item.subtotal || 0,
+            item.fragrance_pct != null ? item.fragrance_pct : null,
           ]
         );
       }

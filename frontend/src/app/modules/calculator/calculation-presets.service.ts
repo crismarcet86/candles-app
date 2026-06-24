@@ -12,6 +12,7 @@ export interface CalcPresetItem {
   unit_abbr: string;
   unit_cost: number;
   subtotal: number;
+  fragrance_pct?: number | null;
 }
 
 export interface CalcPreset {
@@ -22,6 +23,7 @@ export interface CalcPreset {
   quantity: number;
   sell_price: number;
   cost_per_unit: number;
+  includes_color: number;
   is_active: number;
   item_count?: number;
   items?: CalcPresetItem[];

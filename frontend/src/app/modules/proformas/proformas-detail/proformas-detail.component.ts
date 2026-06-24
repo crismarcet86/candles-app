@@ -55,6 +55,11 @@ export class ProformasDetailComponent implements OnInit {
     });
   }
 
+  get displaySubtotal(): number {
+    if (!this.proforma) return 0;
+    return Number(this.proforma.subtotal) + Number(this.proforma.labor_cost);
+  }
+
   statusLabel(status: string): string {
     const map: any = { borrador: 'Borrador', confirmada: 'Confirmada', cancelada: 'Cancelada' };
     return map[status] || status;

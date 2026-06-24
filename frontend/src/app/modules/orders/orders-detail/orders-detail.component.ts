@@ -27,5 +27,10 @@ export class OrdersDetailComponent implements OnInit {
     });
   }
 
+  get displaySubtotal(): number {
+    if (!this.order) return 0;
+    return Number(this.order.total) + Number(this.order.discount);
+  }
+
   goBack() { this.router.navigate(['/dashboard/orders']); }
 }

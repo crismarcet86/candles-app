@@ -108,11 +108,7 @@
         <div class="totals-section">
           <div class="total-row">
             <span>Subtotal</span>
-            <span>S/ {{ getSubtotal() | number:'1.2-2' }}</span>
-          </div>
-          <div class="total-row" *ngIf="(field('labor_cost')?.value || 0) > 0">
-            <span>Mano de obra</span>
-            <span>+ S/ {{ (field('labor_cost')?.value || 0) | number:'1.2-2' }}</span>
+            <span>S/ {{ getDisplaySubtotal() | number:'1.2-2' }}</span>
           </div>
           <div class="total-row" *ngIf="(field('discount')?.value || 0) > 0">
             <span>Descuento</span>

@@ -130,6 +130,11 @@ export class ProformasFormComponent implements OnInit {
     return s;
   }
 
+  getDisplaySubtotal(): number {
+    const laborCost = +(this.form.get('labor_cost')?.value || 0);
+    return this.getSubtotal() + laborCost;
+  }
+
   getTotal(): number {
     const laborCost = +(this.form.get('labor_cost')?.value || 0);
     const discount  = +(this.form.get('discount')?.value  || 0);

@@ -141,14 +141,14 @@ export class CalculatorComponent implements OnInit {
       }
     }
 
-    // Determinar si es por gramo (kg/g) o por unidad
+    // Determinar si es por gramo/ml o por unidad
     const unitLower = ing.unit_abbr.toLowerCase();
     if (unitLower === 'kg') {
       line.is_unit   = false;
       line.unit_cost = ing.price / 1000; // costo por gramo
-    } else if (unitLower === 'g') {
+    } else if (unitLower === 'g' || unitLower === 'ml') {
       line.is_unit   = false;
-      line.unit_cost = ing.price;
+      line.unit_cost = ing.price; // costo por g o por ml
     } else {
       // pabilo u otras unidades
       line.is_unit   = true;
@@ -290,13 +290,14 @@ export class CalculatorComponent implements OnInit {
     this.saving = true;
     this.saveError = '';
     const payload = {
-      name:          this.saveName.trim(),
-      mold_name:     this.selectedMold?.name || null,
-      wax_grams:     this.selectedMold?.wax_grams || null,
-      quantity:      this.quantity,
-      sell_price:    this.sellPrice,
-      cost_per_unit: this.totalCostPerCandle,
-      items:         this.lines
+      name:           this.saveName.trim(),
+      mold_name:      this.selectedMold?.name || null,
+      wax_grams:      this.selectedMold?.wax_grams || null,
+      quantity:       this.quantity,
+      sell_price:     this.sellPrice,
+      cost_per_unit:  this.totalCostPerCandle,
+      includes_color: this.includesColor,
+      items:          this.lines
         .filter(l => l.ingredient_id && l.subtotal > 0)
         .map(l => ({
           ingredient_id:   l.ingredient_id,
@@ -306,6 +307,7 @@ export class CalculatorComponent implements OnInit {
           unit_abbr:       l.unit_abbr,
           unit_cost:       l.unit_cost,
           subtotal:        l.subtotal,
+          fragrance_pct:   l.fragrance_pct ?? null,
         }))
     };
     const request$ = this.editingPresetId
@@ -363,13 +365,13 @@ export class CalculatorComponent implements OnInit {
           this.selectedMold = null;
         }
 
-        this.quantity  = p.quantity || 1;
-        this.sellPrice = Number(p.sell_price) || 0;
-        this.marginTarget = 0;
+        this.quantity      = p.quantity || 1;
+        this.sellPrice     = Number(p.sell_price) || 0;
+        this.marginTarget  = 0;
+        this.includesColor = !!p.includes_color;
 
         // Rebuild lines from preset items
         this.lines = (p.items || []).map((item: any, idx: number) => {
-          const ing = this.ingredients.find(i => i.id === item.product_id);
           return {
             ingredient_id:   item.product_id || null,
             ingredient_name: item.ingredient_name || '',
@@ -379,6 +381,7 @@ export class CalculatorComponent implements OnInit {
             is_unit:         !!item.is_unit,
             subtotal:        Number(item.subtotal) || 0,
             isWaxLine:       idx === 0 && !!matchingMold,
+            fragrance_pct:   item.fragrance_pct != null ? Number(item.fragrance_pct) : null,
           } as CalcLine;
         });
 
@@ -405,7 +408,7 @@ export class CalculatorComponent implements OnInit {
   }
 
   isFragranceLine(line: CalcLine): boolean {
-    if (!line.ingredient_id || line.isWaxLine || line.is_unit) return false;
+    if (!line.ingredient_id || line.isWaxLine) return false;
     const ing = this.ingredients.find(i => i.id === +line.ingredient_id!);
     return !!ing && ing.is_fragrance === 1;
   }

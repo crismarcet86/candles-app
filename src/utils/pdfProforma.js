@@ -114,11 +114,9 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
       doc.moveDown(0.35);
     };
 
-    drawTotalRow('Subtotal:', `S/ ${Number(proforma.subtotal).toFixed(2)}`);
+    const displaySubtotal = Number(proforma.subtotal) + Number(proforma.labor_cost || 0);
 
-    if (Number(proforma.labor_cost) > 0) {
-      drawTotalRow('Mano de obra:', `S/ ${Number(proforma.labor_cost).toFixed(2)}`);
-    }
+    drawTotalRow('Subtotal:', `S/ ${displaySubtotal.toFixed(2)}`);
     if (Number(proforma.discount) > 0) {
       drawTotalRow('Descuento:', `- S/ ${Number(proforma.discount).toFixed(2)}`, false, '#dc2626');
     }
