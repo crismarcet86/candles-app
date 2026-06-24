@@ -262,7 +262,9 @@ candles-app/
 │   │   ├── migrate-presets-v2.js   includes_color en presets; fragrance_pct en items
 │   │   ├── migrate-presets-v3.js   labor_cost en calculation_presets
 │   │   ├── migrate-presets-v4.js   labor_hours en calculation_presets
-│   │   └── migrate-username.js     username NOT NULL UNIQUE en users
+│   │   ├── migrate-username.js     username NOT NULL UNIQUE en users
+│   │   ├── migrate-report-logo.js  report_logo_path en business_settings (imagen PDFs)
+│   │   └── migrate-mold-type-image.js image_path en mold_types (imagen referencial)
 │   ├── controllers/
 │   │   ├── authController.js       Login, register, me, change-password
 │   │   ├── userController.js       CRUD usuarios (solo admin)
@@ -377,7 +379,7 @@ categories (id, name, is_fragrance, is_active)
                         │
                    orders (id, proforma_id UNIQUE, client_id, subtotal, discount, total, status)
 
-mold_types (id, name, is_active)
+mold_types (id, name, image_path, is_active)
     │
     └──► molds (id, name, mold_type_id, total_grams, wax_grams, is_active)
 
@@ -454,6 +456,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
   <tr><td>id</td><td>INT PK</td><td></td></tr>
   <tr><td>name</td><td>VARCHAR(100) NOT NULL</td><td>Ej: "Redondo", "Cuadrado"</td></tr>
+  <tr><td>image_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/; <code>image_url</code> se construye en el controller</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
 </table>
 
@@ -545,7 +548,8 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>ruc</td><td>VARCHAR(20) NULL</td><td>RUC o número fiscal</td></tr>
   <tr><td>phone</td><td>VARCHAR(30) NULL</td><td></td></tr>
   <tr><td>observations</td><td>TEXT NULL</td><td>Notas adicionales para PDFs</td></tr>
-  <tr><td>logo_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/</td></tr>
+  <tr><td>logo_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/ — usado como ícono (login, sidebar, favicon)</td></tr>
+  <tr><td>report_logo_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/ — usado en encabezado de todos los PDFs. Fallback a logo_path si es null</td></tr>
 </table>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -568,6 +572,8 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><code>migrate-presets-v3.js</code></td><td>Agrega <code>labor_cost DECIMAL(10,2)</code> a calculation_presets</td><td>calculation_presets</td></tr>
   <tr><td><code>migrate-presets-v4.js</code></td><td>Agrega <code>labor_hours DECIMAL(6,2) DEFAULT 1</code> a calculation_presets</td><td>calculation_presets</td></tr>
   <tr><td><code>migrate-username.js</code></td><td>Agrega <code>username VARCHAR(100) NOT NULL UNIQUE</code>; popula desde prefijo del email; crea índice único</td><td>users</td></tr>
+  <tr><td><code>migrate-report-logo.js</code></td><td>Agrega <code>report_logo_path VARCHAR(255) NULL</code> para imagen exclusiva de PDFs/reportes</td><td>business_settings</td></tr>
+  <tr><td><code>migrate-mold-type-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del tipo de molde</td><td>mold_types</td></tr>
 </table>
 
 <div class="info">
@@ -646,10 +652,12 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
 <h2>7.7 Tipos de Molde <span class="version">— /api/mold-types</span></h2>
 <table>
   <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
-  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types</td><td>Listar tipos activos</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types</td><td>Listar todos los tipos con <code>image_url</code></td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types/:id</td><td>Detalle de un tipo</td></tr>
   <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types</td><td><code>{ name }</code> (requireAuth)</td></tr>
-  <tr><td><span class="badge badge-put">PUT</span></td><td>/mold-types/:id</td><td>Actualizar (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/mold-types/:id</td><td>Actualizar nombre / estado (requireAuth)</td></tr>
   <tr><td><span class="badge badge-delete">DELETE</span></td><td>/mold-types/:id</td><td>Soft delete (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types/:id/image</td><td>Multipart: sube imagen referencial; guarda como <code>mold-type-{id}.ext</code> (requireAuth)</td></tr>
 </table>
 
 <h2>7.8 Moldes <span class="version">— /api/molds</span></h2>
@@ -707,7 +715,8 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><th>Método</th><th>Ruta</th><th>Auth</th><th>Descripción</th></tr>
   <tr><td><span class="badge badge-get">GET</span></td><td>/settings</td><td>No</td><td>Obtener configuración del negocio (público)</td></tr>
   <tr><td><span class="badge badge-put">PUT</span></td><td>/settings</td><td>Admin</td><td><code>{ name, ruc?, phone?, observations? }</code></td></tr>
-  <tr><td><span class="badge badge-post">POST</span></td><td>/settings/logo</td><td>Admin</td><td>Multipart: sube imagen y actualiza <code>logo_path</code></td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/settings/logo</td><td>Admin</td><td>Multipart: sube imagen de ícono; guarda como <code>logo.ext</code> en <code>public/uploads/</code></td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/settings/report-logo</td><td>Admin</td><td>Multipart: sube imagen exclusiva para PDFs; guarda como <code>report-logo.ext</code></td></tr>
 </table>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -1016,6 +1025,7 @@ total mostrado  = displaySubtotal - descuento
 <h2>12.4 Encabezado Común</h2>
 <p>Archivo: <code>src/utils/pdfHeader.js</code> — Función <code>drawPdfHeader(doc, { businessName, logoPath })</code></p>
 <p>Si <code>logoPath</code> existe, dibuja la imagen desde <code>public/uploads/</code>. El nombre del negocio siempre se muestra como título.</p>
+<p><strong>Sistema de logos dual:</strong> Todos los controladores PDF consultan <code>business_settings</code> y pasan <code>report_logo_path || logo_path</code> como <code>logoPath</code>. Esto permite tener una imagen dedicada para reportes/PDFs (campo <em>"Imagen para PDFs"</em> en Configuración) distinta del logo que aparece como icono/favicon en la interfaz web. Si no se sube una imagen de reporte, se usa el logo del negocio como respaldo.</p>
 
 <!-- ═══════════════════════════════════════════════════════════
      13. CONFIGURACIÓN Y VARIABLES DE ENTORNO
@@ -1093,6 +1103,8 @@ node src/config/migrate-presets-v2.js
 node src/config/migrate-presets-v3.js
 node src/config/migrate-presets-v4.js
 node src/config/migrate-username.js
+node src/config/migrate-report-logo.js
+node src/config/migrate-mold-type-image.js
 
 # 6. Instalar dependencias del frontend
 cd frontend && npm install && cd ..

@@ -27,7 +27,8 @@ node src/config/migrate-presets-v2.js  # includes_color en presets; fragrance_pc
 node src/config/migrate-presets-v3.js  # labor_cost en calculation_presets
 node src/config/migrate-presets-v4.js  # labor_hours en calculation_presets (default 1)
 node src/config/migrate-username.js    # Columna username en users (reemplaza email para login)
-node src/config/migrate-report-logo.js # Columna report_logo_path en business_settings para imagen de PDFs
+node src/config/migrate-report-logo.js     # Columna report_logo_path en business_settings para imagen de PDFs
+node src/config/migrate-mold-type-image.js # Columna image_path en mold_types para imagen referencial
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -69,7 +70,8 @@ src/
     migrate-presets-v3.js # labor_cost en calculation_presets
     migrate-presets-v4.js # labor_hours en calculation_presets
     migrate-username.js   # Agrega username NOT NULL UNIQUE a users; poblado desde prefijo de email
-    migrate-report-logo.js # Agrega report_logo_path a business_settings
+    migrate-report-logo.js    # Agrega report_logo_path a business_settings
+    migrate-mold-type-image.js # Agrega image_path a mold_types
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
@@ -158,7 +160,7 @@ calculation_presets ←── calculation_preset_items
 - **User** tiene `username` (único, reemplaza email para login), `role`: `admin` o `user`. Solo admins gestionan usuarios
 - **Category** tiene `is_fragrance` — si es 1, sus ingredientes muestran el campo % fragancia en la calculadora
 - **Product** (ingrediente) hereda `is_fragrance` de su categoría vía JOIN; `price`, `stock`, `min_stock`
-- **MoldType** — clasificación del molde (ej: "Redondo", "Cuadrado")
+- **MoldType** — clasificación del molde (ej: "Redondo", "Cuadrado"). Tiene `image_path` para imagen referencial; `image_url` se construye en el controller. La imagen se sube con `POST /api/mold-types/:id/image` (solo en modo edición)
 - **Mold** tiene `total_grams` (peso agua por desplazamiento) y `wax_grams` (auto = agua×0.9×1.05)
 - **Client** tiene `cedula` (CI/RUC), `email`, `phone`, `address`, `notes`
 - **ProformaItem** tiene descripción libre (texto), cantidad y precio unitario manual — `product_id` opcional; `preset_id` opcional (vincula un preset de calculadora)
@@ -246,6 +248,14 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 - **Logo de PDFs** (`POST /api/settings/report-logo`): guarda `report-logo.<ext>` en `public/uploads/`; aparece en el encabezado de todos los PDFs. Si no está configurado, hace fallback al logo icono.
 - El `businessName` también se guarda en `localStorage` bajo `candles_business_name` para el topbar
 - Todos los controllers de PDF usan `settings.report_logo_path || settings.logo_path` como `logoPath`
+
+## Imágenes de Tipos de Molde
+
+- `POST /api/mold-types/:id/image` — sube imagen referencial del tipo (requireAuth); guarda como `mold-type-{id}.<ext>` en `public/uploads/`
+- El controller `moldTypeController.js` agrega `image_url` a todas las respuestas (vía helper `buildImageUrl`)
+- En el frontend, el formulario de edición muestra la tarjeta de imagen con preview inmediato al seleccionar archivo
+- En el listado, cada tipo muestra un thumbnail (42×42 px); al hacer clic se abre un modal de vista previa full-size
+- En modo creación no se puede subir imagen aún — se muestra una nota indicando que hay que editar después de crear
 
 ## Validaciones Frontend
 
