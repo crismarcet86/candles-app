@@ -6,6 +6,8 @@ import { environment } from '../../../environments/environment';
 export interface MoldType {
   id: number;
   name: string;
+  image_path: string | null;
+  image_url: string | null;
   is_active: number;
   created_at: string;
 }
@@ -35,5 +37,11 @@ export class MoldTypesService {
 
   deactivate(id: number): Observable<ApiResponse<null>> {
     return this.http.delete<ApiResponse<null>>(`${this.base}/${id}`);
+  }
+
+  uploadImage(id: number, file: File): Observable<ApiResponse<MoldType>> {
+    const fd = new FormData();
+    fd.append('image', file);
+    return this.http.post<ApiResponse<MoldType>>(`${this.base}/${id}/image`, fd);
   }
 }

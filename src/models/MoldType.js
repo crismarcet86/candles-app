@@ -36,6 +36,14 @@ class MoldType {
     return this.findById(id);
   }
 
+  static async updateImage(id, image_path) {
+    await pool.query(
+      'UPDATE mold_types SET image_path=?, updated_at=NOW() WHERE id=?',
+      [image_path, id]
+    );
+    return this.findById(id);
+  }
+
   static async deactivate(id) {
     const [result] = await pool.query(
       'UPDATE mold_types SET is_active=0, updated_at=NOW() WHERE id=?',

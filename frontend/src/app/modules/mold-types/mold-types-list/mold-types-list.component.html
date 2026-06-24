@@ -22,6 +22,7 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th class="th-img"></th>
             <th>Nombre</th>
             <th>Estado</th>
             <th class="th-actions">Acciones</th>
@@ -29,9 +30,19 @@
         </thead>
         <tbody>
           <tr *ngIf="types.length === 0">
-            <td colspan="3" class="empty-state">No hay tipos de molde registrados</td>
+            <td colspan="4" class="empty-state">No hay tipos de molde registrados</td>
           </tr>
           <tr *ngFor="let t of types" [class.row-inactive]="t.is_active === 0">
+            <!-- Thumbnail -->
+            <td class="td-thumb">
+              <div class="thumb-wrapper"
+                   [class.has-img]="!!t.image_url"
+                   [title]="t.image_url ? 'Ver imagen' : 'Sin imagen'"
+                   (click)="t.image_url ? openPreview(t) : null">
+                <img *ngIf="t.image_url" [src]="t.image_url" [alt]="t.name" class="thumb-img">
+                <span *ngIf="!t.image_url" class="thumb-placeholder">🫧</span>
+              </div>
+            </td>
             <td><strong>{{ t.name }}</strong></td>
             <td>
               <span class="badge" [class.badge-active]="t.is_active === 1" [class.badge-inactive]="t.is_active === 0">
@@ -49,14 +60,24 @@
     </div>
   </div>
 
-  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null">
-    <div class="modal">
+  <!-- Modal desactivar -->
+  <div class="modal-backdrop" *ngIf="confirmDeactivateId !== null" (click)="cancelDeactivate()">
+    <div class="modal" (click)="$event.stopPropagation()">
       <h3>¿Desactivar tipo de molde?</h3>
       <p>Los moldes con este tipo conservarán su asignación. Podés reactivarlo editándolo.</p>
       <div class="modal-actions">
         <button class="btn-outline" (click)="cancelDeactivate()">Cancelar</button>
         <button class="btn-danger"  (click)="confirmDeactivate()">Sí, desactivar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal vista previa imagen -->
+  <div class="modal-backdrop preview-backdrop" *ngIf="previewImage" (click)="closePreview()">
+    <div class="preview-modal" (click)="$event.stopPropagation()">
+      <button class="preview-close" (click)="closePreview()">✕</button>
+      <p class="preview-name">{{ previewImage.name }}</p>
+      <img [src]="previewImage.url" [alt]="previewImage.name" class="preview-full">
     </div>
   </div>
 </div>

@@ -13,6 +13,7 @@ export class MoldTypesListComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
   confirmDeactivateId: number | null = null;
+  previewImage: { url: string; name: string } | null = null;
 
   constructor(private svc: MoldTypesService, private router: Router) {}
 
@@ -30,6 +31,11 @@ export class MoldTypesListComponent implements OnInit {
   goToEdit(id: number): void { this.router.navigate(['/dashboard/mold-types', id, 'edit']); }
   askDeactivate(id: number): void { this.confirmDeactivateId = id; }
   cancelDeactivate(): void { this.confirmDeactivateId = null; }
+
+  openPreview(t: MoldType): void {
+    if (t.image_url) this.previewImage = { url: t.image_url, name: t.name };
+  }
+  closePreview(): void { this.previewImage = null; }
 
   confirmDeactivate(): void {
     if (!this.confirmDeactivateId) return;

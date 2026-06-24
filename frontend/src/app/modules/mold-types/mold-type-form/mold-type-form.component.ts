@@ -15,6 +15,9 @@ export class MoldTypeFormComponent implements OnInit {
   loading = false;
   loadingData = false;
   errorMsg = '';
+  successMsg = '';
+  previewUrl: string | null = null;
+  uploadingImage = false;
 
   constructor(
     private fb: FormBuilder,
@@ -34,10 +37,36 @@ export class MoldTypeFormComponent implements OnInit {
     if (this.isEdit && this.typeId) {
       this.loadingData = true;
       this.svc.getById(this.typeId).subscribe({
-        next: r => { this.form.patchValue(r.data); this.loadingData = false; },
+        next: r => {
+          this.form.patchValue(r.data);
+          this.previewUrl = r.data.image_url || null;
+          this.loadingData = false;
+        },
         error: () => { this.errorMsg = 'Error al cargar'; this.loadingData = false; }
       });
     }
+  }
+
+  onImageChange(event: any): void {
+    if (!this.isEdit || !this.typeId) return;
+    const file: File = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { this.errorMsg = 'Solo se permiten imágenes'; return; }
+    if (file.size > 2 * 1024 * 1024) { this.errorMsg = 'La imagen no puede superar 2 MB'; return; }
+    this.errorMsg = '';
+    const reader = new FileReader();
+    reader.onload = e => this.previewUrl = e.target?.result as string;
+    reader.readAsDataURL(file);
+    this.uploadingImage = true;
+    this.svc.uploadImage(this.typeId, file).subscribe({
+      next: r => {
+        this.previewUrl = r.data.image_url || this.previewUrl;
+        this.uploadingImage = false;
+        this.successMsg = 'Imagen guardada';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => { this.uploadingImage = false; this.errorMsg = 'Error al subir imagen'; }
+    });
   }
 
   submit(): void {
@@ -48,7 +77,14 @@ export class MoldTypeFormComponent implements OnInit {
       ? this.svc.update(this.typeId!, this.form.value)
       : this.svc.create(this.form.value);
     req.subscribe({
-      next: () => this.router.navigate(['/dashboard/mold-types']),
+      next: (r) => {
+        if (!this.isEdit) {
+          // Si hay imagen pendiente, navegar al edit para subirla; si no, volver a lista
+          this.router.navigate(['/dashboard/mold-types']);
+        } else {
+          this.router.navigate(['/dashboard/mold-types']);
+        }
+      },
       error: err => { this.errorMsg = err.error?.message || 'Error al guardar'; this.loading = false; }
     });
   }
