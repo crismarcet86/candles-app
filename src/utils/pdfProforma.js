@@ -36,16 +36,37 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
       day: '2-digit', month: '2-digit', year: 'numeric'
     });
 
+    // Columna izquierda: datos del documento
     doc.fillColor('#1a1a2e').fontSize(9).font('Helvetica');
-    doc.text(`N°: ${String(proforma.id).padStart(4, '0')}`, 50,  infoY);
-    doc.text(`Fecha: ${fecha}`,                               50,  infoY + 13);
-    doc.text(`Cliente: ${proforma.client_name}`,              50,  infoY + 26);
+    doc.text(`N°: ${String(proforma.id).padStart(4, '0')}`, 50, infoY);
+    doc.text(`Fecha: ${fecha}`,                               50, infoY + 13);
 
+    // Columna derecha: datos del cliente
+    const clientX = 300;
+    doc.font('Helvetica-Bold').text('Cliente:', clientX, infoY);
+    doc.font('Helvetica').text(proforma.client_name, clientX, infoY + 13);
+
+    let clientLineY = infoY + 26;
+    if (proforma.client_cedula) {
+      doc.text(`CI/RUC: ${proforma.client_cedula}`, clientX, clientLineY);
+      clientLineY += 13;
+    }
+    if (proforma.client_phone) {
+      doc.text(`Tel: ${proforma.client_phone}`, clientX, clientLineY);
+      clientLineY += 13;
+    }
+    if (proforma.client_address) {
+      doc.text(`Dir: ${proforma.client_address}`, clientX, clientLineY, { width: 245 });
+      clientLineY += 13;
+    }
     if (proforma.notes) {
-      doc.text(`Notas: ${proforma.notes}`, 50, infoY + 39);
+      doc.text(`Notas: ${proforma.notes}`, 50, Math.max(infoY + 26, clientLineY), { width: W });
+      clientLineY += 13;
     }
 
-    doc.moveDown(2.5);
+    // Avanzar al final del bloque de info
+    doc.y = Math.max(clientLineY, infoY + 40);
+    doc.moveDown(1);
 
     // ── LÍNEA SEPARADORA ────────────────────────────────────────
     doc.moveTo(50, doc.y).lineTo(545, doc.y).strokeColor(brown).lineWidth(1.5).stroke();

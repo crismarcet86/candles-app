@@ -1,6 +1,6 @@
 # 🕯️ Candles App
 
-Sistema de gestión para un emprendimiento de velas artesanales. Permite gestionar ingredientes (cera, esencia, pabilos), moldes con tipo y capacidad en gramos, clientes, cotizaciones (proformas) con mano de obra y descuentos, confirmar pedidos descontando stock, calcular costos con fragrancias y color, ajustar inventario y exportar reportes en PDF.
+Sistema de gestión para un emprendimiento de velas artesanales. Permite gestionar ingredientes (cera, esencia, pabilos), moldes con tipo y capacidad en gramos, clientes, cotizaciones (proformas) con descuentos, confirmar pedidos descontando stock, calcular costos con fragmentos %, color y mano de obra, ajustar inventario y exportar reportes en PDF.
 
 - **Backend:** Node.js + Express + MySQL — puerto 3000
 - **Frontend:** Angular 16 SPA — puerto 4200
@@ -52,6 +52,9 @@ node src/config/migrate-cedula.js
 node src/config/migrate-settings.js
 node src/config/migrate-presets.js
 node src/config/migrate-mold-types.js
+node src/config/migrate-presets-v2.js
+node src/config/migrate-presets-v3.js
+node src/config/migrate-presets-v4.js
 ```
 
 > **Nota:** cada script verifica si la columna/tabla ya existe antes de crearla, por lo que son idempotentes y pueden ejecutarse más de una vez sin error.
@@ -102,14 +105,17 @@ candles-app/
 │   │   ├── migrate.js         # Schema inicial + seeding
 │   │   ├── migrate-v2.js      # Adapta al modelo de velas
 │   │   ├── migrate-cedula.js  # Agrega cédula a clientes
-│   │   ├── migrate-settings.js # Configuración del negocio (nombre, RUC, logo)
-│   │   ├── migrate-presets.js  # Presets de calculadora vinculados a proformas
-│   │   └── migrate-mold-types.js # Tipos de molde + total_grams en molds
+│   │   ├── migrate-settings.js  # Configuración del negocio (nombre, RUC, logo)
+│   │   ├── migrate-presets.js   # Presets de calculadora vinculados a proformas
+│   │   ├── migrate-mold-types.js # Tipos de molde + total_grams en molds
+│   │   ├── migrate-presets-v2.js # includes_color en presets; fragrance_pct en preset_items
+│   │   ├── migrate-presets-v3.js # labor_cost en calculation_presets
+│   │   └── migrate-presets-v4.js # labor_hours en calculation_presets
 │   ├── models/                # Queries SQL directas (sin ORM)
 │   ├── controllers/           # Manejo de req/res
 │   ├── routes/                # Rutas + validaciones express-validator
 │   ├── middlewares/           # auth, errorHandler, validate
-│   └── utils/                 # logger, response, pdfProforma, pdfReport, pdfList
+│   └── utils/                 # logger, response, pdfProforma, pdfReport, pdfList, pdfHeader
 ├── frontend/                  # Angular 16 SPA
 │   └── src/app/modules/
 │       ├── auth/              # Login y registro
@@ -120,10 +126,10 @@ candles-app/
 │       ├── stock/             # Stock: agregar, dar de baja, toma de inventario
 │       ├── mold-types/        # Tipos de molde (CRUD)
 │       ├── molds/             # Moldes con tipo, agua y cera en gramos
-│       ├── clients/           # Clientes
-│       ├── proformas/         # Cotizaciones → PDF
+│       ├── clients/           # Clientes (cédula, teléfono, dirección, correo)
+│       ├── proformas/         # Cotizaciones → PDF con datos de cliente
 │       ├── orders/            # Pedidos confirmados
-│       ├── calculator/        # Calculadora de costos: fragancia %, color, margen
+│       ├── calculator/        # Calculadora: fragancia %, color, mano de obra (tarifa × horas)
 │       └── reports/           # Reportes KPI + PDF exportable
 ├── .env.example
 ├── .gitignore
@@ -142,6 +148,9 @@ candles-app/
 | `migrate-settings.js` | Tabla `business_settings` (nombre, RUC, teléfono, logo) |
 | `migrate-presets.js` | Tablas `calculation_presets` y `calculation_preset_items`; columna `preset_id` en proforma_items |
 | `migrate-mold-types.js` | Tabla `mold_types`; columnas `total_grams` y `mold_type_id` en molds |
+| `migrate-presets-v2.js` | Columna `includes_color` en `calculation_presets`; `fragrance_pct` en `calculation_preset_items` |
+| `migrate-presets-v3.js` | Columna `labor_cost` en `calculation_presets` |
+| `migrate-presets-v4.js` | Columna `labor_hours` en `calculation_presets` (default 1) |
 
 > Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.
 
@@ -155,12 +164,13 @@ users (autenticación y roles)
 categories (is_fragrance) ←── products (ingredientes) ───→ units
                                         │
                                  proforma_items ──────────→ proformas ───→ clients
-                                        │   (preset_id)       (labor_cost, discount)
+                                        │   (preset_id)       (discount)
                                   order_items   ──────────→ orders
 
 mold_types ←── molds (total_grams, wax_grams — calculadora)
 
-calculation_presets ←── calculation_preset_items (product_id, grams, unit_abbr)
+calculation_presets ←── calculation_preset_items (product_id, grams, unit_abbr, fragrance_pct)
+  (includes_color, labor_cost, labor_hours)
 ```
 
 ---
@@ -182,9 +192,9 @@ Prefijo base: `/api` | Auth: `Authorization: Bearer <token>`
 | Clientes | `GET/POST/PUT/DELETE /clients` |
 | Proformas | `GET/POST/PUT /proformas` · `POST /:id/confirm` · `POST /:id/cancel` · `GET /:id/pdf` |
 | Órdenes | `GET /orders` · `GET /orders/:id` |
-| Calculadora | `GET/POST/PUT/DELETE /calculation-presets` |
+| Calculadora / Presets | `GET/POST/PUT/DELETE /presets` |
 | Reportes | `GET /reports/summary` · `/orders` · `/low-stock` · `/top-clients` · `/pdf` |
-| Configuración | `GET/PUT /settings` |
+| Configuración | `GET/PUT /settings` · `POST /settings/logo` |
 
 ---
 

@@ -34,7 +34,11 @@ class Proforma {
 
   static async findById(id) {
     const [proformas] = await pool.query(`
-      SELECT p.*, c.name AS client_name
+      SELECT p.*,
+        c.name    AS client_name,
+        c.cedula  AS client_cedula,
+        c.phone   AS client_phone,
+        c.address AS client_address
       FROM proformas p
       JOIN clients c ON p.client_id = c.id
       WHERE p.id = ?

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Sistema de gestión para negocio de **velas artesanales**. Permite gestionar ingredientes (cera, esencia, pabilos, etc.), tipos de molde, moldes con capacidad en gramos, clientes, cotizaciones (proformas) con mano de obra y descuentos, confirmar pedidos descontando stock, calcular costos con % de fragancia y color, y ajustar inventario.
+Sistema de gestión para negocio de **velas artesanales**. Permite gestionar ingredientes (cera, esencia, pabilos, etc.), tipos de molde, moldes con capacidad en gramos, clientes, cotizaciones (proformas) con descuentos, confirmar pedidos descontando stock, calcular costos con % de fragancia, color y mano de obra (tarifa × horas), y ajustar inventario.
 
 - **Backend:** Node.js + Express + MySQL REST API (`/` — puerto 3000)
 - **Frontend:** Angular 16 SPA (`/frontend/` — puerto 4200)
@@ -18,11 +18,14 @@ npm start          # Production server
 npm run db:migrate # Inicializa schema y datos semilla (ejecutar una vez)
 
 # Migraciones adicionales (ejecutar en orden si es instalación nueva)
-node src/config/migrate-v2.js        # Adapta DB al modelo de velas: molds, labor_cost, items libres
-node src/config/migrate-cedula.js    # Agrega campo cedula a clients
-node src/config/migrate-settings.js  # Tabla business_settings (nombre, RUC, teléfono, logo)
-node src/config/migrate-presets.js   # Tablas calculation_presets + preset_id en proforma_items
-node src/config/migrate-mold-types.js # Tabla mold_types + total_grams + mold_type_id en molds
+node src/config/migrate-v2.js          # Adapta DB al modelo de velas: molds, labor_cost, items libres
+node src/config/migrate-cedula.js      # Agrega campo cedula a clients
+node src/config/migrate-settings.js    # Tabla business_settings (nombre, RUC, teléfono, logo)
+node src/config/migrate-presets.js     # Tablas calculation_presets + preset_id en proforma_items
+node src/config/migrate-mold-types.js  # Tabla mold_types + total_grams + mold_type_id en molds
+node src/config/migrate-presets-v2.js  # includes_color en presets; fragrance_pct en preset_items
+node src/config/migrate-presets-v3.js  # labor_cost en calculation_presets
+node src/config/migrate-presets-v4.js  # labor_hours en calculation_presets (default 1)
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -60,6 +63,9 @@ src/
     migrate-settings.js  # Tabla business_settings
     migrate-presets.js   # Tablas calculation_presets y calculation_preset_items
     migrate-mold-types.js # Tabla mold_types + columnas en molds
+    migrate-presets-v2.js # includes_color en presets; fragrance_pct en preset_items
+    migrate-presets-v3.js # labor_cost en calculation_presets
+    migrate-presets-v4.js # labor_hours en calculation_presets
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
@@ -73,7 +79,7 @@ src/
   utils/
     logger.js        # Winston logger
     response.js      # Helpers: success(), created(), error(), notFound(), badRequest()
-    pdfProforma.js   # Generador PDF de proformas con pdfkit
+    pdfProforma.js   # Generador PDF de proformas con pdfkit (incluye datos del cliente)
     pdfReport.js     # Generador PDF de reportes: KPIs, órdenes, stock bajo, top clientes
     pdfList.js       # Generador genérico de listados en PDF (generateListPDF)
     pdfHeader.js     # Encabezado común con logo y nombre del negocio
@@ -103,11 +109,11 @@ frontend/src/app/
     products/             # CRUD de ingredientes (precio, stock, min_stock)
     stock/                # Stock: agregar, dar de baja (daño), toma de inventario bulk
     clients/              # CRUD de clientes (nombre, cédula, correo, teléfono, dirección)
-    proformas/            # Cotizaciones: items libres + presets + labor_cost + descuento → PDF
+    proformas/            # Cotizaciones: items libres + presets + descuento → PDF
     orders/               # Pedidos confirmados (solo lectura)
     mold-types/           # CRUD de tipos de molde
     molds/                # CRUD de moldes: tipo, peso agua, cera (auto 90%×1.05)
-    calculator/           # Calculadora: molde + ingredientes + % fragancia + color → precio sugerido
+    calculator/           # Calculadora: molde + ingredientes + % fragancia + color + mano de obra
     reports/              # Reportes: KPIs, órdenes por período, stock bajo, top clientes + PDF
   shared/
     models/               # Interfaces TypeScript: Client, Product, Proforma, Mold, MoldType, etc.
@@ -136,13 +142,13 @@ users (autenticación y roles)
 categories (is_fragrance) ←── products (ingredientes) ───→ units
                                         │
                                  proforma_items ──────────→ proformas ───→ clients
-                                        │   (preset_id?)     (labor_cost, discount)
+                                        │   (preset_id?)     (discount)
                                   order_items   ──────────→ orders
 
 mold_types ←── molds (total_grams agua, wax_grams = agua×0.9×1.05)
 
 calculation_presets ←── calculation_preset_items
-                         (product_id, grams, unit_abbr, is_unit)
+  (includes_color, labor_cost, labor_hours)   (product_id, grams, unit_abbr, is_unit, fragrance_pct)
 ```
 
 - **User** tiene `role`: `admin` o `user`. Solo admins gestionan usuarios
@@ -152,9 +158,9 @@ calculation_presets ←── calculation_preset_items
 - **Mold** tiene `total_grams` (peso agua por desplazamiento) y `wax_grams` (auto = agua×0.9×1.05)
 - **Client** tiene `cedula` (CI/RUC), `email`, `phone`, `address`, `notes`
 - **ProformaItem** tiene descripción libre (texto), cantidad y precio unitario manual — `product_id` opcional; `preset_id` opcional (vincula un preset de calculadora)
-- **Proforma** tiene `labor_cost` (mano de obra artesanal), `discount`, `status`: `borrador` → `confirmada` / `cancelada`
+- **Proforma** tiene `discount`, `status`: `borrador` → `confirmada` / `cancelada`. La mano de obra ya no está en proforma — se gestiona en el preset de calculadora
 - **Order** se crea exclusivamente al confirmar una Proforma — nunca directamente
-- **CalculationPreset** guarda un cálculo completo (molde, ingredientes con gramos, precio de venta) reutilizable en proformas
+- **CalculationPreset** guarda un cálculo completo (molde, ingredientes con gramos, % fragancia, color, mano de obra tarifa/h y horas, precio de venta) reutilizable en proformas
 
 ## Critical Business Logic
 
@@ -187,12 +193,12 @@ Stock siempre usa columnas `DECIMAL` (nunca float) para evitar errores de redond
 **Calculadora de costos** (`/dashboard/calculator`):
 - Carga moldes activos e ingredientes activos
 - Al seleccionar un molde, la línea de cera se auto-llena con `wax_grams`
-- Soporta ingredientes en `kg` → costo por gramo = `price / 1000`
-- Soporta ingredientes por unidad (pabilos, cajas)
-- **% Fragancia**: solo aparece en líneas cuyo ingrediente tiene `is_fragrance = 1` (vía categoría). Al ingresar %, calcula `grams = mold.wax_grams × pct/100` y reduce la línea de cera automáticamente
+- Soporta ingredientes en `kg` → costo por gramo = `price / 1000`; en `ml` → costo por ml = `price`; por unidad (pabilos)
+- **% Fragancia**: aparece en líneas cuyo ingrediente tiene `is_fragrance = 1` (vía categoría), independientemente de la unidad. Al ingresar %, calcula `ml = mold.wax_grams × pct/100` y reduce la línea de cera automáticamente
+- **Mano de obra**: campo tarifa (S//h) × campo horas = `laborTotal`; se suma al `totalCostPerCandle`
 - **Incluye color**: checkbox que suma S/ 0.10 al costo por vela
 - Calcula costo total, ganancia y margen dados un precio de venta
-- Los cálculos se pueden guardar como presets y cargar en proformas
+- Los cálculos se guardan como presets (incluyendo `labor_cost`, `labor_hours`, `includes_color`, `fragrance_pct` por línea) y se pueden cargar/modificar en cualquier momento
 
 **Stock** (`/dashboard/stock`):
 - **Agregar stock**: suma cantidad al stock actual
@@ -208,6 +214,8 @@ Stock siempre usa columnas `DECIMAL` (nunca float) para evitar errores de redond
 ## PDF de Proformas y Reportes
 
 - `GET /api/proformas/:id/pdf` — PDF individual de proforma (pdfkit). El frontend usa `<a href>` directo.
+  - Incluye datos del cliente: nombre, CI/RUC, teléfono y dirección (si existen)
+  - El subtotal muestra ítems + mano de obra absorbida; "Mano de obra" no aparece como línea separada
 - `GET /api/reports/pdf?from=YYYY-MM-DD&to=YYYY-MM-DD` — PDF de reporte gerencial. El frontend hace petición HTTP con blob download.
 - `GET /api/products/stock/pdf` — PDF del reporte de stock (requiere auth, blob download).
 - Listados PDF (categorías, moldes, etc.) usan `generateListPDF` de `src/utils/pdfList.js`.
@@ -229,10 +237,10 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 
 ## Configuración del Negocio
 
-- `GET/PUT /api/settings` — nombre del negocio, RUC, teléfono, logo
+- `GET/PUT /api/settings` — nombre del negocio, RUC, teléfono, logo (ruta pública — no requiere auth)
 - El logo se sube como multipart a `POST /api/settings/logo` y se guarda en `public/uploads/`
 - El `businessName` también se guarda en `localStorage` bajo `candles_business_name` para el topbar
-- El logo aparece en todos los PDFs generados
+- El logo aparece en todos los PDFs generados y como favicon del tab del navegador (dinámico vía `AppComponent.setFavicon`)
 
 ## Validaciones Frontend
 
@@ -290,3 +298,4 @@ El payload del token contiene: `{ id, email, role, name }`
 - El frontend guarda el token en `localStorage` y lo inyecta via HTTP interceptor
 - `AuthService.businessName` se guarda en `localStorage` bajo la clave `candles_business_name` — editable desde el topbar
 - Las descripciones de ítems de proforma/orden se leen de `item.description`, no de `item.product_name` (que puede ser null para ítems libres)
+- `Proforma.findById` retorna `client_cedula`, `client_phone` y `client_address` además de `client_name` para el PDF
