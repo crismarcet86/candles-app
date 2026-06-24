@@ -51,6 +51,7 @@ export class CalculatorComponent implements OnInit {
   marginTarget: number = 0; // % de margen deseado
   includesColor: boolean = false;
   laborCost: number = 0;
+  laborHours: number = 1;
 
   loadingMolds = true;
   loadingIngredients = true;
@@ -200,9 +201,13 @@ export class CalculatorComponent implements OnInit {
     }
   }
 
+  get laborTotal(): number {
+    return (this.laborCost || 0) * (this.laborHours || 1);
+  }
+
   get totalCostPerCandle(): number {
     const linesCost = this.lines.reduce((sum, l) => sum + (l.subtotal || 0), 0);
-    return linesCost + (this.includesColor ? 0.10 : 0) + (this.laborCost || 0);
+    return linesCost + (this.includesColor ? 0.10 : 0) + this.laborTotal;
   }
 
   get totalCost(): number {
@@ -299,6 +304,7 @@ export class CalculatorComponent implements OnInit {
       cost_per_unit:  this.totalCostPerCandle,
       includes_color: this.includesColor,
       labor_cost:     this.laborCost,
+      labor_hours:    this.laborHours,
       items:          this.lines
         .filter(l => l.ingredient_id && l.subtotal > 0)
         .map(l => ({
@@ -372,6 +378,7 @@ export class CalculatorComponent implements OnInit {
         this.marginTarget  = 0;
         this.includesColor = !!p.includes_color;
         this.laborCost     = Number(p.labor_cost) || 0;
+        this.laborHours    = Number(p.labor_hours) || 1;
 
         // Rebuild lines from preset items
         this.lines = (p.items || []).map((item: any, idx: number) => {
@@ -409,6 +416,7 @@ export class CalculatorComponent implements OnInit {
     this.saveSuccess = '';
     this.includesColor = false;
     this.laborCost = 0;
+    this.laborHours = 1;
   }
 
   isFragranceLine(line: CalcLine): boolean {
