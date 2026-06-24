@@ -20,6 +20,9 @@ export class ProductsFormComponent implements OnInit {
 
   categories: any[] = [];
   units: any[] = [];
+  previewUrl: string | null = null;
+  uploadingImage = false;
+  successMsg = '';
 
   constructor(
     private fb: FormBuilder,
@@ -46,6 +49,28 @@ export class ProductsFormComponent implements OnInit {
     if (this.isEdit && this.itemId) {
       this.loadItem(this.itemId);
     }
+  }
+
+  onImageChange(event: any): void {
+    if (!this.isEdit || !this.itemId) return;
+    const file: File = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { this.errorMsg = 'Solo se permiten imágenes'; return; }
+    if (file.size > 2 * 1024 * 1024) { this.errorMsg = 'La imagen no puede superar 2 MB'; return; }
+    this.errorMsg = '';
+    const reader = new FileReader();
+    reader.onload = e => this.previewUrl = e.target?.result as string;
+    reader.readAsDataURL(file);
+    this.uploadingImage = true;
+    this.service.uploadImage(this.itemId, file).subscribe({
+      next: r => {
+        this.previewUrl = r.data.image_url || this.previewUrl;
+        this.uploadingImage = false;
+        this.successMsg = 'Imagen guardada';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => { this.uploadingImage = false; this.errorMsg = 'Error al subir imagen'; }
+    });
   }
 
   private buildForm(): void {
@@ -76,6 +101,7 @@ export class ProductsFormComponent implements OnInit {
           min_stock:   p.min_stock,
           is_active:   p.is_active
         });
+        this.previewUrl = p.image_url || null;
         this.loadingData = false;
       },
       error: err => {

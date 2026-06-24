@@ -265,7 +265,8 @@ candles-app/
 │   │   ├── migrate-username.js     username NOT NULL UNIQUE en users
 │   │   ├── migrate-report-logo.js  report_logo_path en business_settings (imagen PDFs)
 │   │   ├── migrate-mold-type-image.js image_path en mold_types (imagen referencial)
-│   │   └── migrate-mold-image.js      image_path en molds (imagen referencial)
+│   │   ├── migrate-mold-image.js      image_path en molds (imagen referencial)
+│   │   └── migrate-product-image.js   image_path en products (imagen referencial)
 │   ├── controllers/
 │   │   ├── authController.js       Login, register, me, change-password
 │   │   ├── userController.js       CRUD usuarios (solo admin)
@@ -366,7 +367,7 @@ users (id, name, username UNIQUE, password, role, is_active)
 
 categories (id, name, is_fragrance, is_active)
     │
-    └──► products (id, category_id, unit_id, name, price, stock, min_stock, is_active)
+    └──► products (id, category_id, unit_id, name, price, stock, min_stock, image_path, is_active)
               │                    │
               │               units (id, name, abbreviation)
               │
@@ -436,6 +437,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>price</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Precio por unidad nativa</td></tr>
   <tr><td>stock</td><td>DECIMAL(12,4) DEFAULT 0</td><td>DECIMAL para evitar errores de redondeo</td></tr>
   <tr><td>min_stock</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Umbral de stock bajo</td></tr>
+  <tr><td>image_path</td><td>VARCHAR(255) NULL</td><td>Nombre de archivo en <code>public/uploads/</code>; <code>image_url</code> se construye en el controller</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
 </table>
 
@@ -577,6 +579,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><code>migrate-report-logo.js</code></td><td>Agrega <code>report_logo_path VARCHAR(255) NULL</code> para imagen exclusiva de PDFs/reportes</td><td>business_settings</td></tr>
   <tr><td><code>migrate-mold-type-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del tipo de molde</td><td>mold_types</td></tr>
   <tr><td><code>migrate-mold-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del molde</td><td>molds</td></tr>
+  <tr><td><code>migrate-product-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del ingrediente</td><td>products</td></tr>
 </table>
 
 <div class="info">
@@ -641,6 +644,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><span class="badge badge-patch">PATCH</span></td><td>/products/:id/stock</td><td><code>{ quantity }</code> — suma al stock actual</td></tr>
   <tr><td><span class="badge badge-patch">PATCH</span></td><td>/products/:id/writeoff</td><td><code>{ quantity, reason? }</code> — resta del stock (baja por daño)</td></tr>
   <tr><td><span class="badge badge-post">POST</span></td><td>/products/inventory-count</td><td><code>[{ product_id, new_stock }]</code> — toma de inventario bulk</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/products/:id/image</td><td>Subir imagen referencial del ingrediente (multipart/form-data, campo <code>image</code>, requireAuth)</td></tr>
 </table>
 
 <h2>7.6 Clientes <span class="version">— /api/clients</span></h2>

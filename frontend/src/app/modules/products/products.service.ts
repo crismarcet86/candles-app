@@ -47,4 +47,10 @@ export class ProductsService {
   inventoryCount(items: { product_id: number; real_stock: number }[]): Observable<ApiResponse<Product[]>> {
     return this.http.post<ApiResponse<Product[]>>(`${this.base}/inventory-count`, { items });
   }
+
+  uploadImage(id: number, file: File): Observable<ApiResponse<Product>> {
+    const fd = new FormData();
+    fd.append('image', file);
+    return this.http.post<ApiResponse<Product>>(`${this.base}/${id}/image`, fd);
+  }
 }

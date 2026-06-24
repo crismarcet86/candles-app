@@ -59,6 +59,7 @@ node src/config/migrate-username.js
 node src/config/migrate-report-logo.js
 node src/config/migrate-mold-type-image.js
 node src/config/migrate-mold-image.js
+node src/config/migrate-product-image.js
 ```
 
 > **Nota:** cada script verifica si la columna/tabla ya existe antes de crearla, por lo que son idempotentes y pueden ejecutarse más de una vez sin error.
@@ -160,6 +161,7 @@ candles-app/
 | `migrate-report-logo.js` | Columna `report_logo_path` en `business_settings` para imagen exclusiva de PDFs (banner rectangular, se muestra a ancho completo sobre el título) |
 | `migrate-mold-type-image.js` | Columna `image_path` en `mold_types` para imagen referencial del tipo |
 | `migrate-mold-image.js` | Columna `image_path` en `molds` para imagen referencial del molde |
+| `migrate-product-image.js` | Columna `image_path` en `products` para imagen referencial del ingrediente |
 
 > Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.
 

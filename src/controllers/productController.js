@@ -3,11 +3,27 @@ const Settings = require('../models/Settings');
 const { success, created, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
-exports.getAll    = async (req, res, next) => { try { success(res, await Product.findAll()); } catch (e) { next(e); } };
-exports.getById   = async (req, res, next) => { try { const p = await Product.findById(req.params.id); p ? success(res, p) : notFound(res, 'Producto no encontrado'); } catch (e) { next(e); } };
-exports.create    = async (req, res, next) => { try { created(res, await Product.create(req.body)); } catch (e) { next(e); } };
-exports.update    = async (req, res, next) => { try { const p = await Product.findById(req.params.id); if (!p) return notFound(res, 'Producto no encontrado'); success(res, await Product.update(req.params.id, req.body)); } catch (e) { next(e); } };
-exports.remove    = async (req, res, next) => { try { const ok = await Product.delete(req.params.id); ok ? success(res, null, 'Producto desactivado') : notFound(res, 'Producto no encontrado'); } catch (e) { next(e); } };
+const buildImageUrl = (req, image_path) =>
+  image_path ? `${req.protocol}://${req.get('host')}/uploads/${image_path}` : null;
+
+const fmt = (req, p) => p ? { ...p, image_url: buildImageUrl(req, p.image_path) } : null;
+const fmtAll = (req, rows) => rows.map(p => fmt(req, p));
+
+exports.getAll  = async (req, res, next) => { try { success(res, fmtAll(req, await Product.findAll())); } catch (e) { next(e); } };
+exports.getById = async (req, res, next) => { try { const p = await Product.findById(req.params.id); p ? success(res, fmt(req, p)) : notFound(res, 'Producto no encontrado'); } catch (e) { next(e); } };
+exports.create  = async (req, res, next) => { try { created(res, fmt(req, await Product.create(req.body))); } catch (e) { next(e); } };
+exports.update  = async (req, res, next) => { try { const p = await Product.findById(req.params.id); if (!p) return notFound(res, 'Producto no encontrado'); success(res, fmt(req, await Product.update(req.params.id, req.body))); } catch (e) { next(e); } };
+exports.remove  = async (req, res, next) => { try { const ok = await Product.delete(req.params.id); ok ? success(res, null, 'Producto desactivado') : notFound(res, 'Producto no encontrado'); } catch (e) { next(e); } };
+
+exports.uploadImage = async (req, res, next) => {
+  try {
+    if (!req.file) return res.status(400).json({ ok: false, message: 'No se recibió archivo' });
+    const p = await Product.findById(req.params.id);
+    if (!p) return notFound(res, 'Producto no encontrado');
+    const updated = await Product.updateImage(req.params.id, req.file.filename);
+    success(res, fmt(req, updated), 'Imagen actualizada');
+  } catch (e) { next(e); }
+};
 
 exports.addStock = async (req, res, next) => {
   try {
@@ -15,24 +31,24 @@ exports.addStock = async (req, res, next) => {
     const p = await Product.findById(req.params.id);
     if (!p) return notFound(res, 'Producto no encontrado');
     const updated = await Product.adjustStock(req.params.id, +quantity);
-    success(res, updated, 'Stock actualizado');
+    success(res, fmt(req, updated), 'Stock actualizado');
   } catch (e) { next(e); }
 };
 
 exports.writeOffStock = async (req, res, next) => {
   try {
-    const { quantity } = req.body; // positivo desde el cliente, se resta
+    const { quantity } = req.body;
     const p = await Product.findById(req.params.id);
     if (!p) return notFound(res, 'Producto no encontrado');
     if (+quantity <= 0) return res.status(400).json({ ok: false, message: 'La cantidad debe ser mayor a 0' });
     const updated = await Product.adjustStock(req.params.id, -Math.abs(+quantity));
-    success(res, updated, 'Baja de stock registrada');
+    success(res, fmt(req, updated), 'Baja de stock registrada');
   } catch (e) { next(e); }
 };
 
 exports.inventoryCount = async (req, res, next) => {
   try {
-    const { items } = req.body; // [{product_id, real_stock}]
+    const { items } = req.body;
     if (!Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ ok: false, message: 'Se requieren ítems para la toma de inventario' });
     }
@@ -40,7 +56,7 @@ exports.inventoryCount = async (req, res, next) => {
     for (const item of items) {
       if (item.real_stock == null || +item.real_stock < 0) continue;
       const updated = await Product.setStock(item.product_id, +item.real_stock);
-      if (updated) results.push(updated);
+      if (updated) results.push(fmt(req, updated));
     }
     success(res, results, `Inventario actualizado: ${results.length} ítems`);
   } catch (e) { next(e); }
@@ -54,18 +70,10 @@ exports.getStockPdf = async (req, res, next) => {
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = products.map(p => {
       const low = Number(p.min_stock) > 0 && Number(p.stock) <= Number(p.min_stock);
-      return [
-        p.name,
-        p.category_name || '—',
-        p.unit_abbr || '—',
-        p.stock,
-        p.min_stock || '—',
-        low ? 'Stock bajo' : 'OK',
-      ];
+      return [p.name, p.category_name || '—', p.unit_abbr || '—', p.stock, p.min_stock || '—', low ? 'Stock bajo' : 'OK'];
     });
     const pdf = await generateListPDF({
-      title: 'Reporte de Stock',
-      subtitle, businessName, logoPath,
+      title: 'Reporte de Stock', subtitle, businessName, logoPath,
       headers: ['INGREDIENTE', 'CATEGORÍA', 'UNIDAD', 'STOCK ACTUAL', 'MÍN.', 'ESTADO'],
       widths:  [155, 110, 55, 75, 55, 70],
       aligns:  ['left', 'left', 'left', 'right', 'right', 'left'],
@@ -83,17 +91,9 @@ exports.getPdf = async (req, res, next) => {
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const rows = products.map(p => [
-      p.name,
-      p.category_name || '—',
-      p.unit_abbr || '—',
-      `S/ ${(+p.price).toFixed(2)}`,
-      p.stock,
-      p.min_stock,
-    ]);
+    const rows = products.map(p => [p.name, p.category_name || '—', p.unit_abbr || '—', `S/ ${(+p.price).toFixed(2)}`, p.stock, p.min_stock]);
     const pdf = await generateListPDF({
-      title: 'Listado de Ingredientes',
-      subtitle, businessName, logoPath,
+      title: 'Listado de Ingredientes', subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'CATEGORÍA', 'UNIDAD', 'PRECIO', 'STOCK', 'MÍN.'],
       widths:  [160, 110, 55, 65, 55, 50],
       aligns:  ['left', 'left', 'left', 'right', 'right', 'right'],

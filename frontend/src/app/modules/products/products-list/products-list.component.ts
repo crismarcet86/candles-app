@@ -16,6 +16,7 @@ export class ProductsListComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
   confirmDeleteId: number | null = null;
+  previewImage: { url: string; name: string } | null = null;
 
   constructor(private service: ProductsService, private router: Router, private http: HttpClient) {}
 
@@ -70,6 +71,11 @@ export class ProductsListComponent implements OnInit {
       }
     });
   }
+
+  openPreview(p: Product): void {
+    if (p.image_url) this.previewImage = { url: p.image_url, name: p.name };
+  }
+  closePreview(): void { this.previewImage = null; }
 
   isLowStock(product: Product): boolean {
     return product.stock <= product.min_stock && product.is_active === 1;

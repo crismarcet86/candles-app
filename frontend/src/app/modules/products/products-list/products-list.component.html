@@ -28,6 +28,7 @@
       <table class="data-table">
         <thead>
           <tr>
+            <th class="th-img"></th>
             <th>Nombre</th>
             <th>Categoría</th>
             <th>Unidad</th>
@@ -39,9 +40,18 @@
         </thead>
         <tbody>
           <tr *ngIf="items.length === 0">
-            <td colspan="7" class="empty-state">No hay productos registrados</td>
+            <td colspan="8" class="empty-state">No hay productos registrados</td>
           </tr>
           <tr *ngFor="let product of items" [class.row-inactive]="product.is_active === 0">
+            <td class="td-thumb">
+              <div class="thumb-wrapper"
+                   [class.has-img]="!!product.image_url"
+                   [title]="product.image_url ? 'Ver imagen' : 'Sin imagen'"
+                   (click)="product.image_url ? openPreview(product) : null">
+                <img *ngIf="product.image_url" [src]="product.image_url" [alt]="product.name" class="thumb-img">
+                <span *ngIf="!product.image_url" class="thumb-placeholder">📦</span>
+              </div>
+            </td>
             <td>{{ product.name }}</td>
             <td>
               {{ product.category_name }}
@@ -78,14 +88,23 @@
   </div>
 
   <!-- Confirm dialog -->
-  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null">
-    <div class="modal">
+  <div class="modal-backdrop" *ngIf="confirmDeleteId !== null" (click)="cancelDelete()">
+    <div class="modal" (click)="$event.stopPropagation()">
       <h3>¿Desactivar producto?</h3>
       <p>El producto no aparecerá en nuevas proformas. Esta acción se puede revertir editando el producto.</p>
       <div class="modal-actions">
         <button class="btn-outline" (click)="cancelDelete()">Cancelar</button>
         <button class="btn-danger"  (click)="confirmDelete()">Sí, desactivar</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Modal vista previa imagen -->
+  <div class="modal-backdrop preview-backdrop" *ngIf="previewImage" (click)="closePreview()">
+    <div class="preview-modal" (click)="$event.stopPropagation()">
+      <button class="preview-close" (click)="closePreview()">✕</button>
+      <p class="preview-name">{{ previewImage.name }}</p>
+      <img [src]="previewImage.url" [alt]="previewImage.name" class="preview-full">
     </div>
   </div>
 

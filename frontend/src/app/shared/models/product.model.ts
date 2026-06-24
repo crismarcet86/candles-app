@@ -10,6 +10,8 @@ export interface Product {
   price: number;
   stock: number;
   min_stock: number;
+  image_path: string | null;
+  image_url: string | null;
   is_active: number;
   is_fragrance: number;
   created_at: string;
