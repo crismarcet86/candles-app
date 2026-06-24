@@ -26,6 +26,7 @@ node src/config/migrate-mold-types.js  # Tabla mold_types + total_grams + mold_t
 node src/config/migrate-presets-v2.js  # includes_color en presets; fragrance_pct en preset_items
 node src/config/migrate-presets-v3.js  # labor_cost en calculation_presets
 node src/config/migrate-presets-v4.js  # labor_hours en calculation_presets (default 1)
+node src/config/migrate-username.js    # Columna username en users (reemplaza email para login)
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -66,6 +67,7 @@ src/
     migrate-presets-v2.js # includes_color en presets; fragrance_pct en preset_items
     migrate-presets-v3.js # labor_cost en calculation_presets
     migrate-presets-v4.js # labor_hours en calculation_presets
+    migrate-username.js   # Agrega username NOT NULL UNIQUE a users; poblado desde prefijo de email
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
@@ -151,7 +153,7 @@ calculation_presets ←── calculation_preset_items
   (includes_color, labor_cost, labor_hours)   (product_id, grams, unit_abbr, is_unit, fragrance_pct)
 ```
 
-- **User** tiene `role`: `admin` o `user`. Solo admins gestionan usuarios
+- **User** tiene `username` (único, reemplaza email para login), `role`: `admin` o `user`. Solo admins gestionan usuarios
 - **Category** tiene `is_fragrance` — si es 1, sus ingredientes muestran el campo % fragancia en la calculadora
 - **Product** (ingrediente) hereda `is_fragrance` de su categoría vía JOIN; `price`, `stock`, `min_stock`
 - **MoldType** — clasificación del molde (ej: "Redondo", "Cuadrado")
@@ -245,7 +247,8 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 ## Validaciones Frontend
 
 - **Campos numéricos** (`type="number"`): bloquean teclas `e`, `E`, `+`, `-` con `(keydown)` para evitar notación científica
-- **Campos de correo**: usan `Validators.pattern(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)` en todos los formularios (login, registro, usuarios, clientes)
+- **Campos de correo** (solo clientes): usan `Validators.pattern(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)` en el formulario de clientes
+- **Campo username**: solo `Validators.required` (sin formato de email) — en login, registro y gestión de usuarios
 
 ## Estilos globales — Patrones CSS
 
@@ -287,7 +290,7 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 - `DELETE /api/users/:id` — desactivar (lógico)
 
 El token JWT se incluye en el header: `Authorization: Bearer <token>`  
-El payload del token contiene: `{ id, email, role, name }`
+El payload del token contiene: `{ id, username, role, name }`
 
 ## Key Patterns
 
@@ -299,3 +302,4 @@ El payload del token contiene: `{ id, email, role, name }`
 - `AuthService.businessName` se guarda en `localStorage` bajo la clave `candles_business_name` — editable desde el topbar
 - Las descripciones de ítems de proforma/orden se leen de `item.description`, no de `item.product_name` (que puede ser null para ítems libres)
 - `Proforma.findById` retorna `client_cedula`, `client_phone` y `client_address` además de `client_name` para el PDF
+- La autenticación usa `username` (no email): `User.findByUsername()`, `POST /auth/login` recibe `{ username, password }`
