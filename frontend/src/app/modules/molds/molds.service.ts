@@ -15,4 +15,9 @@ export class MoldsService {
   create(payload: any): Observable<ApiResponse<Mold>> { return this.http.post<ApiResponse<Mold>>(this.base, payload); }
   update(id: number, payload: any): Observable<ApiResponse<Mold>> { return this.http.put<ApiResponse<Mold>>(`${this.base}/${id}`, payload); }
   deactivate(id: number): Observable<ApiResponse<any>> { return this.http.delete<ApiResponse<any>>(`${this.base}/${id}`); }
+  uploadImage(id: number, file: File): Observable<ApiResponse<Mold>> {
+    const fd = new FormData();
+    fd.append('image', file);
+    return this.http.post<ApiResponse<Mold>>(`${this.base}/${id}/image`, fd);
+  }
 }

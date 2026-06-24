@@ -264,7 +264,8 @@ candles-app/
 │   │   ├── migrate-presets-v4.js   labor_hours en calculation_presets
 │   │   ├── migrate-username.js     username NOT NULL UNIQUE en users
 │   │   ├── migrate-report-logo.js  report_logo_path en business_settings (imagen PDFs)
-│   │   └── migrate-mold-type-image.js image_path en mold_types (imagen referencial)
+│   │   ├── migrate-mold-type-image.js image_path en mold_types (imagen referencial)
+│   │   └── migrate-mold-image.js      image_path en molds (imagen referencial)
 │   ├── controllers/
 │   │   ├── authController.js       Login, register, me, change-password
 │   │   ├── userController.js       CRUD usuarios (solo admin)
@@ -381,7 +382,7 @@ categories (id, name, is_fragrance, is_active)
 
 mold_types (id, name, image_path, is_active)
     │
-    └──► molds (id, name, mold_type_id, total_grams, wax_grams, is_active)
+    └──► molds (id, name, mold_type_id, total_grams, wax_grams, image_path, is_active)
 
 calculation_presets (id, name, mold_name, wax_grams, quantity, sell_price,
                      cost_per_unit, includes_color, labor_cost, labor_hours, is_active)
@@ -469,6 +470,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>total_grams</td><td>DECIMAL(10,2) NULL</td><td>Peso del agua al llenar el molde (método de desplazamiento)</td></tr>
   <tr><td>wax_grams</td><td>DECIMAL(10,2) NULL</td><td>Auto: total_grams × 0.90 × 1.05</td></tr>
   <tr><td>description</td><td>TEXT NULL</td><td></td></tr>
+  <tr><td>image_path</td><td>VARCHAR(255) NULL</td><td>Nombre de archivo en <code>public/uploads/</code>; <code>image_url</code> se construye en el controller</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
 </table>
 
@@ -574,6 +576,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><code>migrate-username.js</code></td><td>Agrega <code>username VARCHAR(100) NOT NULL UNIQUE</code>; popula desde prefijo del email; crea índice único</td><td>users</td></tr>
   <tr><td><code>migrate-report-logo.js</code></td><td>Agrega <code>report_logo_path VARCHAR(255) NULL</code> para imagen exclusiva de PDFs/reportes</td><td>business_settings</td></tr>
   <tr><td><code>migrate-mold-type-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del tipo de molde</td><td>mold_types</td></tr>
+  <tr><td><code>migrate-mold-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del molde</td><td>molds</td></tr>
 </table>
 
 <div class="info">
@@ -668,6 +671,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><span class="badge badge-post">POST</span></td><td>/molds</td><td><code>{ name, mold_type_id?, total_grams, wax_grams }</code></td></tr>
   <tr><td><span class="badge badge-put">PUT</span></td><td>/molds/:id</td><td>Actualizar</td></tr>
   <tr><td><span class="badge badge-delete">DELETE</span></td><td>/molds/:id</td><td>Soft delete</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/molds/:id/image</td><td>Subir imagen referencial del molde (multipart/form-data, campo <code>image</code>, requireAuth)</td></tr>
 </table>
 
 <h2>7.9 Proformas <span class="version">— /api/proformas</span></h2>
@@ -1105,6 +1109,7 @@ node src/config/migrate-presets-v4.js
 node src/config/migrate-username.js
 node src/config/migrate-report-logo.js
 node src/config/migrate-mold-type-image.js
+node src/config/migrate-mold-image.js
 
 # 6. Instalar dependencias del frontend
 cd frontend && npm install && cd ..

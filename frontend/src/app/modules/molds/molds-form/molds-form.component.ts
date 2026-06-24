@@ -16,7 +16,10 @@ export class MoldsFormComponent implements OnInit {
   loading = false;
   loadingData = false;
   errorMsg = '';
+  successMsg = '';
   moldTypes: MoldType[] = [];
+  previewUrl: string | null = null;
+  uploadingImage = false;
 
   constructor(
     private fb: FormBuilder,
@@ -51,7 +54,11 @@ export class MoldsFormComponent implements OnInit {
   private loadMold(id: number): void {
     this.loadingData = true;
     this.service.getById(id).subscribe({
-      next: res => { this.form.patchValue(res.data); this.loadingData = false; },
+      next: res => {
+        this.form.patchValue(res.data);
+        this.previewUrl = res.data.image_url || null;
+        this.loadingData = false;
+      },
       error: err => { this.errorMsg = err.error?.message || 'Error al cargar'; this.loadingData = false; }
     });
   }
@@ -61,6 +68,28 @@ export class MoldsFormComponent implements OnInit {
     if (total > 0) {
       this.form.get('wax_grams')?.setValue(Math.round(total * 0.9 * 1.05 * 100) / 100, { emitEvent: false });
     }
+  }
+
+  onImageChange(event: any): void {
+    if (!this.isEdit || !this.moldId) return;
+    const file: File = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { this.errorMsg = 'Solo se permiten imágenes'; return; }
+    if (file.size > 2 * 1024 * 1024) { this.errorMsg = 'La imagen no puede superar 2 MB'; return; }
+    this.errorMsg = '';
+    const reader = new FileReader();
+    reader.onload = e => this.previewUrl = e.target?.result as string;
+    reader.readAsDataURL(file);
+    this.uploadingImage = true;
+    this.service.uploadImage(this.moldId, file).subscribe({
+      next: r => {
+        this.previewUrl = r.data.image_url || this.previewUrl;
+        this.uploadingImage = false;
+        this.successMsg = 'Imagen guardada';
+        setTimeout(() => this.successMsg = '', 3000);
+      },
+      error: () => { this.uploadingImage = false; this.errorMsg = 'Error al subir imagen'; }
+    });
   }
 
   submit(): void {

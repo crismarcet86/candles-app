@@ -6,6 +6,8 @@ export interface Mold {
   mold_type_id: number | null;
   mold_type_name: string | null;
   description: string | null;
+  image_path: string | null;
+  image_url: string | null;
   is_active: number;
   created_at: string;
 }

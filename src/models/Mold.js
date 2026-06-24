@@ -57,6 +57,14 @@ class Mold {
     );
     return result.affectedRows > 0;
   }
+
+  static async updateImage(id, image_path) {
+    await pool.query(
+      'UPDATE molds SET image_path=?, updated_at=NOW() WHERE id=?',
+      [image_path, id]
+    );
+    return this.findById(id);
+  }
 }
 
 module.exports = Mold;

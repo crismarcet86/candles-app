@@ -16,6 +16,7 @@ export class MoldsListComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
   confirmDeactivateId: number | null = null;
+  previewImage: { url: string; name: string } | null = null;
 
   constructor(private service: MoldsService, private router: Router, private http: HttpClient) {}
   ngOnInit() { this.load(); }
@@ -32,6 +33,11 @@ export class MoldsListComponent implements OnInit {
   goToEdit(id: number) { this.router.navigate(['/dashboard/molds', id, 'edit']); }
   askDeactivate(id: number) { this.confirmDeactivateId = id; }
   cancelDeactivate() { this.confirmDeactivateId = null; }
+
+  openPreview(m: Mold): void {
+    if (m.image_url) this.previewImage = { url: m.image_url, name: m.name };
+  }
+  closePreview(): void { this.previewImage = null; }
 
   confirmDeactivate() {
     if (!this.confirmDeactivateId) return;

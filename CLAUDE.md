@@ -29,6 +29,7 @@ node src/config/migrate-presets-v4.js  # labor_hours en calculation_presets (def
 node src/config/migrate-username.js    # Columna username en users (reemplaza email para login)
 node src/config/migrate-report-logo.js     # Columna report_logo_path en business_settings para imagen de PDFs
 node src/config/migrate-mold-type-image.js # Columna image_path en mold_types para imagen referencial
+node src/config/migrate-mold-image.js      # Columna image_path en molds para imagen referencial
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -72,6 +73,7 @@ src/
     migrate-username.js   # Agrega username NOT NULL UNIQUE a users; poblado desde prefijo de email
     migrate-report-logo.js    # Agrega report_logo_path a business_settings
     migrate-mold-type-image.js # Agrega image_path a mold_types
+    migrate-mold-image.js      # Agrega image_path a molds
   routes/            # Definición de rutas con reglas express-validator
   controllers/       # Manejo de request/response HTTP
   models/            # Queries SQL crudas (sin ORM), lógica transaccional
@@ -257,6 +259,14 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 - En el frontend, el formulario de edición muestra la tarjeta de imagen con preview inmediato al seleccionar archivo
 - En el listado, cada tipo muestra un thumbnail (42×42 px); al hacer clic se abre un modal de vista previa full-size
 - En modo creación no se puede subir imagen aún — se muestra una nota indicando que hay que editar después de crear
+
+## Imágenes de Moldes
+
+- `POST /api/molds/:id/image` — sube imagen referencial del molde (requireAuth); guarda como `mold-{id}.<ext>` en `public/uploads/`
+- El controller `moldController.js` agrega `image_url` a todas las respuestas (vía helper `buildImageUrl`)
+- En el frontend, el formulario de edición muestra la tarjeta de imagen con preview inmediato al seleccionar archivo
+- En el listado, cada molde muestra un thumbnail (42×42 px); al hacer clic se abre un modal de vista previa full-size
+- En modo creación no se puede subir imagen — se muestra una nota indicando que hay que editar después de crear
 
 ## Validaciones Frontend
 

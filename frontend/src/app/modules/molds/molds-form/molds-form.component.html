@@ -8,82 +8,107 @@
     <div class="skeleton-field" *ngFor="let i of [1,2,3,4]"></div>
   </div>
 
-  <div class="card" *ngIf="!loadingData">
-    <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div *ngIf="!loadingData">
+    <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+    <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
-
-      <div class="form-group">
-        <label>Nombre del molde <span class="required">*</span></label>
-        <input type="text" formControlName="name" placeholder="Ej: Redondo 200g, Vela cilíndrica grande"
-               [class.invalid]="field('name')?.invalid && field('name')?.touched">
-        <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">Requerido</span>
+    <!-- Imagen del molde (solo en edición) -->
+    <div class="card image-card" *ngIf="isEdit">
+      <h3 class="section-title">Imagen referencial</h3>
+      <div class="image-section">
+        <div class="image-preview">
+          <img *ngIf="previewUrl" [src]="previewUrl" alt="Imagen del molde" class="preview-img">
+          <div *ngIf="!previewUrl" class="image-placeholder">🫙</div>
+        </div>
+        <div class="image-actions">
+          <p class="image-hint">Foto o ilustración del molde. Se mostrará en el listado. Máx. 2 MB, formatos: PNG, JPG, WEBP.</p>
+          <label class="btn-upload" [class.uploading]="uploadingImage">
+            <span *ngIf="!uploadingImage">📁 {{ previewUrl ? 'Cambiar imagen' : 'Elegir imagen' }}</span>
+            <span *ngIf="uploadingImage" class="spinner"></span>
+            <input type="file" accept="image/*" (change)="onImageChange($event)" style="display:none">
+          </label>
+        </div>
       </div>
+    </div>
 
-      <div class="form-group">
-        <label>Tipo de molde</label>
-        <select formControlName="mold_type_id">
-          <option [ngValue]="null">— Sin tipo —</option>
-          <option *ngFor="let t of moldTypes" [value]="t.id">{{ t.name }}</option>
-        </select>
-      </div>
+    <!-- Datos -->
+    <div class="card">
+      <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
 
-      <div class="form-row-two">
         <div class="form-group">
-          <label>Peso total de agua (g)</label>
-          <div class="input-suffix-wrapper">
-            <input type="number" formControlName="total_grams"
-                   (input)="onTotalGramsChange()"
-                   (keydown)="blockInvalidKey($event)"
-                   placeholder="Ej: 222" min="0.001" step="1"
-                   [class.invalid]="field('total_grams')?.invalid && field('total_grams')?.touched">
-            <span class="input-suffix">g</span>
-          </div>
-          <span class="field-hint">Peso del agua al llenar el molde (desplazamiento)</span>
+          <label>Nombre del molde <span class="required">*</span></label>
+          <input type="text" formControlName="name" placeholder="Ej: Redondo 200g, Vela cilíndrica grande"
+                 [class.invalid]="field('name')?.invalid && field('name')?.touched">
+          <span class="field-error" *ngIf="field('name')?.hasError('required') && field('name')?.touched">Requerido</span>
         </div>
 
         <div class="form-group">
-          <label>Gramos de cera <span class="required">*</span></label>
-          <div class="input-suffix-wrapper">
-            <input type="number" formControlName="wax_grams"
-                   (keydown)="blockInvalidKey($event)"
-                   placeholder="200" min="0.001" step="1"
-                   [class.invalid]="field('wax_grams')?.invalid && field('wax_grams')?.touched">
-            <span class="input-suffix">g</span>
-          </div>
-          <span class="field-hint">Se auto-calcula: agua × 0.90 × 5%</span>
-          <span class="field-error" *ngIf="field('wax_grams')?.hasError('required') && field('wax_grams')?.touched">Requerido</span>
-          <span class="field-error" *ngIf="field('wax_grams')?.hasError('min') && field('wax_grams')?.touched">Debe ser mayor a 0</span>
+          <label>Tipo de molde</label>
+          <select formControlName="mold_type_id">
+            <option [ngValue]="null">— Sin tipo —</option>
+            <option *ngFor="let t of moldTypes" [value]="t.id">{{ t.name }}</option>
+          </select>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label>Descripción</label>
-        <textarea formControlName="description" placeholder="Descripción opcional del molde..."></textarea>
-      </div>
-
-      <div class="form-group form-toggle" *ngIf="isEdit">
-        <label class="toggle-label">
-          <span>Estado</span>
-          <div class="toggle-wrapper">
-            <input type="checkbox" formControlName="is_active"
-                   [checked]="field('is_active')?.value === 1"
-                   (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
-            <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
-              <span class="toggle-knob"></span>
-            </span>
-            <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+        <div class="form-row-two">
+          <div class="form-group">
+            <label>Peso total de agua (g)</label>
+            <div class="input-suffix-wrapper">
+              <input type="number" formControlName="total_grams"
+                     (input)="onTotalGramsChange()"
+                     (keydown)="blockInvalidKey($event)"
+                     placeholder="Ej: 222" min="0.001" step="1"
+                     [class.invalid]="field('total_grams')?.invalid && field('total_grams')?.touched">
+              <span class="input-suffix">g</span>
+            </div>
+            <span class="field-hint">Peso del agua al llenar el molde (desplazamiento)</span>
           </div>
-        </label>
-      </div>
 
-      <div class="form-actions">
-        <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">Cancelar</button>
-        <button type="submit" class="btn-primary" [disabled]="loading">
-          <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear molde' }}</span>
-          <span *ngIf="loading" class="spinner"></span>
-        </button>
-      </div>
-    </form>
+          <div class="form-group">
+            <label>Gramos de cera <span class="required">*</span></label>
+            <div class="input-suffix-wrapper">
+              <input type="number" formControlName="wax_grams"
+                     (keydown)="blockInvalidKey($event)"
+                     placeholder="200" min="0.001" step="1"
+                     [class.invalid]="field('wax_grams')?.invalid && field('wax_grams')?.touched">
+              <span class="input-suffix">g</span>
+            </div>
+            <span class="field-hint">Se auto-calcula: agua × 0.90 × 5%</span>
+            <span class="field-error" *ngIf="field('wax_grams')?.hasError('required') && field('wax_grams')?.touched">Requerido</span>
+            <span class="field-error" *ngIf="field('wax_grams')?.hasError('min') && field('wax_grams')?.touched">Debe ser mayor a 0</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Descripción</label>
+          <textarea formControlName="description" placeholder="Descripción opcional del molde..."></textarea>
+        </div>
+
+        <div class="form-group form-toggle" *ngIf="isEdit">
+          <label class="toggle-label">
+            <span>Estado</span>
+            <div class="toggle-wrapper">
+              <input type="checkbox" formControlName="is_active"
+                     [checked]="field('is_active')?.value === 1"
+                     (change)="form.get('is_active')?.setValue($any($event.target).checked ? 1 : 0)">
+              <span class="toggle-track" [class.active]="field('is_active')?.value === 1">
+                <span class="toggle-knob"></span>
+              </span>
+              <span class="toggle-text">{{ field('is_active')?.value === 1 ? 'Activo' : 'Inactivo' }}</span>
+            </div>
+          </label>
+        </div>
+
+        <p class="image-note" *ngIf="!isEdit">💡 Después de crear el molde, podrás agregar una imagen desde la edición.</p>
+
+        <div class="form-actions">
+          <button type="button" class="btn-outline" (click)="cancel()" [disabled]="loading">Cancelar</button>
+          <button type="submit" class="btn-primary" [disabled]="loading">
+            <span *ngIf="!loading">{{ isEdit ? 'Guardar cambios' : 'Crear molde' }}</span>
+            <span *ngIf="loading" class="spinner"></span>
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
