@@ -50,6 +50,7 @@ export class CalculatorComponent implements OnInit {
   quantity: number  = 1;  // cuántas velas se calcula
   marginTarget: number = 0; // % de margen deseado
   includesColor: boolean = false;
+  laborCost: number = 0;
 
   loadingMolds = true;
   loadingIngredients = true;
@@ -201,7 +202,7 @@ export class CalculatorComponent implements OnInit {
 
   get totalCostPerCandle(): number {
     const linesCost = this.lines.reduce((sum, l) => sum + (l.subtotal || 0), 0);
-    return linesCost + (this.includesColor ? 0.10 : 0);
+    return linesCost + (this.includesColor ? 0.10 : 0) + (this.laborCost || 0);
   }
 
   get totalCost(): number {
@@ -297,6 +298,7 @@ export class CalculatorComponent implements OnInit {
       sell_price:     this.sellPrice,
       cost_per_unit:  this.totalCostPerCandle,
       includes_color: this.includesColor,
+      labor_cost:     this.laborCost,
       items:          this.lines
         .filter(l => l.ingredient_id && l.subtotal > 0)
         .map(l => ({
@@ -369,6 +371,7 @@ export class CalculatorComponent implements OnInit {
         this.sellPrice     = Number(p.sell_price) || 0;
         this.marginTarget  = 0;
         this.includesColor = !!p.includes_color;
+        this.laborCost     = Number(p.labor_cost) || 0;
 
         // Rebuild lines from preset items
         this.lines = (p.items || []).map((item: any, idx: number) => {
@@ -405,6 +408,7 @@ export class CalculatorComponent implements OnInit {
     this.editingPresetId = null;
     this.saveSuccess = '';
     this.includesColor = false;
+    this.laborCost = 0;
   }
 
   isFragranceLine(line: CalcLine): boolean {

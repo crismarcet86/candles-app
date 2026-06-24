@@ -24,6 +24,7 @@ export interface CalcPreset {
   sell_price: number;
   cost_per_unit: number;
   includes_color: number;
+  labor_cost: number;
   is_active: number;
   item_count?: number;
   items?: CalcPresetItem[];

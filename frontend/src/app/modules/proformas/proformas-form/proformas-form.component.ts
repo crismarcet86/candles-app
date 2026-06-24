@@ -51,11 +51,10 @@ export class ProformasFormComponent implements OnInit {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      client_id:  [null, Validators.required],
-      notes:      [''],
-      discount:   [0, [Validators.min(0)]],
-      labor_cost: [0, [Validators.min(0)]],
-      items:      this.fb.array([])
+      client_id: [null, Validators.required],
+      notes:     [''],
+      discount:  [0, [Validators.min(0)]],
+      items:     this.fb.array([])
     });
   }
 
@@ -65,10 +64,9 @@ export class ProformasFormComponent implements OnInit {
       next: res => {
         const p = res.data;
         this.form.patchValue({
-          client_id:  p.client_id,
-          notes:      p.notes || '',
-          discount:   p.discount,
-          labor_cost: p.labor_cost || 0
+          client_id: p.client_id,
+          notes:     p.notes || '',
+          discount:  p.discount,
         });
         while (this.items.length) this.items.removeAt(0);
         (p.items || []).forEach((item: any) => {
@@ -131,14 +129,12 @@ export class ProformasFormComponent implements OnInit {
   }
 
   getDisplaySubtotal(): number {
-    const laborCost = +(this.form.get('labor_cost')?.value || 0);
-    return this.getSubtotal() + laborCost;
+    return this.getSubtotal();
   }
 
   getTotal(): number {
-    const laborCost = +(this.form.get('labor_cost')?.value || 0);
-    const discount  = +(this.form.get('discount')?.value  || 0);
-    return Math.max(0, this.getSubtotal() + laborCost - discount);
+    const discount = +(this.form.get('discount')?.value || 0);
+    return Math.max(0, this.getSubtotal() - discount);
   }
 
   submit(): void {
@@ -146,10 +142,9 @@ export class ProformasFormComponent implements OnInit {
     this.loading = true; this.errorMsg = '';
     const val = this.form.value;
     const payload = {
-      client_id:  +val.client_id,
-      notes:      val.notes || null,
-      discount:   +(val.discount || 0),
-      labor_cost: +(val.labor_cost || 0),
+      client_id: +val.client_id,
+      notes:     val.notes || null,
+      discount:  +(val.discount || 0),
       items: val.items.map((it: any) => ({
         description: it.description,
         quantity:    +it.quantity,
