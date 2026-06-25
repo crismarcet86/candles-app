@@ -1,11 +1,13 @@
 const { pool } = require('../config/database');
 
 class Client {
-  static async findAll({ onlyActive = false } = {}) {
-    const where = onlyActive ? 'WHERE is_active = 1' : '';
-    const [rows] = await pool.query(
-      `SELECT * FROM clients ${where} ORDER BY name ASC`
-    );
+  static async findAll({ onlyActive = false, name = '', cedula = '' } = {}) {
+    const conds = []; const params = [];
+    if (onlyActive) { conds.push('is_active = 1'); }
+    if (name)       { conds.push('name LIKE ?');   params.push(`%${name}%`); }
+    if (cedula)     { conds.push('cedula LIKE ?');  params.push(`%${cedula}%`); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
+    const [rows] = await pool.query(`SELECT * FROM clients ${where} ORDER BY name ASC`, params);
     return rows;
   }
 

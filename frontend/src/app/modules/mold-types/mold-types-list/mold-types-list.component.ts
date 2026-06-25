@@ -14,6 +14,8 @@ export class MoldTypesListComponent implements OnInit {
   successMsg = '';
   confirmDeactivateId: number | null = null;
   previewImage: { url: string; name: string } | null = null;
+  filterName = '';
+  private ft: any;
 
   constructor(private svc: MoldTypesService, private router: Router) {}
 
@@ -21,11 +23,14 @@ export class MoldTypesListComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    this.svc.getAll().subscribe({
+    this.svc.getAll({ name: this.filterName }).subscribe({
       next: r => { this.types = r.data; this.loading = false; },
       error: () => { this.errorMsg = 'Error al cargar los tipos de molde'; this.loading = false; }
     });
   }
+  onFilterChange(): void { clearTimeout(this.ft); this.ft = setTimeout(() => this.load(), 400); }
+  get hasFilters(): boolean { return !!this.filterName; }
+  clearFilters(): void { this.filterName = ''; this.load(); }
 
   goToNew(): void  { this.router.navigate(['/dashboard/mold-types/new']); }
   goToEdit(id: number): void { this.router.navigate(['/dashboard/mold-types', id, 'edit']); }

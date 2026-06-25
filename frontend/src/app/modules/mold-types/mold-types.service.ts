@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -19,8 +19,10 @@ export class MoldTypesService {
   private base = `${environment.apiUrl}/mold-types`;
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<MoldType[]>> {
-    return this.http.get<ApiResponse<MoldType[]>>(this.base);
+  getAll(f: { name?: string } = {}): Observable<ApiResponse<MoldType[]>> {
+    let params = new HttpParams();
+    if (f.name) params = params.set('name', f.name);
+    return this.http.get<ApiResponse<MoldType[]>>(this.base, { params });
   }
 
   getById(id: number): Observable<ApiResponse<MoldType>> {

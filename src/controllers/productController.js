@@ -9,7 +9,12 @@ const buildImageUrl = (req, image_path) =>
 const fmt = (req, p) => p ? { ...p, image_url: buildImageUrl(req, p.image_path) } : null;
 const fmtAll = (req, rows) => rows.map(p => fmt(req, p));
 
-exports.getAll  = async (req, res, next) => { try { success(res, fmtAll(req, await Product.findAll())); } catch (e) { next(e); } };
+exports.getAll  = async (req, res, next) => {
+  try {
+    const { name = '', category_id = null, unit_id = null } = req.query;
+    success(res, fmtAll(req, await Product.findAll({ name, category_id: category_id || null, unit_id: unit_id || null })));
+  } catch (e) { next(e); }
+};
 exports.getById = async (req, res, next) => { try { const p = await Product.findById(req.params.id); p ? success(res, fmt(req, p)) : notFound(res, 'Producto no encontrado'); } catch (e) { next(e); } };
 exports.create  = async (req, res, next) => { try { created(res, fmt(req, await Product.create(req.body))); } catch (e) { next(e); } };
 exports.update  = async (req, res, next) => { try { const p = await Product.findById(req.params.id); if (!p) return notFound(res, 'Producto no encontrado'); success(res, fmt(req, await Product.update(req.params.id, req.body))); } catch (e) { next(e); } };
@@ -64,7 +69,8 @@ exports.inventoryCount = async (req, res, next) => {
 
 exports.getStockPdf = async (req, res, next) => {
   try {
-    const [products, settings] = await Promise.all([Product.findAll(), Settings.get()]);
+    const { name = '', category_id = null, unit_id = null } = req.query;
+    const [products, settings] = await Promise.all([Product.findAll({ name, category_id: category_id || null, unit_id: unit_id || null }), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -87,7 +93,8 @@ exports.getStockPdf = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const [products, settings] = await Promise.all([Product.findAll(), Settings.get()]);
+    const { name = '', category_id = null, unit_id = null } = req.query;
+    const [products, settings] = await Promise.all([Product.findAll({ name, category_id: category_id || null, unit_id: unit_id || null }), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });

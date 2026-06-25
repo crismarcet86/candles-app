@@ -37,6 +37,19 @@
 
   <!-- ── Stock normal ───────────────────────────────────── -->
   <div class="card" *ngIf="!loading && !inventoryMode">
+    <div class="filter-bar">
+      <input class="filter-input" type="text" placeholder="Buscar por nombre..."
+             [value]="filterName" (input)="filterName = $any($event.target).value; onFilterChange()">
+      <select class="filter-select" [value]="filterCategoryId ?? ''" (change)="filterCategoryId = $any($event.target).value ? +$any($event.target).value : null; onComboChange()">
+        <option value="">Todas las categorías</option>
+        <option *ngFor="let c of categories" [value]="c.id">{{ c.name }}</option>
+      </select>
+      <select class="filter-select" [value]="filterUnitId ?? ''" (change)="filterUnitId = $any($event.target).value ? +$any($event.target).value : null; onComboChange()">
+        <option value="">Todas las unidades</option>
+        <option *ngFor="let u of units" [value]="u.id">{{ u.name }} ({{ u.abbreviation }})</option>
+      </select>
+      <button class="btn-filter-clear" *ngIf="hasFilters" (click)="clearFilters()">✕ Limpiar</button>
+    </div>
     <div class="table-wrapper">
       <table class="data-table">
         <thead>

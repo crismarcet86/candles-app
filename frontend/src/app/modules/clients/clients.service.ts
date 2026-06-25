@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Client } from '../../shared/models/client.model';
 import { environment } from '../../../environments/environment';
@@ -16,8 +16,11 @@ export class ClientsService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<Client[]>> {
-    return this.http.get<ApiResponse<Client[]>>(this.base);
+  getAll(f: { name?: string; cedula?: string } = {}): Observable<ApiResponse<Client[]>> {
+    let params = new HttpParams();
+    if (f.name) params = params.set('name', f.name);
+    if (f.cedula) params = params.set('cedula', f.cedula);
+    return this.http.get<ApiResponse<Client[]>>(this.base, { params });
   }
 
   getById(id: number): Observable<ApiResponse<Client>> {

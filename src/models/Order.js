@@ -1,13 +1,21 @@
 const { pool } = require('../config/database');
 
 class Order {
-  static async findAll() {
+  static async findAll({ client = '', status = '', delivery_status = '', from = '', to = '' } = {}) {
+    const conds = []; const params = [];
+    if (client)          { conds.push('c.name LIKE ?');              params.push(`%${client}%`); }
+    if (status)          { conds.push('o.status = ?');               params.push(status); }
+    if (delivery_status) { conds.push('o.delivery_status = ?');      params.push(delivery_status); }
+    if (from)            { conds.push('DATE(o.created_at) >= ?');    params.push(from); }
+    if (to)              { conds.push('DATE(o.created_at) <= ?');    params.push(to); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT o.*, c.name AS client_name
       FROM orders o
       JOIN clients c ON o.client_id = c.id
+      ${where}
       ORDER BY o.created_at DESC
-    `);
+    `, params);
     return rows;
   }
 

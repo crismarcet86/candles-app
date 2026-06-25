@@ -24,6 +24,11 @@
 
   <!-- Table -->
   <div class="card" *ngIf="!loading">
+    <div class="filter-bar">
+      <input class="filter-input" type="text" placeholder="Buscar por nombre..."
+             [value]="filterName" (input)="filterName = $any($event.target).value; onFilterChange()">
+      <button class="btn-filter-clear" *ngIf="hasFilters" (click)="clearFilters()">✕ Limpiar</button>
+    </div>
     <div class="table-wrapper">
       <table class="data-table">
         <thead>

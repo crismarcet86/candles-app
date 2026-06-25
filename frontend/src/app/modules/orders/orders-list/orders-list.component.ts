@@ -14,18 +14,28 @@ export class OrdersListComponent implements OnInit {
   orders: Order[] = [];
   loading = true;
   errorMsg = '';
+  filterClient = '';
+  filterStatus = '';
+  filterDelivery = '';
+  filterFrom = '';
+  filterTo = '';
+  private ft: any;
 
   constructor(private service: OrdersService, private router: Router, private http: HttpClient) {}
 
   ngOnInit() { this.load(); }
 
   load() {
-    this.loading = true;
-    this.service.getAll().subscribe({
+    this.loading = true; this.errorMsg = '';
+    this.service.getAll({ client: this.filterClient, status: this.filterStatus, delivery_status: this.filterDelivery, from: this.filterFrom, to: this.filterTo }).subscribe({
       next: res => { this.orders = res.data; this.loading = false; },
       error: err => { this.errorMsg = err.error?.message || 'Error al cargar'; this.loading = false; }
     });
   }
+  onFilterChange(): void { clearTimeout(this.ft); this.ft = setTimeout(() => this.load(), 400); }
+  onComboChange(): void { this.load(); }
+  get hasFilters(): boolean { return !!(this.filterClient || this.filterStatus || this.filterDelivery || this.filterFrom || this.filterTo); }
+  clearFilters(): void { this.filterClient = ''; this.filterStatus = ''; this.filterDelivery = ''; this.filterFrom = ''; this.filterTo = ''; this.load(); }
 
   goToDetail(id: number) { this.router.navigate(['/dashboard/orders', id]); }
 
@@ -40,17 +50,15 @@ export class OrdersListComponent implements OnInit {
   }
 
   downloadPdf(): void {
-    this.http.get(`${environment.apiUrl}/orders/pdf`, { responseType: 'blob' }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'pedidos.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      },
+    let p = new URLSearchParams();
+    if (this.filterClient)  p.set('client', this.filterClient);
+    if (this.filterStatus)  p.set('status', this.filterStatus);
+    if (this.filterDelivery) p.set('delivery_status', this.filterDelivery);
+    if (this.filterFrom)    p.set('from', this.filterFrom);
+    if (this.filterTo)      p.set('to', this.filterTo);
+    const qs = p.toString() ? '?' + p.toString() : '';
+    this.http.get(`${environment.apiUrl}/orders/pdf${qs}`, { responseType: 'blob' }).subscribe({
+      next: blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'ordenes.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); },
       error: () => {}
     });
   }

@@ -17,6 +17,26 @@
   </div>
 
   <div class="card" *ngIf="!loading">
+    <div class="filter-bar">
+      <input class="filter-input" type="text" placeholder="Buscar por cliente..."
+             [value]="filterClient" (input)="filterClient = $any($event.target).value; onFilterChange()">
+      <select class="filter-select" [value]="filterDelivery" (change)="filterDelivery = $any($event.target).value; onComboChange()">
+        <option value="">Estado entrega</option>
+        <option value="pendiente">Pendiente</option>
+        <option value="entregado">Entregado</option>
+      </select>
+      <select class="filter-select" [value]="filterStatus" (change)="filterStatus = $any($event.target).value; onComboChange()">
+        <option value="">Estado devolución</option>
+        <option value="pendiente">Sin devolución</option>
+        <option value="anulado parcial">Anulado parcial</option>
+        <option value="anulado total">Anulado total</option>
+      </select>
+      <span class="filter-sep">Desde</span>
+      <input class="filter-date" type="date" [value]="filterFrom" (change)="filterFrom = $any($event.target).value; onComboChange()">
+      <span class="filter-sep">Hasta</span>
+      <input class="filter-date" type="date" [value]="filterTo" (change)="filterTo = $any($event.target).value; onComboChange()">
+      <button class="btn-filter-clear" *ngIf="hasFilters" (click)="clearFilters()">✕ Limpiar</button>
+    </div>
     <div class="table-wrapper">
       <table class="data-table">
         <thead>

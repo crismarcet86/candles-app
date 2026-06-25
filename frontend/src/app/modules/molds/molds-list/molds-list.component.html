@@ -19,6 +19,15 @@
   </div>
 
   <div class="card" *ngIf="!loading">
+    <div class="filter-bar">
+      <input class="filter-input" type="text" placeholder="Buscar nombre o descripción..."
+             [value]="filterName" (input)="filterName = $any($event.target).value; onFilterChange()">
+      <select class="filter-select" [value]="filterMoldTypeId ?? ''" (change)="filterMoldTypeId = $any($event.target).value ? +$any($event.target).value : null; onComboChange()">
+        <option value="">Todos los tipos</option>
+        <option *ngFor="let t of moldTypes" [value]="t.id">{{ t.name }}</option>
+      </select>
+      <button class="btn-filter-clear" *ngIf="hasFilters" (click)="clearFilters()">✕ Limpiar</button>
+    </div>
     <div class="table-wrapper">
       <table class="data-table">
         <thead>

@@ -167,3 +167,45 @@ input, textarea, select { font-family: inherit; }
 /* Filas de tabla: un poco más densas */
 .data-table td { padding: 0.6rem 0.9rem !important; }
 .data-table th { padding: 0.55rem 0.9rem !important; }
+
+/* ── Filter bar (compartido en todas las páginas de listado) ── */
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: #fafafa;
+  flex-wrap: wrap;
+}
+.filter-input,
+.filter-select,
+.filter-date {
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.84rem;
+  color: #374151;
+  background: #fff;
+  outline: none;
+  height: 32px;
+}
+.filter-input  { min-width: 180px; }
+.filter-select { min-width: 150px; cursor: pointer; }
+.filter-date   { min-width: 130px; }
+.filter-input:focus,
+.filter-select:focus,
+.filter-date:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(139,94,60,0.12); }
+.filter-sep { color: #d1d5db; font-size: 0.8rem; }
+.btn-filter-clear {
+  background: none;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.78rem;
+  color: #6b7280;
+  cursor: pointer;
+  height: 32px;
+  white-space: nowrap;
+}
+.btn-filter-clear:hover { background: #f3f4f6; border-color: #9ca3af; }

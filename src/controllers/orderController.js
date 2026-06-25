@@ -4,7 +4,12 @@ const { pool } = require('../config/database');
 const { success, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
-exports.getAll    = async (req, res, next) => { try { success(res, await Order.findAll()); } catch (e) { next(e); } };
+exports.getAll = async (req, res, next) => {
+  try {
+    const { client = '', status = '', delivery_status = '', from = '', to = '' } = req.query;
+    success(res, await Order.findAll({ client, status, delivery_status, from, to }));
+  } catch (e) { next(e); }
+};
 exports.getById   = async (req, res, next) => { try { const o = await Order.findById(req.params.id); o ? success(res, o) : notFound(res, 'Orden no encontrada'); } catch (e) { next(e); } };
 exports.updateStatus = async (req, res, next) => {
   try {
@@ -29,14 +34,15 @@ exports.updateDeliveryStatus = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const [[orders], settings] = await Promise.all([
-      pool.query(`
-        SELECT o.*, c.name AS client_name,
-          (SELECT COUNT(*) FROM order_items oi WHERE oi.order_id = o.id) AS item_count
-        FROM orders o
-        JOIN clients c ON o.client_id = c.id
-        ORDER BY o.created_at DESC
-      `),
+    const { client = '', status = '', delivery_status = '', from = '', to = '' } = req.query;
+    const filters = { client, status, delivery_status, from, to };
+    const [orders, settings] = await Promise.all([
+      Order.findAll(filters).then(async rows => {
+        return Promise.all(rows.map(async o => {
+          const [[cnt]] = await pool.query('SELECT COUNT(*) AS n FROM order_items WHERE order_id = ?', [o.id]);
+          return { ...o, item_count: cnt.n };
+        }));
+      }),
       Settings.get(),
     ]);
     const businessName = settings?.name || 'Mi Negocio';

@@ -22,13 +22,20 @@ function gramsToNativeUnit(grams, unitAbbr) {
 class Proforma {
   // ── Lectura ──────────────────────────────────────────────────
 
-  static async findAll() {
+  static async findAll({ client = '', status = '', from = '', to = '' } = {}) {
+    const conds = []; const params = [];
+    if (client) { conds.push('c.name LIKE ?');          params.push(`%${client}%`); }
+    if (status) { conds.push('p.status = ?');            params.push(status); }
+    if (from)   { conds.push('DATE(p.created_at) >= ?'); params.push(from); }
+    if (to)     { conds.push('DATE(p.created_at) <= ?'); params.push(to); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT p.*, c.name AS client_name
       FROM proformas p
       JOIN clients c ON p.client_id = c.id
+      ${where}
       ORDER BY p.created_at DESC
-    `);
+    `, params);
     return rows;
   }
 

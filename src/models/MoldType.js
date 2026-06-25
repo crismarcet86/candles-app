@@ -1,10 +1,11 @@
 const { pool } = require('../config/database');
 
 class MoldType {
-  static async findAll() {
-    const [rows] = await pool.query(
-      'SELECT * FROM mold_types ORDER BY name'
-    );
+  static async findAll({ name = '' } = {}) {
+    const conds = []; const params = [];
+    if (name) { conds.push('name LIKE ?'); params.push(`%${name}%`); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
+    const [rows] = await pool.query(`SELECT * FROM mold_types ${where} ORDER BY name`, params);
     return rows;
   }
 
