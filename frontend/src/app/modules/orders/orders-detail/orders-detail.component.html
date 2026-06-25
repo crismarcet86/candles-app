@@ -4,9 +4,13 @@
       <button class="btn-back" (click)="goBack()">← Volver</button>
       <h1 class="page-title" *ngIf="order">Orden #{{ order.id }}</h1>
     </div>
+    <div class="header-actions" *ngIf="order && hasReturnableItems">
+      <button class="btn-return" (click)="openReturnModal()">↩ Registrar devolución</button>
+    </div>
   </div>
 
-  <div class="alert alert-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+  <div class="alert alert-success" *ngIf="successMsg">{{ successMsg }}</div>
+  <div class="alert alert-error"   *ngIf="errorMsg">{{ errorMsg }}</div>
 
   <div class="card skeleton-card" *ngIf="loading">
     <div class="skeleton-field" *ngFor="let i of [1,2,3,4]"></div>
@@ -27,6 +31,20 @@
           <span class="info-label">Fecha</span>
           <span class="info-value">{{ order.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
         </div>
+        <div class="info-item" *ngIf="order.delivery_date">
+          <span class="info-label">Fecha de entrega</span>
+          <span class="info-value">{{ order.delivery_date | date:'dd/MM/yyyy' }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Estado de entrega</span>
+          <span class="badge" [ngClass]="order.delivery_status === 'entregado' ? 'badge-confirmada' : 'badge-borrador'">
+            {{ order.delivery_status === 'entregado' ? 'Entregado' : 'Pendiente de entrega' }}
+          </span>
+        </div>
+        <div class="info-item" *ngIf="order.status === 'anulado parcial' || order.status === 'anulado total'">
+          <span class="info-label">Devolución</span>
+          <span class="badge" [ngClass]="statusClass(order.status)">{{ statusLabel(order.status) }}</span>
+        </div>
         <div class="info-item" *ngIf="order.notes">
           <span class="info-label">Notas</span>
           <span class="info-value">{{ order.notes }}</span>
@@ -35,24 +53,35 @@
     </div>
 
     <div class="card items-card">
-      <div class="items-header">
-        <h3>Productos</h3>
-      </div>
+      <div class="items-header"><h3>Productos</h3></div>
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
             <tr>
-              <th>Producto</th>
+              <th>Descripción</th>
               <th class="th-num">Precio unit.</th>
               <th class="th-num">Cantidad</th>
+              <th class="th-num">Devuelto</th>
               <th class="th-num">Subtotal</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let item of order.items">
-              <td>{{ item.description || item.product_name || '—' }}</td>
+            <tr *ngFor="let item of order.items"
+                [class.row-returned]="!item.is_service && +item.returned_quantity >= +item.quantity"
+                [class.row-service]="item.is_service">
+              <td>
+                {{ item.description || item.product_name || '—' }}
+                <span class="badge-item-type badge-service" *ngIf="item.is_service">Servicio</span>
+                <span class="badge-item-type badge-preset" *ngIf="!item.is_service && item.preset_id">Calculadora</span>
+              </td>
               <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }}</td>
               <td class="td-num">{{ item.quantity | number:'1.0-3' }}</td>
+              <td class="td-num">
+                <span *ngIf="+item.returned_quantity > 0" class="text-returned">
+                  {{ item.returned_quantity | number:'1.0-3' }}
+                </span>
+                <span *ngIf="+item.returned_quantity === 0" class="text-muted">—</span>
+              </td>
               <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
             </tr>
           </tbody>
@@ -68,5 +97,106 @@
         <div class="total-row total-final"><span>TOTAL</span><span>S/ {{ order.total | number:'1.2-2' }}</span></div>
       </div>
     </div>
+
+    <!-- Historial de devoluciones -->
+    <div class="card items-card" *ngIf="returns.length > 0">
+      <div class="items-header"><h3>Historial de devoluciones</h3></div>
+      <div class="returns-list">
+        <div class="return-entry" *ngFor="let ret of returns">
+          <div class="return-entry-header">
+            <span class="return-date">{{ ret.created_at | date:'dd/MM/yyyy HH:mm' }}</span>
+            <span class="return-notes text-muted" *ngIf="ret.notes">— {{ ret.notes }}</span>
+          </div>
+          <table class="data-table return-table">
+            <thead>
+              <tr>
+                <th>Ítem</th>
+                <th class="th-num">Cant. devuelta</th>
+                <th>Stock restaurado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ri of ret.items">
+                <td>{{ ri.description || '—' }}</td>
+                <td class="td-num">{{ ri.quantity | number:'1.0-3' }}</td>
+                <td>
+                  <span *ngIf="ri.restores_stock" class="badge-stock-ok">Sí</span>
+                  <span *ngIf="!ri.restores_stock" class="text-muted">No</span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   </ng-container>
+</div>
+
+<!-- Modal de devolución -->
+<div class="modal-backdrop" *ngIf="showReturnModal">
+  <div class="modal modal-return">
+    <div class="modal-header">
+      <h3>Registrar devolución</h3>
+      <button class="btn-close-modal" (click)="showReturnModal = false" [disabled]="returnLoading">✕</button>
+    </div>
+
+    <div class="alert alert-error" *ngIf="returnError" style="margin-bottom:0.75rem">{{ returnError }}</div>
+
+    <p class="modal-hint">
+      Ingresá la cantidad a devolver por cada ítem. Dejá en 0 los que no se devuelven.<br>
+      <strong>Calculadora:</strong> restaura los ingredientes del preset por unidad devuelta.
+    </p>
+
+    <div class="return-items-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Ítem</th>
+            <th class="th-num">Disponible</th>
+            <th class="th-num">A devolver</th>
+            <th>Restaurar stock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of returnItems">
+            <td>
+              {{ itemLabel(item) }}
+              <span class="badge-item-type badge-preset" *ngIf="item.preset_id">Calculadora</span>
+            </td>
+            <td class="td-num text-muted">{{ item.available | number:'1.0-3' }}</td>
+            <td class="td-num">
+              <input type="number"
+                     [(ngModel)]="item.return_quantity"
+                     min="0" [max]="item.available" step="1"
+                     class="return-qty-input"
+                     (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-' ? $event.preventDefault() : null">
+            </td>
+            <td>
+              <label *ngIf="item.product_id || item.preset_id" class="stock-checkbox">
+                <input type="checkbox" [(ngModel)]="item.restores_stock">
+                <span>{{ itemStockLabel(item) }}</span>
+              </label>
+              <span *ngIf="!item.product_id && !item.preset_id" class="text-muted">—</span>
+            </td>
+          </tr>
+          <tr *ngIf="returnItems.length === 0">
+            <td colspan="4" class="empty-state">No hay ítems disponibles para devolver.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="form-group" style="margin-top:1rem">
+      <label>Notas (opcional)</label>
+      <input type="text" [(ngModel)]="returnNotes" placeholder="Motivo de la devolución...">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-outline" (click)="showReturnModal = false" [disabled]="returnLoading">Cancelar</button>
+      <button class="btn-return-submit" (click)="submitReturn()" [disabled]="returnLoading">
+        <span *ngIf="!returnLoading">Confirmar devolución</span>
+        <span *ngIf="returnLoading" class="spinner"></span>
+      </button>
+    </div>
+  </div>
 </div>

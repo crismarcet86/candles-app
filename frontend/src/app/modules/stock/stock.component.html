@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="page-title">📦 Stock</h1>
-      <p class="page-subtitle" *ngIf="!inventoryMode">Visualizá y ajustá el inventario de ingredientes</p>
+      <p class="page-subtitle" *ngIf="!inventoryMode">Visualizá y ajustá el inventario de productos</p>
       <p class="page-subtitle" *ngIf="inventoryMode">Ingresá el stock real contado de cada ítem</p>
     </div>
     <div class="header-actions" *ngIf="!inventoryMode">
@@ -41,7 +41,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Ingrediente</th>
+            <th>Producto</th>
             <th>Categoría</th>
             <th>Unidad</th>
             <th class="th-num">Stock actual</th>
@@ -52,7 +52,7 @@
         </thead>
         <tbody>
           <tr *ngIf="items.length === 0">
-            <td colspan="7" class="empty-state">No hay ingredientes registrados</td>
+            <td colspan="7" class="empty-state">No hay productos registrados</td>
           </tr>
           <tr *ngFor="let p of items">
             <td>{{ p.name }}</td>
@@ -86,7 +86,7 @@
       <table class="data-table">
         <thead>
           <tr>
-            <th>Ingrediente</th>
+            <th>Producto</th>
             <th>Categoría</th>
             <th>Unidad</th>
             <th class="th-num">Stock registrado</th>

@@ -38,6 +38,10 @@
 
         <div class="form-row">
           <div class="form-group">
+            <label>Fecha de entrega</label>
+            <input type="date" formControlName="delivery_date">
+          </div>
+          <div class="form-group">
             <label>Descuento (S/)</label>
             <input type="number" formControlName="discount" min="0" step="1" placeholder="0.00">
           </div>
@@ -70,7 +74,7 @@
                   [class.row-preset]="item.get('preset_id')?.value">
                 <td>
                   <div class="desc-cell">
-                    <span class="badge-preset" *ngIf="item.get('preset_id')?.value" title="Calculado — al confirmar descuenta ingredientes">🧮</span>
+                    <span class="badge-preset" *ngIf="item.get('preset_id')?.value" title="Calculado — al confirmar descuenta productos del stock">🧮</span>
                     <input type="text" formControlName="description"
                            placeholder="Ej: 12 velas aromáticas lavanda, Mano de obra..."
                            [class.invalid]="itemField(i,'description')?.invalid && itemField(i,'description')?.touched">
@@ -136,7 +140,7 @@
       <h3>Seleccionar cálculo guardado</h3>
       <button class="btn-close-modal" (click)="presetsModal = false">✕</button>
     </div>
-    <p class="modal-hint">Al insertar, los ingredientes se descontarán del stock cuando confirmes la proforma.</p>
+    <p class="modal-hint">Al insertar, los productos se descontarán del stock cuando confirmes la proforma.</p>
 
     <div class="preset-loading" *ngIf="loadingPresets">Cargando...</div>
 
@@ -149,7 +153,7 @@
         <div class="preset-card-title">{{ p.name }}</div>
         <div class="preset-card-meta">
           <span *ngIf="p.mold_name">🫙 {{ p.mold_name }}</span>
-          <span>{{ p.item_count }} ingrediente(s)</span>
+          <span>{{ p.item_count }} producto(s)</span>
           <span>Costo: S/ {{ p.cost_per_unit | number:'1.2-2' }}/u</span>
           <span *ngIf="p.sell_price > 0" class="price-tag">Precio: S/ {{ p.sell_price | number:'1.2-2' }}</span>
         </div>

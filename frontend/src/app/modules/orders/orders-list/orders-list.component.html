@@ -25,20 +25,41 @@
             <th>Cliente</th>
             <th>Proforma</th>
             <th>Total</th>
-            <th>Fecha</th>
+            <th>Devolución</th>
+            <th>Entrega</th>
+            <th>Estado entrega</th>
             <th class="th-actions">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="orders.length === 0">
-            <td colspan="6" class="empty-state">No hay órdenes registradas</td>
+            <td colspan="8" class="empty-state">No hay órdenes registradas</td>
           </tr>
-          <tr *ngFor="let o of orders">
+          <tr *ngFor="let o of orders" [class.row-anulada]="o.status === 'anulado total'">
             <td class="text-muted">#{{ o.id }}</td>
             <td>{{ o.client_name }}</td>
             <td class="text-muted">Proforma #{{ o.proforma_id }}</td>
             <td><strong>S/ {{ o.total | number:'1.2-2' }}</strong></td>
-            <td class="text-muted">{{ o.created_at | date:'dd/MM/yyyy' }}</td>
+            <td>
+              <span *ngIf="o.status === 'anulado total'"   class="badge badge-cancelada">Anulado total</span>
+              <span *ngIf="o.status === 'anulado parcial'" class="badge badge-warning">Anulado parcial</span>
+              <span *ngIf="o.status !== 'anulado total' && o.status !== 'anulado parcial'" class="text-muted">—</span>
+            </td>
+            <td class="text-muted">{{ o.delivery_date ? (o.delivery_date | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>
+              <label class="delivery-switch"
+                     [class.switch-disabled]="o.status === 'anulado total'"
+                     [title]="o.status === 'anulado total' ? 'Orden anulada' : o.delivery_status === 'entregado' ? 'Marcar como pendiente' : 'Marcar como entregado'">
+                <input type="checkbox"
+                       [checked]="o.delivery_status === 'entregado'"
+                       [disabled]="o.status === 'anulado total'"
+                       (change)="toggleDelivery(o)">
+                <span class="delivery-slider"></span>
+                <span class="delivery-label" [class.delivered]="o.delivery_status === 'entregado'">
+                  {{ o.delivery_status === 'entregado' ? 'Entregado' : 'Pendiente' }}
+                </span>
+              </label>
+            </td>
             <td class="td-actions">
               <button class="btn-action" (click)="goToDetail(o.id)" title="Ver detalle">👁️</button>
             </td>

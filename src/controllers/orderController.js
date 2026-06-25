@@ -14,6 +14,19 @@ exports.updateStatus = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+exports.updateDeliveryStatus = async (req, res, next) => {
+  try {
+    const o = await Order.findById(req.params.id);
+    if (!o) return notFound(res, 'Orden no encontrada');
+    const { delivery_status } = req.body;
+    if (!['pendiente', 'entregado'].includes(delivery_status)) {
+      const { error } = require('../utils/response');
+      return error(res, 'Estado de entrega inválido', 422);
+    }
+    success(res, await Order.updateDeliveryStatus(req.params.id, delivery_status), 'Estado de entrega actualizado');
+  } catch (e) { next(e); }
+};
+
 exports.getPdf = async (req, res, next) => {
   try {
     const [[orders], settings] = await Promise.all([
@@ -34,15 +47,18 @@ exports.getPdf = async (req, res, next) => {
       o.client_name,
       o.item_count || 0,
       `S/ ${(+o.total).toFixed(2)}`,
-      o.status,
+      o.delivery_date
+        ? new Date(o.delivery_date + 'T00:00:00').toLocaleDateString('es-PE')
+        : '—',
+      o.delivery_status === 'entregado' ? 'Entregado' : 'Pendiente',
       new Date(o.created_at).toLocaleDateString('es-PE'),
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Pedidos',
       subtitle, businessName, logoPath,
-      headers: ['ID', 'CLIENTE', 'ÍTEMS', 'TOTAL', 'ESTADO', 'FECHA'],
-      widths:  [40, 175, 50, 80, 70, 80],
-      aligns:  ['left', 'left', 'right', 'right', 'left', 'left'],
+      headers: ['ID', 'CLIENTE', 'ÍTEMS', 'TOTAL', 'F. ENTREGA', 'ENTREGA', 'FECHA'],
+      widths:  [35, 145, 40, 70, 70, 65, 70],
+      aligns:  ['left', 'left', 'right', 'right', 'left', 'left', 'left'],
       rows,
     });
     res.setHeader('Content-Type', 'application/pdf');

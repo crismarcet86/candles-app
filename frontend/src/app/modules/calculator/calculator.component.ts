@@ -254,11 +254,14 @@ export class CalculatorComponent implements OnInit {
   downloadPdf(): void {
     this.pdfLoading = true;
     const body = {
-      moldName:   this.selectedMold?.name,
-      waxGrams:   this.selectedMold?.wax_grams,
-      quantity:   this.quantity,
-      sellPrice:  this.sellPrice,
-      lines:      this.lines
+      moldName:      this.selectedMold?.name,
+      waxGrams:      this.selectedMold?.wax_grams,
+      quantity:      this.quantity,
+      sellPrice:     this.sellPrice,
+      includesColor: this.includesColor,
+      laborCost:     this.laborCost,
+      laborHours:    this.laborHours,
+      lines:         this.lines
     };
     this.http.post(`${environment.apiUrl}/calculator/pdf`, body, { responseType: 'blob' }).subscribe({
       next: blob => {

@@ -25,7 +25,13 @@ class Order {
       SELECT
         oi.*,
         p.name         AS product_name,
-        u.abbreviation AS unit_abbr
+        u.abbreviation AS unit_abbr,
+        COALESCE((
+          SELECT SUM(ri.quantity)
+          FROM order_return_items ri
+          JOIN order_returns r ON ri.return_id = r.id
+          WHERE ri.order_item_id = oi.id AND r.order_id = oi.order_id
+        ), 0) AS returned_quantity
       FROM order_items oi
       LEFT JOIN products p ON oi.product_id = p.id
       LEFT JOIN units    u ON p.unit_id     = u.id
@@ -40,6 +46,14 @@ class Order {
     await pool.query(
       'UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?',
       [status, id]
+    );
+    return this.findById(id);
+  }
+
+  static async updateDeliveryStatus(id, delivery_status) {
+    await pool.query(
+      'UPDATE orders SET delivery_status = ?, updated_at = NOW() WHERE id = ?',
+      [delivery_status, id]
     );
     return this.findById(id);
   }

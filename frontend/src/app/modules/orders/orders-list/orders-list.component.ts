@@ -29,6 +29,16 @@ export class OrdersListComponent implements OnInit {
 
   goToDetail(id: number) { this.router.navigate(['/dashboard/orders', id]); }
 
+  toggleDelivery(order: Order): void {
+    const next = order.delivery_status === 'entregado' ? 'pendiente' : 'entregado';
+    this.service.updateDeliveryStatus(order.id, next).subscribe({
+      next: res => {
+        order.delivery_status = res.data.delivery_status;
+      },
+      error: () => {}
+    });
+  }
+
   downloadPdf(): void {
     this.http.get(`${environment.apiUrl}/orders/pdf`, { responseType: 'blob' }).subscribe({
       next: blob => {

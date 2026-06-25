@@ -93,14 +93,14 @@ exports.getPdf = async (req, res, next) => {
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
     const rows = products.map(p => [p.name, p.category_name || '—', p.unit_abbr || '—', `S/ ${(+p.price).toFixed(2)}`, p.stock, p.min_stock]);
     const pdf = await generateListPDF({
-      title: 'Listado de Ingredientes', subtitle, businessName, logoPath,
+      title: 'Listado de Productos', subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'CATEGORÍA', 'UNIDAD', 'PRECIO', 'STOCK', 'MÍN.'],
       widths:  [160, 110, 55, 65, 55, 50],
       aligns:  ['left', 'left', 'left', 'right', 'right', 'right'],
       rows,
     });
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename="ingredientes.pdf"');
+    res.setHeader('Content-Disposition', 'attachment; filename="productos.pdf"');
     res.send(pdf);
   } catch (e) { next(e); }
 };

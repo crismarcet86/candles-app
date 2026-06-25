@@ -26,7 +26,7 @@
           <div *ngIf="!previewUrl" class="image-placeholder">📦</div>
         </div>
         <div class="image-actions">
-          <p class="image-hint">Foto o ilustración del ingrediente. Se mostrará en el listado. Máx. 2 MB, formatos: PNG, JPG, WEBP.</p>
+          <p class="image-hint">Foto o ilustración del producto. Se mostrará en el listado. Máx. 2 MB, formatos: PNG, JPG, WEBP.</p>
           <label class="btn-upload" [class.uploading]="uploadingImage">
             <span *ngIf="!uploadingImage">📁 {{ previewUrl ? 'Cambiar imagen' : 'Elegir imagen' }}</span>
             <span *ngIf="uploadingImage" class="spinner-dark"></span>
