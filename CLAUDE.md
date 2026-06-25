@@ -45,6 +45,14 @@ cd frontend && npm run build  # Build de producción
 
 No hay test runner ni linter configurado en ninguno de los dos proyectos.
 
+# Comandos de base de datos
+
+```bash
+npm run db:migrate-all   # Corre las 18 migraciones en orden — seguro de re-ejecutar
+npm run db:reset         # Backup → drop → migraciones → restore (ideal al cambiar de ambiente)
+npm run db:restore <f>   # Restaura datos desde un JSON de backup generado por db:reset
+```
+
 ## Environment Setup
 
 Copiar `.env.example` a `.env` y configurar:
@@ -336,6 +344,37 @@ En toda la interfaz de usuario los ingredientes se muestran como **"Productos"**
 - **Campos numéricos** (`type="number"`): bloquean teclas `e`, `E`, `+`, `-` con `(keydown)` para evitar notación científica
 - **Campos de correo** (solo clientes): usan `Validators.pattern(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)` en el formulario de clientes
 - **Campo username**: solo `Validators.required` (sin formato de email) — en login, registro y gestión de usuarios
+
+## Filtros en Listados
+
+Todos los listados tienen filtros server-side que también se aplican al PDF descargado.
+
+**Patrón backend:**
+- `Model.findAll(filters)` construye cláusulas `WHERE` dinámicas con queries parametrizadas (sin concatenación de strings — seguro contra SQL injection)
+- El controller extrae `req.query` y lo pasa al modelo; el endpoint PDF usa los mismos parámetros
+
+**Patrón frontend:**
+- `Service.getAll(filters)` construye `HttpParams` y los envía como query string
+- Campos de texto: debounce de 400 ms antes de llamar al backend
+- Combos/fechas: disparan carga inmediata (`onComboChange`)
+- Botón "✕ Limpiar" aparece solo cuando hay algún filtro activo (`get hasFilters`)
+- `downloadPdf()` pasa los mismos filtros como query string al endpoint PDF
+- No usa `ngModel` — usa `(input)` / `(change)` para no requerir `FormsModule` en los módulos de listado
+- CSS de la barra de filtros en `styles.css` global: `.filter-bar`, `.filter-input`, `.filter-select`, `.filter-date`, `.filter-sep`, `.btn-filter-clear`
+
+**Filtros disponibles por módulo:**
+
+| Módulo | Filtros |
+|--------|---------|
+| Categorías | `name` LIKE |
+| Unidades | `search` LIKE en nombre y abreviatura (mismo campo) |
+| Tipos de molde | `name` LIKE |
+| Moldes | `name` LIKE (nombre o descripción) + `mold_type_id` (combo) |
+| Productos | `name` LIKE + `category_id` (combo) + `unit_id` (combo) |
+| Stock | `name` LIKE + `category_id` (combo) + `unit_id` (combo) |
+| Clientes | `name` LIKE + `cedula` LIKE |
+| Proformas | `client` LIKE + `status` (combo) + `from`/`to` (rango fechas) |
+| Órdenes | `client` LIKE + `delivery_status` (combo) + `status` devolución (combo) + `from`/`to` |
 
 ## Estilos globales — Patrones CSS
 

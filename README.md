@@ -55,26 +55,39 @@ cd frontend && npm install
 
 ### 3. Inicializar base de datos
 
-Ejecutar migraciones en orden:
-
+**Opcion recomendada — un solo comando:**
 ```bash
-npm run db:migrate
-node src/config/migrate-v2.js
-node src/config/migrate-cedula.js
-node src/config/migrate-settings.js
-node src/config/migrate-presets.js
-node src/config/migrate-mold-types.js
-node src/config/migrate-presets-v2.js
-node src/config/migrate-presets-v3.js
-node src/config/migrate-presets-v4.js
-node src/config/migrate-username.js
-node src/config/migrate-report-logo.js
-node src/config/migrate-mold-type-image.js
-node src/config/migrate-mold-image.js
-node src/config/migrate-product-image.js
-node src/config/migrate-delivery.js
-node src/config/migrate-returns.js
-node src/config/migrate-order-items-v2.js
+npm run db:migrate-all
+```
+
+Esto corre las 18 migraciones en orden. Es seguro de re-ejecutar (cada migracion verifica si la columna/tabla ya existe antes de crearla).
+
+**Si cambias de ambiente y tenes datos que preservar:**
+```bash
+npm run db:reset
+```
+Hace backup JSON → drop de tablas → migraciones desde cero → restaura datos.
+
+**Migraciones individuales (referencia):**
+```bash
+npm run db:migrate                      # Schema base
+node src/config/migrate-v2.js           # Modelo de velas: molds, labor_cost, items libres
+node src/config/migrate-cedula.js       # cedula en clients
+node src/config/migrate-settings.js     # business_settings
+node src/config/migrate-presets.js      # calculation_presets + updated_at
+node src/config/migrate-mold-types.js   # mold_types + mold_type_id en molds
+node src/config/migrate-fragrance.js    # is_fragrance en categories
+node src/config/migrate-presets-v2.js   # includes_color, fragrance_pct
+node src/config/migrate-presets-v3.js   # labor_cost en presets
+node src/config/migrate-presets-v4.js   # labor_hours en presets
+node src/config/migrate-username.js     # username en users
+node src/config/migrate-report-logo.js  # report_logo_path en settings
+node src/config/migrate-mold-type-image.js  # image_path en mold_types
+node src/config/migrate-mold-image.js       # image_path en molds
+node src/config/migrate-product-image.js    # image_path en products
+node src/config/migrate-delivery.js     # delivery_date/status + orders.status ENUM ampliado
+node src/config/migrate-returns.js      # order_returns + order_return_items
+node src/config/migrate-order-items-v2.js   # preset_id + is_service en order_items
 ```
 
 ### 4. Iniciar servidores
@@ -158,6 +171,22 @@ Abrir `http://localhost:4200` en el navegador.
   - **Servicios**: no se pueden devolver
 - Historial de devoluciones con fecha, notas y detalle de stock restaurado
 - La orden pasa automaticamente a `anulado parcial` o `anulado total` segun corresponda
+
+### Filtros en listados
+
+Todos los listados tienen filtros server-side. El PDF descargado respeta siempre los filtros activos.
+
+| Modulo | Filtros disponibles |
+|--------|---------------------|
+| Categorias | Nombre |
+| Unidades | Nombre o abreviatura (mismo campo) |
+| Tipos de molde | Nombre |
+| Moldes | Nombre/descripcion + tipo de molde (combo) |
+| Productos | Nombre + categoria (combo) + unidad (combo) |
+| Stock | Nombre + categoria (combo) + unidad (combo) |
+| Clientes | Nombre + cedula/RUC |
+| Proformas | Cliente + estado (combo) + rango de fechas |
+| Ordenes | Cliente + estado entrega + estado devolucion + rango de fechas |
 
 ### Reportes
 - KPIs: total ordenes, ingresos, clientes activos, proformas pendientes, productos con stock bajo
@@ -247,9 +276,20 @@ Donde `total_grams` es el peso del agua al llenar el molde por desplazamiento.
 
 ---
 
+## Comandos de base de datos
+
+| Comando | Descripcion |
+|---------|-------------|
+| `npm run db:migrate` | Schema base (primera vez) |
+| `npm run db:migrate-all` | Corre las 18 migraciones en orden, seguro de re-ejecutar |
+| `npm run db:reset` | Backup → drop → migraciones → restore (cambio de ambiente) |
+| `npm run db:restore <archivo.json>` | Restaura datos desde un backup JSON |
+
 ## Notas de desarrollo
 
 - No hay test runner ni linter configurados
 - Los deletes de Categories, Products, Molds, MoldTypes y Clients son **logicos** (`is_active = 0`)
 - Las imagenes se guardan en `public/uploads/` con nombres predecibles (`product-{id}.ext`, etc.)
 - El token JWT se incluye en todas las peticiones via HTTP interceptor en Angular
+- Los filtros de listado usan queries parametrizadas — no hay riesgo de SQL injection
+- El PDF de cada listado respeta los filtros activos (mismos query params que el listado)
