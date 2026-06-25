@@ -39,6 +39,22 @@ async function run() {
       } else throw e;
     }
 
+    // orders.status — ampliar ENUM para incluir valores de devolución
+    // El ENUM original era ('pendiente','entregado','cancelado').
+    // Las devoluciones usan 'anulado parcial' y 'anulado total'.
+    // MODIFY es idempotente: si los valores ya están, no cambia nada funcional.
+    try {
+      await conn.query(`
+        ALTER TABLE orders
+          MODIFY COLUMN status
+            ENUM('pendiente','entregado','cancelado','anulado parcial','anulado total')
+            NOT NULL DEFAULT 'pendiente'
+      `);
+      console.log('✔ orders.status ENUM actualizado con valores de devolución');
+    } catch (e) {
+      console.log('ℹ orders.status ENUM:', e.message);
+    }
+
     console.log('\n✅ migrate-delivery completado');
   } finally {
     conn.release();
