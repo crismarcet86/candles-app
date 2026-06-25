@@ -38,14 +38,24 @@ async function run() {
     `);
     if (!mtRow.cnt) {
       await conn.query('ALTER TABLE molds ADD COLUMN mold_type_id INT NULL AFTER id');
+      console.log('✓ Columna mold_type_id agregada a molds');
+    } else {
+      console.log('  mold_type_id ya existe');
+    }
+
+    // FK separada para que sea re-ejecutable independientemente
+    try {
       await conn.query(`
         ALTER TABLE molds
         ADD CONSTRAINT fk_molds_mold_type
         FOREIGN KEY (mold_type_id) REFERENCES mold_types(id) ON DELETE SET NULL
       `);
-      console.log('✓ Columna mold_type_id + FK agregada a molds');
-    } else {
-      console.log('  mold_type_id ya existe');
+      console.log('✓ FK fk_molds_mold_type agregada');
+    } catch (e) {
+      if (e.code === 'ER_FK_DUP_NAME' || e.code === 'ER_DUP_KEYNAME' ||
+          e.message.includes('Duplicate key name') || e.message.includes('fk_molds_mold_type')) {
+        console.log('  FK fk_molds_mold_type ya existe');
+      } else throw e;
     }
 
     console.log('\n✅ Migración completada');
