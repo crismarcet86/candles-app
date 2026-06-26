@@ -5,7 +5,10 @@ const { generateListPDF } = require('../utils/pdfList');
 const { success, created, notFound, error } = require('../utils/response');
 
 exports.getAll = async (req, res, next) => {
-  try { success(res, await Proforma.findAll()); } catch (e) { next(e); }
+  try {
+    const { client = '', status = '', from = '', to = '' } = req.query;
+    success(res, await Proforma.findAll({ client, status, from, to }));
+  } catch (e) { next(e); }
 };
 
 exports.getById = async (req, res, next) => {
@@ -54,7 +57,8 @@ exports.cancel = async (req, res, next) => {
 // GET /api/proformas/pdf — listado PDF de todas las proformas
 exports.getListPdf = async (req, res, next) => {
   try {
-    const [proformas, settings] = await Promise.all([Proforma.findAll(), Settings.get()]);
+    const { client = '', status = '', from = '', to = '' } = req.query;
+    const [proformas, settings] = await Promise.all([Proforma.findAll({ client, status, from, to }), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });

@@ -1,8 +1,11 @@
 const { pool } = require('../config/database');
 
 class Unit {
-  static async findAll() {
-    const [rows] = await pool.query('SELECT * FROM units ORDER BY name ASC');
+  static async findAll({ search = '' } = {}) {
+    const conds = []; const params = [];
+    if (search) { conds.push('(name LIKE ? OR abbreviation LIKE ?)'); params.push(`%${search}%`, `%${search}%`); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
+    const [rows] = await pool.query(`SELECT * FROM units ${where} ORDER BY name ASC`, params);
     return rows;
   }
 

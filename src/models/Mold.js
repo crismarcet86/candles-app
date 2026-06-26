@@ -1,13 +1,18 @@
 const { pool } = require('../config/database');
 
 class Mold {
-  static async findAll() {
+  static async findAll({ name = '', mold_type_id = null } = {}) {
+    const conds = []; const params = [];
+    if (name)         { conds.push('(m.name LIKE ? OR m.description LIKE ?)'); params.push(`%${name}%`, `%${name}%`); }
+    if (mold_type_id) { conds.push('m.mold_type_id = ?'); params.push(mold_type_id); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT m.*, mt.name AS mold_type_name
       FROM molds m
       LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
+      ${where}
       ORDER BY m.name
-    `);
+    `, params);
     return rows;
   }
 

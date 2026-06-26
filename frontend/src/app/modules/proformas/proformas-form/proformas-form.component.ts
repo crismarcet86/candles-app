@@ -51,10 +51,11 @@ export class ProformasFormComponent implements OnInit {
 
   private buildForm(): void {
     this.form = this.fb.group({
-      client_id: [null, Validators.required],
-      notes:     [''],
-      discount:  [0, [Validators.min(0)]],
-      items:     this.fb.array([])
+      client_id:     [null, Validators.required],
+      notes:         [''],
+      delivery_date: [null],
+      discount:      [0, [Validators.min(0)]],
+      items:         this.fb.array([])
     });
   }
 
@@ -64,9 +65,10 @@ export class ProformasFormComponent implements OnInit {
       next: res => {
         const p = res.data;
         this.form.patchValue({
-          client_id: p.client_id,
-          notes:     p.notes || '',
-          discount:  p.discount,
+          client_id:     p.client_id,
+          notes:         p.notes || '',
+          delivery_date: p.delivery_date || null,
+          discount:      p.discount,
         });
         while (this.items.length) this.items.removeAt(0);
         (p.items || []).forEach((item: any) => {
@@ -142,9 +144,10 @@ export class ProformasFormComponent implements OnInit {
     this.loading = true; this.errorMsg = '';
     const val = this.form.value;
     const payload = {
-      client_id: +val.client_id,
-      notes:     val.notes || null,
-      discount:  +(val.discount || 0),
+      client_id:     +val.client_id,
+      notes:         val.notes || null,
+      delivery_date: val.delivery_date || null,
+      discount:      +(val.discount || 0),
       items: val.items.map((it: any) => ({
         description: it.description,
         quantity:    +it.quantity,

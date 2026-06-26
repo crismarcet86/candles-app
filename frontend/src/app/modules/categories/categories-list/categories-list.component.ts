@@ -16,6 +16,8 @@ export class CategoriesListComponent implements OnInit {
   errorMsg = '';
   successMsg = '';
   confirmDeactivateId: number | null = null;
+  filterName = '';
+  private ft: any;
 
   constructor(
     private categoriesService: CategoriesService,
@@ -30,17 +32,15 @@ export class CategoriesListComponent implements OnInit {
   loadCategories(): void {
     this.loading = true;
     this.errorMsg = '';
-    this.categoriesService.getAll().subscribe({
-      next: res => {
-        this.categories = res.data;
-        this.loading = false;
-      },
-      error: err => {
-        this.errorMsg = err.error?.message || 'Error al cargar categorías';
-        this.loading = false;
-      }
+    this.categoriesService.getAll({ name: this.filterName }).subscribe({
+      next: res => { this.categories = res.data; this.loading = false; },
+      error: err => { this.errorMsg = err.error?.message || 'Error al cargar categorías'; this.loading = false; }
     });
   }
+
+  onFilterChange(): void { clearTimeout(this.ft); this.ft = setTimeout(() => this.loadCategories(), 400); }
+  get hasFilters(): boolean { return !!this.filterName; }
+  clearFilters(): void { this.filterName = ''; this.loadCategories(); }
 
   goToNew(): void {
     this.router.navigate(['/dashboard/categories/new']);
@@ -76,17 +76,10 @@ export class CategoriesListComponent implements OnInit {
   }
 
   downloadPdf(): void {
-    this.http.get(`${environment.apiUrl}/categories/pdf`, { responseType: 'blob' }).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'categorias.pdf';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      },
+    let params = '';
+    if (this.filterName) params += `?name=${encodeURIComponent(this.filterName)}`;
+    this.http.get(`${environment.apiUrl}/categories/pdf${params}`, { responseType: 'blob' }).subscribe({
+      next: blob => { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'categorias.pdf'; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url); },
       error: () => {}
     });
   }

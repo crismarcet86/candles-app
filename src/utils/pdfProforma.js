@@ -40,6 +40,14 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
     doc.fillColor('#1a1a2e').fontSize(9).font('Helvetica');
     doc.text(`N°: ${String(proforma.id).padStart(4, '0')}`, 50, infoY);
     doc.text(`Fecha: ${fecha}`,                               50, infoY + 13);
+    let leftLineY = infoY + 26;
+    if (proforma.delivery_date) {
+      const fechaEntrega = new Date(proforma.delivery_date + 'T00:00:00').toLocaleDateString('es-PE', {
+        day: '2-digit', month: '2-digit', year: 'numeric'
+      });
+      doc.text(`Entrega: ${fechaEntrega}`,                    50, leftLineY);
+      leftLineY += 13;
+    }
 
     // Columna derecha: datos del cliente
     const clientX = 300;
@@ -60,12 +68,13 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
       clientLineY += 13;
     }
     if (proforma.notes) {
-      doc.text(`Notas: ${proforma.notes}`, 50, Math.max(infoY + 26, clientLineY), { width: W });
-      clientLineY += 13;
+      const notesY = Math.max(leftLineY, clientLineY);
+      doc.text(`Notas: ${proforma.notes}`, 50, notesY, { width: W });
+      clientLineY = notesY + 13;
     }
 
     // Avanzar al final del bloque de info
-    doc.y = Math.max(clientLineY, infoY + 40);
+    doc.y = Math.max(clientLineY, leftLineY, infoY + 40);
     doc.moveDown(1);
 
     // ── LÍNEA SEPARADORA ────────────────────────────────────────

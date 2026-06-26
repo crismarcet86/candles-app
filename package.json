@@ -7,6 +7,9 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "db:migrate": "node src/config/migrate.js",
+    "db:migrate-all": "node src/config/migrate-all.js",
+    "db:reset": "node src/config/migrate-reset.js",
+    "db:restore": "node src/config/migrate-restore.js",
     "db:migrate-presets": "node src/config/migrate-presets.js",
     "set-env": "node set-env.js"
   },

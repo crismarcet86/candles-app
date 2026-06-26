@@ -11,7 +11,10 @@ const fmt = (req, m) => m ? { ...m, image_url: buildImageUrl(req, m.image_path) 
 const fmtAll = (req, rows) => rows.map(m => fmt(req, m));
 
 exports.getAll = async (req, res, next) => {
-  try { success(res, fmtAll(req, await Mold.findAll())); } catch (e) { next(e); }
+  try {
+    const { name = '', mold_type_id = null } = req.query;
+    success(res, fmtAll(req, await Mold.findAll({ name, mold_type_id: mold_type_id || null })));
+  } catch (e) { next(e); }
 };
 
 exports.getById = async (req, res, next) => {
@@ -56,7 +59,8 @@ exports.uploadImage = async (req, res, next) => {
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const [molds, settings] = await Promise.all([Mold.findAll(), Settings.get()]);
+    const { name = '', mold_type_id = null } = req.query;
+    const [molds, settings] = await Promise.all([Mold.findAll({ name, mold_type_id: mold_type_id || null }), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });

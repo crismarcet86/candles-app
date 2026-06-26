@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Category } from '../../shared/models/category.model';
 import { environment } from '../../../environments/environment';
@@ -16,8 +16,10 @@ export class CategoriesService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<Category[]>> {
-    return this.http.get<ApiResponse<Category[]>>(this.base);
+  getAll(f: { name?: string } = {}): Observable<ApiResponse<Category[]>> {
+    let params = new HttpParams();
+    if (f.name) params = params.set('name', f.name);
+    return this.http.get<ApiResponse<Category[]>>(this.base, { params });
   }
 
   getById(id: number): Observable<ApiResponse<Category>> {

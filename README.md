@@ -1,257 +1,295 @@
-# 🕯️ Candles App
+# Candles App — Sistema de gestión para negocio de velas artesanales
 
-Sistema de gestión para un emprendimiento de velas artesanales. Permite gestionar ingredientes (cera, esencia, pabilos), moldes con tipo y capacidad en gramos, clientes, cotizaciones (proformas) con descuentos, confirmar pedidos descontando stock, calcular costos con fragmentos %, color y mano de obra, ajustar inventario y exportar reportes en PDF.
+Sistema completo de gestión para producción y venta de velas artesanales. Permite administrar productos (cera, esencia, pabilos, etc.), moldes, clientes, cotizaciones, pedidos, devoluciones e inventario.
 
-- **Backend:** Node.js + Express + MySQL — puerto 3000
-- **Frontend:** Angular 16 SPA — puerto 4200
+## Stack tecnológico
+
+- **Backend:** Node.js + Express + MySQL (puerto 3000)
+- **Frontend:** Angular 16 SPA (puerto 4200)
+- **PDF:** pdfkit
+- **Auth:** JWT (basado en username, no email)
 
 ---
 
-## Instalación desde cero
+## Requisitos previos
 
-### Requisitos previos
-- [Node.js 18+](https://nodejs.org)
-- MySQL 8 corriendo localmente
+- Node.js 18+
+- MySQL 8+
+- npm
 
-### 1. Clonar el repositorio
+---
+
+## Instalación
+
+### 1. Clonar y configurar entorno
+
 ```bash
-git clone https://github.com/crismarcet86/candles-app.git
+git clone <repo-url>
 cd candles-app
-```
-
-### 2. Crear la base de datos en MySQL
-```sql
-CREATE DATABASE candles_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 3. Configurar variables de entorno
-```bash
 cp .env.example .env
 ```
-Editá `.env` con tus credenciales:
-```
+
+Editar `.env`:
+
+```env
 DB_HOST=localhost
 DB_PORT=3306
-DB_USER=tu_usuario
-DB_PASSWORD=tu_contraseña
+DB_USER=root
+DB_PASSWORD=tu_password
 DB_NAME=candles_db
-JWT_SECRET=cualquier_texto_secreto
+PORT=3000
 CORS_ORIGIN=http://localhost:4200
+JWT_SECRET=tu_clave_secreta
+JWT_EXPIRES=8h
 ```
 
-### 4. Instalar dependencias del backend
+### 2. Instalar dependencias
+
 ```bash
+# Backend
 npm install
+
+# Frontend
+cd frontend && npm install
 ```
 
-### 5. Inicializar la base de datos (ejecutar en orden)
+### 3. Inicializar base de datos
+
+**Opcion recomendada — un solo comando:**
 ```bash
-npm run db:migrate
-node src/config/migrate-v2.js
-node src/config/migrate-cedula.js
-node src/config/migrate-settings.js
-node src/config/migrate-presets.js
-node src/config/migrate-mold-types.js
-node src/config/migrate-presets-v2.js
-node src/config/migrate-presets-v3.js
-node src/config/migrate-presets-v4.js
-node src/config/migrate-username.js
-node src/config/migrate-report-logo.js
-node src/config/migrate-mold-type-image.js
-node src/config/migrate-mold-image.js
-node src/config/migrate-product-image.js
+npm run db:migrate-all
 ```
 
-> **Nota:** cada script verifica si la columna/tabla ya existe antes de crearla, por lo que son idempotentes y pueden ejecutarse más de una vez sin error.
+Esto corre las 18 migraciones en orden. Es seguro de re-ejecutar (cada migracion verifica si la columna/tabla ya existe antes de crearla).
 
-### 6. Instalar dependencias del frontend
+**Si cambias de ambiente y tenes datos que preservar:**
 ```bash
-cd frontend && npm install && cd ..
+npm run db:reset
+```
+Hace backup JSON → drop de tablas → migraciones desde cero → restaura datos.
+
+**Migraciones individuales (referencia):**
+```bash
+npm run db:migrate                      # Schema base
+node src/config/migrate-v2.js           # Modelo de velas: molds, labor_cost, items libres
+node src/config/migrate-cedula.js       # cedula en clients
+node src/config/migrate-settings.js     # business_settings
+node src/config/migrate-presets.js      # calculation_presets + updated_at
+node src/config/migrate-mold-types.js   # mold_types + mold_type_id en molds
+node src/config/migrate-fragrance.js    # is_fragrance en categories
+node src/config/migrate-presets-v2.js   # includes_color, fragrance_pct
+node src/config/migrate-presets-v3.js   # labor_cost en presets
+node src/config/migrate-presets-v4.js   # labor_hours en presets
+node src/config/migrate-username.js     # username en users
+node src/config/migrate-report-logo.js  # report_logo_path en settings
+node src/config/migrate-mold-type-image.js  # image_path en mold_types
+node src/config/migrate-mold-image.js       # image_path en molds
+node src/config/migrate-product-image.js    # image_path en products
+node src/config/migrate-delivery.js     # delivery_date/status + orders.status ENUM ampliado
+node src/config/migrate-returns.js      # order_returns + order_return_items
+node src/config/migrate-order-items-v2.js   # preset_id + is_service en order_items
 ```
 
-### 7. Levantar los servidores (en terminales separadas)
+### 4. Iniciar servidores
 
-**Terminal 1 — Backend:**
 ```bash
+# Backend (desarrollo con auto-reload)
 npm run dev
-```
 
-**Terminal 2 — Frontend:**
-```bash
+# Frontend (en otra terminal)
 cd frontend && npm start
 ```
 
-### 8. Abrir en el navegador
-```
-http://localhost:4200
-```
+Abrir `http://localhost:4200` en el navegador.
 
 ---
 
-## Tecnologías
+## Funcionalidades
 
-| Capa | Stack |
-|---|---|
-| Backend | Node.js, Express 4, mysql2, express-validator, winston, pdfkit, JWT |
-| Frontend | Angular 16, HttpClient, Reactive Forms, lazy loading |
-| Base de datos | MySQL 8 |
+### Autenticacion
+- Login y registro con `username` (no email)
+- JWT con duracion configurable (default 8h)
+- Roles: `admin` y `user`
+- Cambio de contrasena desde el topbar
 
----
+### Configuracion del negocio
+- Nombre, RUC, telefono
+- **Logo icono**: aparece en login, sidebar y favicon
+- **Logo de PDFs**: aparece en el encabezado de todos los PDFs (fallback al logo icono si no esta configurado)
 
-## Estructura del proyecto
+### Productos (Ingredientes)
+- CRUD completo con categorias y unidades de medida
+- Stock con minimo configurable (`min_stock`)
+- Imagen referencial por producto
+- Exportacion a PDF
 
-```
-candles-app/
-├── src/
-│   ├── server.js              # Punto de entrada
-│   ├── app.js                 # Express: middlewares y rutas
-│   ├── config/
-│   │   ├── database.js        # Pool MySQL
-│   │   ├── migrate.js         # Schema inicial + seeding
-│   │   ├── migrate-v2.js      # Adapta al modelo de velas
-│   │   ├── migrate-cedula.js  # Agrega cédula a clientes
-│   │   ├── migrate-settings.js  # Configuración del negocio (nombre, RUC, logo)
-│   │   ├── migrate-presets.js   # Presets de calculadora vinculados a proformas
-│   │   ├── migrate-mold-types.js # Tipos de molde + total_grams en molds
-│   │   ├── migrate-presets-v2.js # includes_color en presets; fragrance_pct en preset_items
-│   │   ├── migrate-presets-v3.js # labor_cost en calculation_presets
-│   │   ├── migrate-presets-v4.js # labor_hours en calculation_presets
-│   │   └── migrate-username.js   # username NOT NULL UNIQUE en users
-│   ├── models/                # Queries SQL directas (sin ORM)
-│   ├── controllers/           # Manejo de req/res
-│   ├── routes/                # Rutas + validaciones express-validator
-│   ├── middlewares/           # auth, errorHandler, validate
-│   └── utils/                 # logger, response, pdfProforma, pdfReport, pdfList, pdfHeader
-├── frontend/                  # Angular 16 SPA
-│   └── src/app/modules/
-│       ├── auth/              # Login y registro
-│       ├── dashboard/         # Inicio con accesos rápidos y métricas
-│       ├── categories/        # Categorías de ingredientes (con flag is_fragrance)
-│       ├── units/             # Unidades de medida
-│       ├── products/          # Ingredientes (cera, esencia, pabilo…)
-│       ├── stock/             # Stock: agregar, dar de baja, toma de inventario
-│       ├── mold-types/        # Tipos de molde (CRUD)
-│       ├── molds/             # Moldes con tipo, agua y cera en gramos
-│       ├── clients/           # Clientes (cédula, teléfono, dirección, correo)
-│       ├── proformas/         # Cotizaciones → PDF con datos de cliente
-│       ├── orders/            # Pedidos confirmados
-│       ├── calculator/        # Calculadora: fragancia %, color, mano de obra (tarifa × horas)
-│       └── reports/           # Reportes KPI + PDF exportable
-├── .env.example
-├── .gitignore
-└── package.json
-```
+### Gestion de stock
+- **Agregar stock**: suma cantidad al stock actual
+- **Dar de baja**: resta cantidad (ej: material danado)
+- **Toma de inventario**: modo bulk — se ingresan cantidades reales, el sistema calcula diferencias
 
----
+### Categorias
+- Flag `is_fragrance`: los productos de estas categorias activan el campo de % fragancia en la calculadora
 
-## Migraciones — detalle
+### Moldes y tipos de molde
+- **Tipos de molde**: clasificacion con imagen referencial
+- **Moldes**: `total_grams` (peso agua por desplazamiento), `wax_grams` auto-calculado (`total_grams x 0.90 x 1.05`)
+- Imagen referencial por molde y tipo de molde
 
-| Script | Qué hace |
-|---|---|
-| `migrate.js` | Schema inicial: users, categories, units, products, clients, proformas, orders |
-| `migrate-v2.js` | Adapta al modelo de velas: molds, labor_cost, items opcionales |
-| `migrate-cedula.js` | Agrega campo `cedula` a clients |
-| `migrate-settings.js` | Tabla `business_settings` (nombre, RUC, teléfono, logo) |
-| `migrate-presets.js` | Tablas `calculation_presets` y `calculation_preset_items`; columna `preset_id` en proforma_items |
-| `migrate-mold-types.js` | Tabla `mold_types`; columnas `total_grams` y `mold_type_id` en molds |
-| `migrate-presets-v2.js` | Columna `includes_color` en `calculation_presets`; `fragrance_pct` en `calculation_preset_items` |
-| `migrate-presets-v3.js` | Columna `labor_cost` en `calculation_presets` |
-| `migrate-presets-v4.js` | Columna `labor_hours` en `calculation_presets` (default 1) |
-| `migrate-username.js` | Columna `username VARCHAR(100) NOT NULL UNIQUE` en `users`; poblada desde prefijo de email |
-| `migrate-report-logo.js` | Columna `report_logo_path` en `business_settings` para imagen exclusiva de PDFs (banner rectangular, se muestra a ancho completo sobre el título) |
-| `migrate-mold-type-image.js` | Columna `image_path` en `mold_types` para imagen referencial del tipo |
-| `migrate-mold-image.js` | Columna `image_path` en `molds` para imagen referencial del molde |
-| `migrate-product-image.js` | Columna `image_path` en `products` para imagen referencial del ingrediente |
+### Calculadora de costos
+- Selecciona molde e ingredientes
+- Auto-llena cera segun `wax_grams` del molde
+- **% Fragancia**: para productos de categoria `is_fragrance`, calcula `ml = wax_grams x pct/100` y reduce la linea de cera
+- **Mano de obra**: tarifa (S//h) x horas
+- **Color**: checkbox que suma S/ 0.10 por vela
+- Calcula costo total, ganancia y margen dado un precio de venta
+- Los calculos se guardan como **presets** reutilizables en proformas
+- Exportacion a PDF con todos los costos (ingredientes + mano de obra + color)
 
-> Las columnas `is_fragrance` en `categories` y los ajustes de stock (`writeoff`, `inventory-count`) no requieren script separado — se agregaron con `ALTER TABLE` directo.
+### Clientes
+- CRUD con nombre, CI/RUC, correo, telefono, direccion y notas
 
----
+### Proformas (Cotizaciones)
+- Items libres (descripcion manual) o vinculados a presets de calculadora
+- Descuento global
+- **Fecha de entrega** (opcional): se muestra en el PDF y se copia a la orden al confirmar
+- PDF incluye datos del cliente (nombre, CI/RUC, telefono, direccion)
+- Estados: `borrador` -> `confirmada` / `cancelada`
 
-## Modelo de datos
+### Ordenes (Pedidos)
+- Se crean exclusivamente al confirmar una proforma
+- **Estado de entrega**: toggle switch `pendiente` / `entregado`
+- **Estado de devolucion**: `anulado parcial` / `anulado total` (calculado automaticamente)
+- Exportacion a PDF con columnas de fecha y estado de entrega
 
-```
-users (autenticación y roles — login por username)
+#### Devoluciones
+- Devolucion parcial o total desde el detalle de la orden
+- Seleccion de cantidad a devolver por item
+- **Restauracion de stock inteligente**:
+  - **Productos directos**: restaura el stock del producto segun la unidad nativa
+  - **Presets de calculadora**: restaura cada ingrediente del preset proporcionalmente
+  - **Servicios**: no se pueden devolver
+- Historial de devoluciones con fecha, notas y detalle de stock restaurado
+- La orden pasa automaticamente a `anulado parcial` o `anulado total` segun corresponda
 
-categories (is_fragrance) ←── products (ingredientes) ───→ units
-                                        │
-                                 proforma_items ──────────→ proformas ───→ clients
-                                        │   (preset_id)       (discount)
-                                  order_items   ──────────→ orders
+### Filtros en listados
 
-mold_types ←── molds (total_grams, wax_grams — calculadora)
+Todos los listados tienen filtros server-side. El PDF descargado respeta siempre los filtros activos.
 
-calculation_presets ←── calculation_preset_items (product_id, grams, unit_abbr, fragrance_pct)
-  (includes_color, labor_cost, labor_hours)
-```
+| Modulo | Filtros disponibles |
+|--------|---------------------|
+| Categorias | Nombre |
+| Unidades | Nombre o abreviatura (mismo campo) |
+| Tipos de molde | Nombre |
+| Moldes | Nombre/descripcion + tipo de molde (combo) |
+| Productos | Nombre + categoria (combo) + unidad (combo) |
+| Stock | Nombre + categoria (combo) + unidad (combo) |
+| Clientes | Nombre + cedula/RUC |
+| Proformas | Cliente + estado (combo) + rango de fechas |
+| Ordenes | Cliente + estado entrega + estado devolucion + rango de fechas |
+
+### Reportes
+- KPIs: total ordenes, ingresos, clientes activos, proformas pendientes, productos con stock bajo
+- Ordenes por periodo con filtro de fechas
+- Stock bajo (productos donde `stock <= min_stock`)
+- Top 10 clientes por volumen de compra
+- Exportacion completa a PDF
 
 ---
 
-## API — Endpoints principales
+## API REST
 
-Prefijo base: `/api` | Auth: `Authorization: Bearer <token>`
+Base URL: `http://localhost:3000/api`
 
-| Recurso | Rutas |
-|---|---|
-| Auth | `POST /auth/login` · `POST /auth/register` · `GET /auth/me` · `POST /auth/change-password` |
-| Usuarios | `GET/POST/PUT/DELETE /users` (solo admin) |
-| Categorías | `GET/POST/PUT/DELETE /categories` |
-| Unidades | `GET/POST/PUT/DELETE /units` |
-| Productos | `GET/POST/PUT/DELETE /products` · `GET /products/stock/pdf` |
-| Stock | `PATCH /products/:id/stock` · `PATCH /products/:id/writeoff` · `POST /products/inventory-count` |
-| Tipos de molde | `GET/POST/PUT/DELETE /mold-types` |
-| Moldes | `GET/POST/PUT/DELETE /molds` · `GET /molds/pdf` |
-| Clientes | `GET/POST/PUT/DELETE /clients` |
-| Proformas | `GET/POST/PUT /proformas` · `POST /:id/confirm` · `POST /:id/cancel` · `GET /:id/pdf` |
-| Órdenes | `GET /orders` · `GET /orders/:id` |
-| Calculadora / Presets | `GET/POST/PUT/DELETE /presets` |
-| Reportes | `GET /reports/summary` · `/orders` · `/low-stock` · `/top-clients` · `/pdf` |
-| Configuración | `GET/PUT /settings` · `POST /settings/logo` |
+Todas las respuestas usan: `{ ok, message, data?, errors? }`
 
----
+### Auth (publico)
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| POST | `/auth/login` | `{ username, password }` -> `{ user, token }` |
+| POST | `/auth/register` | `{ username, name, password }` -> `{ user, token }` |
+| GET | `/auth/me` | Perfil del usuario autenticado |
+| POST | `/auth/change-password` | `{ current_password, new_password }` |
 
-## Respuesta estándar
+### Proformas
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/proformas` | Listar proformas |
+| POST | `/proformas` | Crear proforma |
+| GET | `/proformas/:id` | Detalle |
+| PUT | `/proformas/:id` | Actualizar |
+| DELETE | `/proformas/:id` | Cancelar |
+| POST | `/proformas/:id/confirm` | Confirmar -> crea orden |
+| GET | `/proformas/:id/pdf` | PDF de la proforma |
 
+### Ordenes
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/orders` | Listar ordenes |
+| GET | `/orders/:id` | Detalle de la orden |
+| GET | `/orders/pdf` | PDF del listado |
+| PATCH | `/orders/:id/delivery-status` | Cambiar estado de entrega |
+| GET | `/orders/:id/returns` | Historial de devoluciones |
+| POST | `/orders/:id/returns` | Registrar devolucion |
+
+**Body para devolucion:**
 ```json
-{ "ok": true, "message": "OK", "data": {} }
+{
+  "notes": "Motivo opcional",
+  "items": [
+    {
+      "order_item_id": 1,
+      "quantity": 2,
+      "restores_stock": true
+    }
+  ]
+}
 ```
+
+### Reportes
+| Metodo | Ruta | Descripcion |
+|--------|------|-------------|
+| GET | `/reports/summary` | KPIs del negocio |
+| GET | `/reports/orders?from=&to=` | Ordenes por periodo |
+| GET | `/reports/low-stock` | Productos con stock bajo |
+| GET | `/reports/top-clients` | Top 10 clientes |
+| GET | `/reports/pdf?from=&to=` | PDF completo |
 
 ---
 
-## Resetear contraseña desde consola
+## Logica de negocio critica
 
-```bash
-node -e "
-const bcrypt = require('bcryptjs');
-const { pool } = require('./src/config/database');
-bcrypt.hash('NUEVA_CONTRASEÑA', 10).then(hash => {
-  return pool.query('UPDATE users SET password = ? WHERE username = ?', [hash, 'USERNAME_DEL_USUARIO']);
-}).then(([r]) => {
-  console.log('Filas actualizadas:', r.affectedRows);
-  process.exit(0);
-}).catch(e => { console.error(e.message); process.exit(1); });
-"
-```
+### Confirmacion de proforma (`Proforma.confirm()`)
+Transaccion que:
+1. Verifica stock suficiente para todos los items con producto o preset
+2. Crea el registro de orden
+3. Copia items de proforma -> orden (con `preset_id` y flag `is_service`)
+4. Descuenta stock convirtiendo gramos a unidad nativa del producto
+5. Marca los presets usados como inactivos
+6. Rollback completo ante cualquier falla
 
-Para ver los usuarios registrados:
-```bash
-node -e "
-const { pool } = require('./src/config/database');
-pool.query('SELECT id, name, username, role FROM users').then(([r]) => { console.table(r); process.exit(0); });
-"
+### Formula de cera
 ```
+wax_grams = total_grams x 0.90 x 1.05
+```
+Donde `total_grams` es el peso del agua al llenar el molde por desplazamiento.
 
 ---
 
-## Variables de entorno
+## Comandos de base de datos
 
-| Variable | Descripción | Default |
-|---|---|---|
-| `PORT` | Puerto del backend | `3000` |
-| `DB_HOST` | Host MySQL | `localhost` |
-| `DB_PORT` | Puerto MySQL | `3306` |
-| `DB_USER` | Usuario MySQL | — |
-| `DB_PASSWORD` | Contraseña MySQL | — |
-| `DB_NAME` | Nombre de la DB | `candles_db` |
-| `JWT_SECRET` | Clave secreta JWT | — |
-| `JWT_EXPIRES` | Duración del token | `8h` |
-| `CORS_ORIGIN` | URL del frontend | `http://localhost:4200` |
+| Comando | Descripcion |
+|---------|-------------|
+| `npm run db:migrate` | Schema base (primera vez) |
+| `npm run db:migrate-all` | Corre las 18 migraciones en orden, seguro de re-ejecutar |
+| `npm run db:reset` | Backup → drop → migraciones → restore (cambio de ambiente) |
+| `npm run db:restore <archivo.json>` | Restaura datos desde un backup JSON |
+
+## Notas de desarrollo
+
+- No hay test runner ni linter configurados
+- Los deletes de Categories, Products, Molds, MoldTypes y Clients son **logicos** (`is_active = 0`)
+- Las imagenes se guardan en `public/uploads/` con nombres predecibles (`product-{id}.ext`, etc.)
+- El token JWT se incluye en todas las peticiones via HTTP interceptor en Angular
+- Los filtros de listado usan queries parametrizadas — no hay riesgo de SQL injection
+- El PDF de cada listado respeta los filtros activos (mismos query params que el listado)

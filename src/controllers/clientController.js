@@ -3,7 +3,12 @@ const Settings = require('../models/Settings');
 const { success, created, notFound, badRequest } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
 
-exports.getAll    = async (req, res, next) => { try { success(res, await Client.findAll()); } catch (e) { next(e); } };
+exports.getAll = async (req, res, next) => {
+  try {
+    const { name = '', cedula = '' } = req.query;
+    success(res, await Client.findAll({ name, cedula }));
+  } catch (e) { next(e); }
+};
 exports.getById   = async (req, res, next) => { try { const c = await Client.findById(req.params.id); c ? success(res, c) : notFound(res, 'Cliente no encontrado'); } catch (e) { next(e); } };
 exports.create = async (req, res, next) => {
   try {
@@ -30,7 +35,8 @@ exports.remove    = async (req, res, next) => { try { const ok = await Client.de
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const [clients, settings] = await Promise.all([Client.findAll(), Settings.get()]);
+    const { name = '', cedula = '' } = req.query;
+    const [clients, settings] = await Promise.all([Client.findAll({ name, cedula }), Settings.get()]);
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });

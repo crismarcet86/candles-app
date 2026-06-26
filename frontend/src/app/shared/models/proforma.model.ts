@@ -14,6 +14,7 @@ export interface Proforma {
   client_id: number;
   client_name: string;
   notes: string | null;
+  delivery_date: string | null;
   discount: number;
   labor_cost: number;
   subtotal: number;

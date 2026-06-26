@@ -10,7 +10,10 @@ const fmt = (req, t) => t ? { ...t, image_url: buildImageUrl(req, t.image_path) 
 const fmtAll = (req, rows) => rows.map(t => fmt(req, t));
 
 exports.getAll = async (req, res, next) => {
-  try { success(res, fmtAll(req, await MoldType.findAll())); } catch (e) { next(e); }
+  try {
+    const { name = '' } = req.query;
+    success(res, fmtAll(req, await MoldType.findAll({ name })));
+  } catch (e) { next(e); }
 };
 
 exports.getById = async (req, res, next) => {

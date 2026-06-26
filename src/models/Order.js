@@ -1,13 +1,21 @@
 const { pool } = require('../config/database');
 
 class Order {
-  static async findAll() {
+  static async findAll({ client = '', status = '', delivery_status = '', from = '', to = '' } = {}) {
+    const conds = []; const params = [];
+    if (client)          { conds.push('c.name LIKE ?');              params.push(`%${client}%`); }
+    if (status)          { conds.push('o.status = ?');               params.push(status); }
+    if (delivery_status) { conds.push('o.delivery_status = ?');      params.push(delivery_status); }
+    if (from)            { conds.push('DATE(o.created_at) >= ?');    params.push(from); }
+    if (to)              { conds.push('DATE(o.created_at) <= ?');    params.push(to); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT o.*, c.name AS client_name
       FROM orders o
       JOIN clients c ON o.client_id = c.id
+      ${where}
       ORDER BY o.created_at DESC
-    `);
+    `, params);
     return rows;
   }
 
@@ -25,7 +33,13 @@ class Order {
       SELECT
         oi.*,
         p.name         AS product_name,
-        u.abbreviation AS unit_abbr
+        u.abbreviation AS unit_abbr,
+        COALESCE((
+          SELECT SUM(ri.quantity)
+          FROM order_return_items ri
+          JOIN order_returns r ON ri.return_id = r.id
+          WHERE ri.order_item_id = oi.id AND r.order_id = oi.order_id
+        ), 0) AS returned_quantity
       FROM order_items oi
       LEFT JOIN products p ON oi.product_id = p.id
       LEFT JOIN units    u ON p.unit_id     = u.id
@@ -40,6 +54,14 @@ class Order {
     await pool.query(
       'UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?',
       [status, id]
+    );
+    return this.findById(id);
+  }
+
+  static async updateDeliveryStatus(id, delivery_status) {
+    await pool.query(
+      'UPDATE orders SET delivery_status = ?, updated_at = NOW() WHERE id = ?',
+      [delivery_status, id]
     );
     return this.findById(id);
   }

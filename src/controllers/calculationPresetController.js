@@ -19,7 +19,7 @@ exports.create = async (req, res, next) => {
   try {
     const { name, items } = req.body;
     if (!name?.trim()) return badRequest(res, 'El nombre es requerido');
-    if (!Array.isArray(items) || items.length === 0) return badRequest(res, 'Se requieren ingredientes');
+    if (!Array.isArray(items) || items.length === 0) return badRequest(res, 'Se requieren productos');
     const dup = await CalculationPreset.findByName(name.trim());
     if (dup) return badRequest(res, `Ya existe un cálculo guardado con el nombre "${name.trim()}"`);
     created(res, await CalculationPreset.create(req.body), 'Cálculo guardado');
@@ -30,7 +30,7 @@ exports.update = async (req, res, next) => {
   try {
     const { name, items } = req.body;
     if (!name?.trim()) return badRequest(res, 'El nombre es requerido');
-    if (!Array.isArray(items) || items.length === 0) return badRequest(res, 'Se requieren ingredientes');
+    if (!Array.isArray(items) || items.length === 0) return badRequest(res, 'Se requieren productos');
     const dup = await CalculationPreset.findByName(name.trim(), +req.params.id);
     if (dup) return badRequest(res, `Ya existe un cálculo guardado con el nombre "${name.trim()}"`);
     const updated = await CalculationPreset.update(req.params.id, req.body);

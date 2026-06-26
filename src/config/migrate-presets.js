@@ -20,10 +20,24 @@ async function run() {
         sell_price    DECIMAL(10,2) NOT NULL DEFAULT 0,
         cost_per_unit DECIMAL(12,4) NOT NULL DEFAULT 0,
         is_active     TINYINT(1) NOT NULL DEFAULT 1,
-        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at    TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
       )
     `);
     console.log('✔ calculation_presets');
+
+    // updated_at — para instalaciones existentes que no lo tienen
+    try {
+      await conn.query(`
+        ALTER TABLE calculation_presets
+          ADD COLUMN updated_at TIMESTAMP NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP
+      `);
+      console.log('✔ calculation_presets.updated_at agregada');
+    } catch (e) {
+      if (e.code === 'ER_DUP_FIELDNAME' || e.message.includes('Duplicate column')) {
+        console.log('ℹ calculation_presets.updated_at ya existe');
+      } else throw e;
+    }
 
     // 2. Ingredientes de cada preset
     await conn.query(`

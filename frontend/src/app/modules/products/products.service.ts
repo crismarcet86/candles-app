@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product } from '../../shared/models/product.model';
 import { environment } from '../../../environments/environment';
@@ -16,8 +16,12 @@ export class ProductsService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(): Observable<ApiResponse<Product[]>> {
-    return this.http.get<ApiResponse<Product[]>>(this.base);
+  getAll(f: { name?: string; category_id?: number | null; unit_id?: number | null } = {}): Observable<ApiResponse<Product[]>> {
+    let params = new HttpParams();
+    if (f.name) params = params.set('name', f.name);
+    if (f.category_id) params = params.set('category_id', String(f.category_id));
+    if (f.unit_id) params = params.set('unit_id', String(f.unit_id));
+    return this.http.get<ApiResponse<Product[]>>(this.base, { params });
   }
 
   getById(id: number): Observable<ApiResponse<Product>> {

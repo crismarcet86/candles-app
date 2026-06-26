@@ -1,8 +1,13 @@
 const { pool } = require('../config/database');
 
 class Product {
-  static async findAll({ onlyActive = false } = {}) {
-    const where = onlyActive ? 'WHERE p.is_active = 1' : '';
+  static async findAll({ onlyActive = false, name = '', category_id = null, unit_id = null } = {}) {
+    const conds = []; const params = [];
+    if (onlyActive)   { conds.push('p.is_active = 1'); }
+    if (name)         { conds.push('p.name LIKE ?'); params.push(`%${name}%`); }
+    if (category_id)  { conds.push('p.category_id = ?'); params.push(category_id); }
+    if (unit_id)      { conds.push('p.unit_id = ?'); params.push(unit_id); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT
         p.*,
@@ -15,7 +20,7 @@ class Product {
       JOIN units      u ON p.unit_id     = u.id
       ${where}
       ORDER BY c.name, p.name
-    `);
+    `, params);
     return rows;
   }
 

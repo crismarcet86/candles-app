@@ -286,7 +286,7 @@
             <span *ngIf="p.mold_name">🕯️ {{ p.mold_name }}</span>
             <span>S/ {{ p.cost_per_unit | number:'1.2-2' }}/vela</span>
             <span *ngIf="p.sell_price > 0">Venta: S/ {{ p.sell_price | number:'1.2-2' }}</span>
-            <span>{{ p.item_count }} ingrediente{{ p.item_count !== 1 ? 's' : '' }}</span>
+            <span>{{ p.item_count }} producto{{ p.item_count !== 1 ? 's' : '' }}</span>
           </div>
         </div>
         <button class="btn-primary-sm" (click)="loadPreset(p)">⬆️ Cargar</button>
@@ -323,7 +323,7 @@
         <span>Precio de venta sugerido</span><span>S/ {{ sellPrice | number:'1.2-2' }}</span>
       </div>
       <div class="preset-row">
-        <span>Ingredientes registrados</span><span>{{ lines.length }}</span>
+        <span>Productos registrados</span><span>{{ lines.length }}</span>
       </div>
     </div>
 

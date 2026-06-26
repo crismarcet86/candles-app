@@ -22,13 +22,20 @@ function gramsToNativeUnit(grams, unitAbbr) {
 class Proforma {
   // ── Lectura ──────────────────────────────────────────────────
 
-  static async findAll() {
+  static async findAll({ client = '', status = '', from = '', to = '' } = {}) {
+    const conds = []; const params = [];
+    if (client) { conds.push('c.name LIKE ?');          params.push(`%${client}%`); }
+    if (status) { conds.push('p.status = ?');            params.push(status); }
+    if (from)   { conds.push('DATE(p.created_at) >= ?'); params.push(from); }
+    if (to)     { conds.push('DATE(p.created_at) <= ?'); params.push(to); }
+    const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
       SELECT p.*, c.name AS client_name
       FROM proformas p
       JOIN clients c ON p.client_id = c.id
+      ${where}
       ORDER BY p.created_at DESC
-    `);
+    `, params);
     return rows;
   }
 
@@ -71,7 +78,7 @@ class Proforma {
    * - product_id es opcional (para ítems de texto libre / mano de obra)
    * - unit_price lo establece el usuario (no se toma del catálogo)
    */
-  static async save({ id = null, client_id, notes, discount = 0, labor_cost = 0, items }) {
+  static async save({ id = null, client_id, notes, delivery_date = null, discount = 0, labor_cost = 0, items }) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
@@ -96,18 +103,20 @@ class Proforma {
 
       let proformaId = id;
 
+      const deliveryDateVal = delivery_date || null;
+
       if (id) {
         await conn.query(
           `UPDATE proformas
-           SET client_id=?, notes=?, discount=?, labor_cost=?, subtotal=?, total=?, updated_at=NOW()
+           SET client_id=?, notes=?, delivery_date=?, discount=?, labor_cost=?, subtotal=?, total=?, updated_at=NOW()
            WHERE id=? AND status='borrador'`,
-          [client_id, notes || null, discount, labor_cost, subtotal, total, id]
+          [client_id, notes || null, deliveryDateVal, discount, labor_cost, subtotal, total, id]
         );
         await conn.query('DELETE FROM proforma_items WHERE proforma_id = ?', [id]);
       } else {
         const [result] = await conn.query(
-          'INSERT INTO proformas (client_id, notes, discount, labor_cost, subtotal, total) VALUES (?, ?, ?, ?, ?, ?)',
-          [client_id, notes || null, discount, labor_cost, subtotal, total]
+          'INSERT INTO proformas (client_id, notes, delivery_date, discount, labor_cost, subtotal, total) VALUES (?, ?, ?, ?, ?, ?, ?)',
+          [client_id, notes || null, deliveryDateVal, discount, labor_cost, subtotal, total]
         );
         proformaId = result.insertId;
       }
@@ -203,18 +212,19 @@ class Proforma {
 
       // Crear orden
       const [orderResult] = await conn.query(
-        `INSERT INTO orders (proforma_id, client_id, notes, subtotal, discount, total)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [id, proforma.client_id, proforma.notes, proforma.subtotal, proforma.discount, proforma.total]
+        `INSERT INTO orders (proforma_id, client_id, notes, delivery_date, subtotal, discount, total)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [id, proforma.client_id, proforma.notes, proforma.delivery_date || null, proforma.subtotal, proforma.discount, proforma.total]
       );
       const orderId = orderResult.insertId;
 
       // Copiar ítems y descontar stock directo
       for (const item of proforma.items) {
+        const isService = !item.product_id && !item.preset_id ? 1 : 0;
         await conn.query(
-          `INSERT INTO order_items (order_id, product_id, description, quantity, unit_price, subtotal)
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          [orderId, item.product_id, item.description, item.quantity, item.unit_price, item.subtotal]
+          `INSERT INTO order_items (order_id, product_id, preset_id, description, quantity, unit_price, subtotal, is_service)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [orderId, item.product_id || null, item.preset_id || null, item.description, item.quantity, item.unit_price, item.subtotal, isService]
         );
         if (item.product_id) {
           // Convertir grams a unidad nativa antes de descontar

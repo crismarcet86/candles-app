@@ -11,6 +11,7 @@ const rules = [
   body('items.*.unit_price').isFloat({ min: 0 }).withMessage('Precio inválido'),
   body('labor_cost').optional().isFloat({ min: 0 }).withMessage('Mano de obra inválida'),
   body('discount').optional().isFloat({ min: 0 }).withMessage('Descuento inválido'),
+  body('delivery_date').optional({ nullable: true }).isISO8601().withMessage('Fecha de entrega inválida'),
 ];
 
 router.get('/',               ctrl.getAll);

@@ -20,6 +20,12 @@ export class StockComponent implements OnInit {
   successMsg = '';
   errorMsg = '';
   pdfLoading = false;
+  filterName = '';
+  filterCategoryId: number | null = null;
+  filterUnitId: number | null = null;
+  categories: any[] = [];
+  units: any[] = [];
+  private ft: any;
 
   // Modal agregar stock
   modalProduct: Product | null = null;
@@ -38,15 +44,24 @@ export class StockComponent implements OnInit {
 
   constructor(private svc: ProductsService, private http: HttpClient) {}
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void { this.loadCombos(); this.load(); }
+
+  loadCombos(): void {
+    this.http.get<any>(`${environment.apiUrl}/categories`).subscribe({ next: r => this.categories = r.data || [], error: () => {} });
+    this.http.get<any>(`${environment.apiUrl}/units`).subscribe({ next: r => this.units = r.data || [], error: () => {} });
+  }
 
   load(): void {
     this.loading = true;
-    this.svc.getAll().subscribe({
+    this.svc.getAll({ name: this.filterName, category_id: this.filterCategoryId, unit_id: this.filterUnitId }).subscribe({
       next: r => { this.items = r.data.filter(p => p.is_active === 1); this.loading = false; },
       error: () => { this.errorMsg = 'Error al cargar el stock'; this.loading = false; }
     });
   }
+  onFilterChange(): void { clearTimeout(this.ft); this.ft = setTimeout(() => this.load(), 400); }
+  onComboChange(): void { this.load(); }
+  get hasFilters(): boolean { return !!(this.filterName || this.filterCategoryId || this.filterUnitId); }
+  clearFilters(): void { this.filterName = ''; this.filterCategoryId = null; this.filterUnitId = null; this.load(); }
 
   // ── Agregar stock ─────────────────────────────────────
   openModal(product: Product): void {
@@ -164,7 +179,12 @@ export class StockComponent implements OnInit {
 
   downloadPdf(): void {
     this.pdfLoading = true;
-    this.http.get(`${environment.apiUrl}/products/stock/pdf`, { responseType: 'blob' }).subscribe({
+    let p = new URLSearchParams();
+    if (this.filterName) p.set('name', this.filterName);
+    if (this.filterCategoryId) p.set('category_id', String(this.filterCategoryId));
+    if (this.filterUnitId) p.set('unit_id', String(this.filterUnitId));
+    const qs = p.toString() ? '?' + p.toString() : '';
+    this.http.get(`${environment.apiUrl}/products/stock/pdf${qs}`, { responseType: 'blob' }).subscribe({
       next: blob => {
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
