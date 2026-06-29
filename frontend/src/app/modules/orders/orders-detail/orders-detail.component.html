@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <button class="btn-back" (click)="goBack()">← Volver</button>
@@ -74,7 +74,7 @@
                 <span class="badge-item-type badge-service" *ngIf="item.is_service">Servicio</span>
                 <span class="badge-item-type badge-preset" *ngIf="!item.is_service && item.preset_id">Calculadora</span>
               </td>
-              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }}</td>
+              <td class="td-num text-muted">${{ item.unit_price | number:'1.2-2' }}</td>
               <td class="td-num">{{ item.quantity | number:'1.0-3' }}</td>
               <td class="td-num">
                 <span *ngIf="+item.returned_quantity > 0" class="text-returned">
@@ -82,19 +82,19 @@
                 </span>
                 <span *ngIf="+item.returned_quantity === 0" class="text-muted">—</span>
               </td>
-              <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
+              <td class="td-num"><strong>${{ item.subtotal | number:'1.2-2' }}</strong></td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="totals-section">
         <div class="total-row" *ngIf="+order.discount > 0">
-          <span>Subtotal</span><span>S/ {{ displaySubtotal | number:'1.2-2' }}</span>
+          <span>Subtotal</span><span>${{ displaySubtotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row" *ngIf="+order.discount > 0">
-          <span>Descuento</span><span class="text-danger">- S/ {{ order.discount | number:'1.2-2' }}</span>
+          <span>Descuento</span><span class="text-danger">- ${{ order.discount | number:'1.2-2' }}</span>
         </div>
-        <div class="total-row total-final"><span>TOTAL</span><span>S/ {{ order.total | number:'1.2-2' }}</span></div>
+        <div class="total-row total-final"><span>TOTAL</span><span>${{ order.total | number:'1.2-2' }}</span></div>
       </div>
     </div>
 

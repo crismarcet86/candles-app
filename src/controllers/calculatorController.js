@@ -1,4 +1,4 @@
-const { generateListPDF } = require('../utils/pdfList');
+﻿const { generateListPDF } = require('../utils/pdfList');
 const Settings = require('../models/Settings');
 const { badRequest } = require('../utils/response');
 
@@ -34,36 +34,36 @@ exports.getPdf = async (req, res, next) => {
         l.ingredient_name || '—',
         l.is_unit ? `${l.grams} u` : `${l.grams} g`,
         l.is_unit
-          ? `S/ ${Number(l.unit_cost).toFixed(4)}/u`
-          : `S/ ${Number(l.unit_cost).toFixed(4)}/g`,
-        `S/ ${Number(l.subtotal).toFixed(2)}`
+          ? `$${Number(l.unit_cost).toFixed(4)}/u`
+          : `$${Number(l.unit_cost).toFixed(4)}/g`,
+        `$${Number(l.subtotal).toFixed(2)}`
       ]);
 
     // Filas adicionales de costo
     if (laborTotal > 0) {
-      const hoursLabel = Number(laborHours) !== 1 ? ` (${laborHours}h × S/${Number(laborCost).toFixed(2)})` : '';
-      ingredientRows.push(['Mano de obra' + hoursLabel, '', '', `S/ ${laborTotal.toFixed(2)}`]);
+      const hoursLabel = Number(laborHours) !== 1 ? ` (${laborHours}h × $${Number(laborCost).toFixed(2)})` : '';
+      ingredientRows.push(['Mano de obra' + hoursLabel, '', '', `$${laborTotal.toFixed(2)}`]);
     }
     if (colorCost > 0) {
-      ingredientRows.push(['Color', '', '', `S/ ${colorCost.toFixed(2)}`]);
+      ingredientRows.push(['Color', '', '', `$${colorCost.toFixed(2)}`]);
     }
 
     // Filas de resumen
     const summaryRows = [
       ['', '', '', ''],
-      ['Costo por vela', '', '', `S/ ${totalCostPerCandle.toFixed(2)}`],
+      ['Costo por vela', '', '', `$${totalCostPerCandle.toFixed(2)}`],
     ];
-    if (qty > 1) summaryRows.push([`Costo total (${qty} velas)`, '', '', `S/ ${totalCost.toFixed(2)}`]);
+    if (qty > 1) summaryRows.push([`Costo total (${qty} velas)`, '', '', `$${totalCost.toFixed(2)}`]);
     if (sell > 0) {
       summaryRows.push(
-        [`Precio de venta`, '', '', `S/ ${sell.toFixed(2)}`],
-        [`Ganancia por vela`, '', '', `S/ ${profit.toFixed(2)}`],
+        [`Precio de venta`, '', '', `$${sell.toFixed(2)}`],
+        [`Ganancia por vela`, '', '', `$${profit.toFixed(2)}`],
         [`Margen`, '', '', `${margin.toFixed(1)}%`],
       );
       if (qty > 1) {
         summaryRows.push(
-          [`Ingreso total`, '', '', `S/ ${totalRevenue.toFixed(2)}`],
-          [`Ganancia total`, '', '', `S/ ${totalProfit.toFixed(2)}`],
+          [`Ingreso total`, '', '', `$${totalRevenue.toFixed(2)}`],
+          [`Ganancia total`, '', '', `$${totalProfit.toFixed(2)}`],
         );
       }
     }

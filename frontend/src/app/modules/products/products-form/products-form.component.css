@@ -52,3 +52,11 @@ input[type="checkbox"] { display: none; }
 .spinner-dark { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.15); border-top-color: #374151; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .image-note { font-size: 0.82rem; color: #6b7280; background: #f9fafb; border-radius: 8px; padding: 0.6rem 0.9rem; margin-bottom: 1rem; }
+/* Calculadora de precio unitario */
+.price-calc { display: flex; align-items: center; gap: 0.4rem; margin-top: 0.5rem; background: #f8f5f2; border: 1px solid #e8ddd5; border-radius: 8px; padding: 0.5rem 0.65rem; flex-wrap: wrap; }
+.calc-label { font-size: 0.75rem; font-weight: 700; color: #8B5E3C; white-space: nowrap; }
+.calc-field { display: flex; flex-direction: column; gap: 0.15rem; }
+.calc-mini-label { font-size: 0.68rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.04em; }
+.calc-input { padding: 0.3rem 0.5rem !important; border: 1.5px solid #d1d5db !important; border-radius: 6px !important; font-size: 0.83rem !important; width: 90px !important; background: #fff !important; }
+.calc-input:focus { border-color: #8B5E3C !important; }
+.calc-op { font-size: 1rem; font-weight: 700; color: #6b7280; align-self: flex-end; padding-bottom: 0.1rem; }

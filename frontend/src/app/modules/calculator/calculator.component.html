@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <h1 class="page-title">🧮 Calculadora de costos</h1>
@@ -50,7 +50,7 @@
               <div class="input-suffix-wrapper">
                 <input type="number" [(ngModel)]="laborCost" min="0" step="0.01" placeholder="0.00"
                        (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
-                <span class="input-suffix">S//h</span>
+                <span class="input-suffix">$/h</span>
               </div>
               <span class="labor-sep">×</span>
               <div class="input-suffix-wrapper">
@@ -58,14 +58,14 @@
                        (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
                 <span class="input-suffix">h</span>
               </div>
-              <span class="labor-total" *ngIf="laborCost > 0">= S/ {{ laborTotal | number:'1.2-2' }}</span>
+              <span class="labor-total" *ngIf="laborCost > 0">= ${{ laborTotal | number:'1.2-2' }}</span>
             </div>
           </div>
 
           <div class="form-group color-check-group">
             <label class="color-check-label">
               <input type="checkbox" [(ngModel)]="includesColor">
-              <span>Incluye color <span class="color-cost-hint">(+ S/ 0.10)</span></span>
+              <span>Incluye color <span class="color-cost-hint">(+ $0.10)</span></span>
             </label>
           </div>
         </div>
@@ -85,14 +85,30 @@
                     <span *ngIf="line.isWaxLine">🕯️ Cera a usar</span>
                     <span *ngIf="!line.isWaxLine">Producto</span>
                   </label>
-                  <select [(ngModel)]="line.ingredient_id" (ngModelChange)="onIngredientChange(line)">
-                    <option [ngValue]="null">Seleccionar...</option>
-                    <optgroup *ngFor="let cat of getCategories()" [label]="cat">
-                      <option *ngFor="let ing of getByCategory(cat)" [value]="ing.id">
-                        {{ ing.name }} ({{ ing.unit_abbr }})
-                      </option>
-                    </optgroup>
-                  </select>
+                  <div class="searchable-select" [class.open]="line.dropdownOpen">
+                    <input
+                      type="text"
+                      class="search-input"
+                      [value]="line.dropdownOpen ? (line.searchText ?? '') : line.ingredient_name"
+                      (focus)="openLineDropdown(line)"
+                      (input)="onLineSearchInput(line, $any($event.target).value)"
+                      (blur)="onLineBlur(line)"
+                      [placeholder]="line.ingredient_id ? '' : 'Buscar por nombre o ID...'">
+                    <span class="select-chevron">▾</span>
+                    <div class="dropdown-list" *ngIf="line.dropdownOpen">
+                      <div class="dropdown-empty" *ngIf="getFilteredIngredients(line).length === 0">Sin resultados</div>
+                      <ng-container *ngFor="let cat of getFilteredCategories(line)">
+                        <div class="dropdown-category">{{ cat }}</div>
+                        <div class="dropdown-item"
+                             *ngFor="let ing of getFilteredByCategory(line, cat)"
+                             (mousedown)="selectIngredient(line, ing)">
+                          <span class="ing-id">#{{ ing.id }}</span>
+                          {{ ing.name }}
+                          <span class="ing-unit">({{ ing.unit_abbr }})</span>
+                        </div>
+                      </ng-container>
+                    </div>
+                  </div>
                 </div>
 
                 <div class="form-group qty-group" *ngIf="isFragranceLine(line)">
@@ -125,9 +141,9 @@
 
               <div class="line-cost" *ngIf="line.ingredient_id && line.grams > 0">
                 <span class="cost-detail">
-                  {{ isFragranceLine(line) ? (line.grams + 'ml × S/ ' + (line.unit_cost | number:'1.4-4') + '/ml') : (line.is_unit ? line.grams + ' u × S/ ' + (line.unit_cost | number:'1.4-4') : line.grams + 'g × S/ ' + (line.unit_cost | number:'1.4-4') + '/g') }}
+                  {{ isFragranceLine(line) ? (line.grams + 'ml × $' + (line.unit_cost | number:'1.4-4') + '/ml') : (line.is_unit ? line.grams + ' u × $' + (line.unit_cost | number:'1.4-4') : line.grams + 'g × $' + (line.unit_cost | number:'1.4-4') + '/g') }}
                 </span>
-                <span class="cost-value">S/ {{ line.subtotal | number:'1.2-2' }}</span>
+                <span class="cost-value">${{ line.subtotal | number:'1.2-2' }}</span>
               </div>
             </div>
           </div>
@@ -145,13 +161,13 @@
               <span class="margin-badge">{{ marginTarget }}%</span>
             </div>
             <div class="margin-hint" *ngIf="totalCostPerCandle > 0">
-              Precio sugerido: <strong>S/ {{ suggestedPrice | number:'1.2-2' }}</strong>
+              Precio sugerido: <strong>${{ suggestedPrice | number:'1.2-2' }}</strong>
               <button type="button" class="btn-apply-margin" (click)="useSuggestedPrice()">Usar</button>
             </div>
           </div>
 
           <div class="form-group">
-            <label>Precio por vela (S/)</label>
+            <label>Precio por vela ($)</label>
             <input type="number" [(ngModel)]="sellPrice" min="0" step="1" placeholder="0.00">
           </div>
         </div>
@@ -170,21 +186,21 @@
                 {{ line.ingredient_name }}
               </span>
               <span *ngIf="line.ingredient_id && line.subtotal > 0" class="result-val">
-                S/ {{ line.subtotal | number:'1.2-2' }}
+                ${{ line.subtotal | number:'1.2-2' }}
               </span>
             </div>
             <div class="result-row" *ngIf="includesColor">
               <span>Color</span>
-              <span class="result-val">S/ 0.10</span>
+              <span class="result-val">$0.10</span>
             </div>
             <div class="result-row" *ngIf="laborTotal > 0">
               <span>Mano de obra</span>
-              <span class="result-val">S/ {{ laborTotal | number:'1.2-2' }}</span>
+              <span class="result-val">${{ laborTotal | number:'1.2-2' }}</span>
             </div>
             <div class="result-divider"></div>
             <div class="result-row result-total">
               <span>Costo total</span>
-              <span class="result-val">S/ {{ totalCostPerCandle | number:'1.2-2' }}</span>
+              <span class="result-val">${{ totalCostPerCandle | number:'1.2-2' }}</span>
             </div>
           </div>
 
@@ -192,12 +208,12 @@
             <h4 class="result-subtitle">Precio vs costo</h4>
             <div class="result-row">
               <span>Precio de venta</span>
-              <span class="result-val">S/ {{ sellPrice | number:'1.2-2' }}</span>
+              <span class="result-val">${{ sellPrice | number:'1.2-2' }}</span>
             </div>
             <div class="result-row">
               <span>Ganancia</span>
               <span class="result-val" [class.text-green]="profit > 0" [class.text-red]="profit < 0">
-                S/ {{ profit | number:'1.2-2' }}
+                ${{ profit | number:'1.2-2' }}
               </span>
             </div>
             <div class="result-row">
@@ -212,16 +228,16 @@
             <h4 class="result-subtitle">Para {{ quantity }} velas</h4>
             <div class="result-row">
               <span>Costo total</span>
-              <span class="result-val">S/ {{ totalCost | number:'1.2-2' }}</span>
+              <span class="result-val">${{ totalCost | number:'1.2-2' }}</span>
             </div>
             <div class="result-row" *ngIf="sellPrice > 0">
               <span>Ingreso total</span>
-              <span class="result-val">S/ {{ totalRevenue | number:'1.2-2' }}</span>
+              <span class="result-val">${{ totalRevenue | number:'1.2-2' }}</span>
             </div>
             <div class="result-row" *ngIf="sellPrice > 0">
               <span>Ganancia total</span>
               <span class="result-val" [class.text-green]="totalProfit > 0" [class.text-red]="totalProfit < 0">
-                S/ {{ totalProfit | number:'1.2-2' }}
+                ${{ totalProfit | number:'1.2-2' }}
               </span>
             </div>
           </div>
@@ -284,8 +300,8 @@
           </div>
           <div class="preset-list-meta">
             <span *ngIf="p.mold_name">🕯️ {{ p.mold_name }}</span>
-            <span>S/ {{ p.cost_per_unit | number:'1.2-2' }}/vela</span>
-            <span *ngIf="p.sell_price > 0">Venta: S/ {{ p.sell_price | number:'1.2-2' }}</span>
+            <span>${{ p.cost_per_unit | number:'1.2-2' }}/vela</span>
+            <span *ngIf="p.sell_price > 0">Venta: ${{ p.sell_price | number:'1.2-2' }}</span>
             <span>{{ p.item_count }} producto{{ p.item_count !== 1 ? 's' : '' }}</span>
           </div>
         </div>
@@ -317,10 +333,10 @@
         <span>Molde</span><span>{{ selectedMold.name }}</span>
       </div>
       <div class="preset-row">
-        <span>Costo por vela</span><span>S/ {{ totalCostPerCandle | number:'1.2-2' }}</span>
+        <span>Costo por vela</span><span>${{ totalCostPerCandle | number:'1.2-2' }}</span>
       </div>
       <div class="preset-row" *ngIf="sellPrice > 0">
-        <span>Precio de venta sugerido</span><span>S/ {{ sellPrice | number:'1.2-2' }}</span>
+        <span>Precio de venta sugerido</span><span>${{ sellPrice | number:'1.2-2' }}</span>
       </div>
       <div class="preset-row">
         <span>Productos registrados</span><span>{{ lines.length }}</span>

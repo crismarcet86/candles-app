@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
 
   <!-- ── Page Header ─────────────────────────────────────────── -->
   <div class="page-header">
@@ -39,7 +39,7 @@
       </div>
       <div class="kpi-card">
         <div class="kpi-icon">💰</div>
-        <div class="kpi-value">S/ {{ summary.total_revenue != null ? (summary.total_revenue | number:'1.2-2') : '—' }}</div>
+        <div class="kpi-value">${{ summary.total_revenue != null ? (summary.total_revenue | number:'1.2-2') : '—' }}</div>
         <div class="kpi-label">Ingresos totales</div>
       </div>
       <div class="kpi-card">
@@ -104,7 +104,7 @@
             <td>{{ o.id }}</td>
             <td>{{ o.client_name || '—' }}</td>
             <td>{{ o.item_count ?? '—' }}</td>
-            <td>S/ {{ o.total | number:'1.2-2' }}</td>
+            <td>${{ o.total | number:'1.2-2' }}</td>
             <td>{{ o.created_at | date:'dd/MM/yyyy' }}</td>
           </tr>
         </tbody>
@@ -179,7 +179,7 @@
                 {{ c.name || c.client_name }}
               </td>
               <td>{{ c.order_count ?? '—' }}</td>
-              <td>S/ {{ c.total_spent | number:'1.2-2' }}</td>
+              <td>${{ c.total_spent | number:'1.2-2' }}</td>
             </tr>
           </tbody>
         </table>
