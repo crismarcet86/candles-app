@@ -106,8 +106,8 @@
             <div class="calc-field">
               <span class="calc-mini-label">$ total</span>
               <input type="number" class="calc-input"
-                     [(ngModel)]="calcTotal" [ngModelOptions]="{standalone: true}"
-                     (input)="onCalcChange()"
+                     [value]="calcTotal"
+                     (input)="calcTotal = +$any($event.target).value; onCalcChange()"
                      min="0" step="0.01" placeholder="0.00"
                      (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
             </div>
@@ -115,8 +115,8 @@
             <div class="calc-field">
               <span class="calc-mini-label">cantidad</span>
               <input type="number" class="calc-input"
-                     [(ngModel)]="calcQty" [ngModelOptions]="{standalone: true}"
-                     (input)="onCalcChange()"
+                     [value]="calcQty"
+                     (input)="calcQty = +$any($event.target).value; onCalcChange()"
                      min="0.000001" step="0.001" placeholder="1"
                      (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
             </div>
