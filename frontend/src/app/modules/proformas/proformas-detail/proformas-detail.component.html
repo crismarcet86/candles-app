@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <button class="btn-back" (click)="goBack()">← Volver</button>
@@ -68,21 +68,21 @@
           <tbody>
             <tr *ngFor="let item of proforma.items">
               <td>{{ item.description || item.product_name || '—' }}</td>
-              <td class="td-num text-muted">S/ {{ item.unit_price | number:'1.2-2' }}</td>
+              <td class="td-num text-muted">${{ item.unit_price | number:'1.2-2' }}</td>
               <td class="td-num">{{ item.quantity | number:'1.0-3' }}</td>
-              <td class="td-num"><strong>S/ {{ item.subtotal | number:'1.2-2' }}</strong></td>
+              <td class="td-num"><strong>${{ item.subtotal | number:'1.2-2' }}</strong></td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="totals-section">
         <div class="total-row">
-          <span>Subtotal</span><span>S/ {{ displaySubtotal | number:'1.2-2' }}</span>
+          <span>Subtotal</span><span>${{ displaySubtotal | number:'1.2-2' }}</span>
         </div>
         <div class="total-row" *ngIf="+proforma.discount > 0">
-          <span>Descuento</span><span class="text-danger">- S/ {{ proforma.discount | number:'1.2-2' }}</span>
+          <span>Descuento</span><span class="text-danger">- ${{ proforma.discount | number:'1.2-2' }}</span>
         </div>
-        <div class="total-row total-final"><span>TOTAL</span><span>S/ {{ proforma.total | number:'1.2-2' }}</span></div>
+        <div class="total-row total-final"><span>TOTAL</span><span>${{ proforma.total | number:'1.2-2' }}</span></div>
       </div>
     </div>
   </ng-container>

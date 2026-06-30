@@ -234,9 +234,10 @@ Stock siempre usa columnas `DECIMAL` (nunca float) para evitar errores de redond
 - Al seleccionar un molde, la línea de cera se auto-llena con `wax_grams`
 - Soporta productos en `kg` → costo por gramo = `price / 1000`; en `ml` → costo por ml = `price`; por unidad (pabilos)
 - **% Fragancia**: aparece en líneas cuyo producto tiene `is_fragrance = 1` (vía categoría). Al ingresar %, calcula `ml = mold.wax_grams × pct/100` y reduce la línea de cera automáticamente
-- **Mano de obra**: campo tarifa (S/·/h) × campo horas = `laborTotal`; se suma al `totalCostPerCandle`
-- **Incluye color**: checkbox que suma S/ 0.10 al costo por vela
+- **Mano de obra**: campo tarifa ($/h) × campo horas = `laborTotal`; se suma al `totalCostPerCandle`
+- **Incluye color**: checkbox que suma $0.10 al costo por vela
 - El PDF de calculadora (`POST /api/calculator/pdf`) incluye `laborCost`, `laborHours` e `includesColor` en el body — el backend los incluye en el cálculo y muestra las filas de mano de obra y color
+- **Selector de productos buscable**: reemplaza el `<select>` nativo por un dropdown con input de búsqueda. Filtra en tiempo real por nombre, ID numérico, categoría o unidad. Muestra resultados agrupados por categoría con badge `#ID`. Usa `mousedown` en los ítems para que el blur no cierre el dropdown antes de registrar la selección. Estado (`searchText`, `dropdownOpen`) vive en cada `CalcLine`.
 
 ### Stock — `/dashboard/stock`
 - **Agregar stock**: suma cantidad al stock actual
@@ -335,6 +336,10 @@ El topbar tiene un modal "Cambiar contraseña" (🔑) accesible desde el dropdow
 - `POST /api/products/:id/image` — sube imagen referencial (requireAuth); guarda como `product-{id}.<ext>` en `public/uploads/`
 - Mismo patrón de thumbnail + modal que Tipos de Molde
 
+## Moneda
+
+El sistema opera en **dólares americanos ($)**. El símbolo `$` se usa en toda la UI (templates Angular), controllers de backend y generadores de PDF (`pdfProforma.js`, `pdfReport.js`, `calculatorController.js`, etc.). No usar `S/` en ningún archivo nuevo.
+
 ## Nomenclatura en la UI
 
 En toda la interfaz de usuario los ingredientes se muestran como **"Productos"** (dashboard, stock, reportes, calculadora, proformas). Los nombres de variables, métodos y columnas de BD mantienen `ingredient`/`product` según su definición original — solo cambia el texto visible.
@@ -344,6 +349,19 @@ En toda la interfaz de usuario los ingredientes se muestran como **"Productos"**
 - **Campos numéricos** (`type="number"`): bloquean teclas `e`, `E`, `+`, `-` con `(keydown)` para evitar notación científica
 - **Campos de correo** (solo clientes): usan `Validators.pattern(/^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/)` en el formulario de clientes
 - **Campo username**: solo `Validators.required` (sin formato de email) — en login, registro y gestión de usuarios
+- **Precio de producto**: acepta hasta 6 decimales (`step="0.000001"`) para soportar costos por gramo de insumos comprados en cantidad
+
+## Calculadora de precio unitario — Formulario de Productos
+
+En el formulario de creación/edición de productos, debajo del campo **Precio por unidad**, hay una barra de ayuda:
+
+```
+Calcular:  [ $ total ]  ÷  [ cantidad ]  →  auto-llena Precio
+```
+
+- `calcTotal` y `calcQty` son propiedades del componente (no form controls); `onCalcChange()` calcula `price = calcTotal / calcQty` redondeado a 6 decimales y lo escribe en el form control `price`
+- Si el usuario edita el campo Precio directamente, los campos de calculadora no se afectan (son solo de entrada)
+- Al cargar un producto en edición, `calcTotal` y `calcQty` quedan en `null` (vacíos)
 
 ## Filtros en Listados
 

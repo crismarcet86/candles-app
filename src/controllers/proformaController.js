@@ -1,4 +1,4 @@
-const Proforma = require('../models/Proforma');
+﻿const Proforma = require('../models/Proforma');
 const Settings = require('../models/Settings');
 const { generateProformaPDF } = require('../utils/pdfProforma');
 const { generateListPDF } = require('../utils/pdfList');
@@ -65,7 +65,7 @@ exports.getListPdf = async (req, res, next) => {
     const rows = proformas.map(p => [
       String(p.id).padStart(4, '0'),
       p.client_name || '—',
-      `S/ ${(+p.total).toFixed(2)}`,
+      `$${(+p.total).toFixed(2)}`,
       p.status,
       p.notes || '—',
     ]);

@@ -1,4 +1,4 @@
-const Order = require('../models/Order');
+﻿const Order = require('../models/Order');
 const Settings = require('../models/Settings');
 const { pool } = require('../config/database');
 const { success, notFound } = require('../utils/response');
@@ -52,7 +52,7 @@ exports.getPdf = async (req, res, next) => {
       String(o.id).padStart(4, '0'),
       o.client_name,
       o.item_count || 0,
-      `S/ ${(+o.total).toFixed(2)}`,
+      `$${(+o.total).toFixed(2)}`,
       o.delivery_date
         ? new Date(o.delivery_date + 'T00:00:00').toLocaleDateString('es-PE')
         : '—',

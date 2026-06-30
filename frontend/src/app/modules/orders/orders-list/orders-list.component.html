@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <h1 class="page-title">📋 Órdenes</h1>
@@ -59,7 +59,7 @@
             <td class="text-muted">#{{ o.id }}</td>
             <td>{{ o.client_name }}</td>
             <td class="text-muted">Proforma #{{ o.proforma_id }}</td>
-            <td><strong>S/ {{ o.total | number:'1.2-2' }}</strong></td>
+            <td><strong>${{ o.total | number:'1.2-2' }}</strong></td>
             <td>
               <span *ngIf="o.status === 'anulado total'"   class="badge badge-cancelada">Anulado total</span>
               <span *ngIf="o.status === 'anulado parcial'" class="badge badge-warning">Anulado parcial</span>

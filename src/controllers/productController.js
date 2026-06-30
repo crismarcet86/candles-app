@@ -1,4 +1,4 @@
-const Product = require('../models/Product');
+﻿const Product = require('../models/Product');
 const Settings = require('../models/Settings');
 const { success, created, notFound } = require('../utils/response');
 const { generateListPDF } = require('../utils/pdfList');
@@ -98,7 +98,7 @@ exports.getPdf = async (req, res, next) => {
     const businessName = settings?.name || 'Mi Negocio';
     const logoPath     = settings?.report_logo_path || settings?.logo_path || null;
     const subtitle = new Date().toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const rows = products.map(p => [p.name, p.category_name || '—', p.unit_abbr || '—', `S/ ${(+p.price).toFixed(2)}`, p.stock, p.min_stock]);
+    const rows = products.map(p => [p.name, p.category_name || '—', p.unit_abbr || '—', `$${(+p.price).toFixed(2)}`, p.stock, p.min_stock]);
     const pdf = await generateListPDF({
       title: 'Listado de Productos', subtitle, businessName, logoPath,
       headers: ['NOMBRE', 'CATEGORÍA', 'UNIDAD', 'PRECIO', 'STOCK', 'MÍN.'],

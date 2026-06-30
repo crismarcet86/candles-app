@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <button class="btn-back" (click)="cancel()">← Volver</button>
@@ -42,7 +42,7 @@
             <input type="date" formControlName="delivery_date">
           </div>
           <div class="form-group">
-            <label>Descuento (S/)</label>
+            <label>Descuento ($)</label>
             <input type="number" formControlName="discount" min="0" step="1" placeholder="0.00">
           </div>
         </div>
@@ -64,7 +64,7 @@
               <tr>
                 <th>Descripción</th>
                 <th class="th-num">Cantidad</th>
-                <th class="th-num">Precio unit. (S/)</th>
+                <th class="th-num">Precio unit. ($)</th>
                 <th class="th-num">Subtotal</th>
                 <th class="th-remove"></th>
               </tr>
@@ -92,7 +92,7 @@
                          [class.invalid]="itemField(i,'unit_price')?.invalid && itemField(i,'unit_price')?.touched">
                 </td>
                 <td class="td-num">
-                  <strong>S/ {{ getItemSubtotal(i) | number:'1.2-2' }}</strong>
+                  <strong>${{ getItemSubtotal(i) | number:'1.2-2' }}</strong>
                 </td>
                 <td class="td-remove">
                   <button type="button" class="btn-remove-item" (click)="removeItem(i)"
@@ -107,15 +107,15 @@
         <div class="totals-section">
           <div class="total-row">
             <span>Subtotal</span>
-            <span>S/ {{ getDisplaySubtotal() | number:'1.2-2' }}</span>
+            <span>${{ getDisplaySubtotal() | number:'1.2-2' }}</span>
           </div>
           <div class="total-row" *ngIf="(field('discount')?.value || 0) > 0">
             <span>Descuento</span>
-            <span class="text-danger">- S/ {{ (field('discount')?.value || 0) | number:'1.2-2' }}</span>
+            <span class="text-danger">- ${{ (field('discount')?.value || 0) | number:'1.2-2' }}</span>
           </div>
           <div class="total-row total-final">
             <span>TOTAL</span>
-            <span>S/ {{ getTotal() | number:'1.2-2' }}</span>
+            <span>${{ getTotal() | number:'1.2-2' }}</span>
           </div>
         </div>
       </div>
@@ -154,8 +154,8 @@
         <div class="preset-card-meta">
           <span *ngIf="p.mold_name">🫙 {{ p.mold_name }}</span>
           <span>{{ p.item_count }} producto(s)</span>
-          <span>Costo: S/ {{ p.cost_per_unit | number:'1.2-2' }}/u</span>
-          <span *ngIf="p.sell_price > 0" class="price-tag">Precio: S/ {{ p.sell_price | number:'1.2-2' }}</span>
+          <span>Costo: ${{ p.cost_per_unit | number:'1.2-2' }}/u</span>
+          <span *ngIf="p.sell_price > 0" class="price-tag">Precio: ${{ p.sell_price | number:'1.2-2' }}</span>
         </div>
       </div>
     </div>

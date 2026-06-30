@@ -29,6 +29,9 @@ interface CalcLine {
   subtotal: number;
   isWaxLine?: boolean;   // true = línea de cera, recibe gramos del molde automáticamente
   fragrance_pct?: number | null; // % de fragancia aplicado sobre wax_grams del molde
+  // UI state para dropdown buscable
+  searchText?: string;
+  dropdownOpen?: boolean;
 }
 
 @Component({
@@ -113,7 +116,9 @@ export class CalculatorComponent implements OnInit {
       is_unit: false,
       subtotal: 0,
       isWaxLine: false,
-      fragrance_pct: null
+      fragrance_pct: null,
+      searchText: '',
+      dropdownOpen: false
     };
   }
 
@@ -395,6 +400,8 @@ export class CalculatorComponent implements OnInit {
             subtotal:        Number(item.subtotal) || 0,
             isWaxLine:       idx === 0 && !!matchingMold,
             fragrance_pct:   item.fragrance_pct != null ? Number(item.fragrance_pct) : null,
+            searchText:      '',
+            dropdownOpen:    false,
           } as CalcLine;
         });
 
@@ -421,6 +428,51 @@ export class CalculatorComponent implements OnInit {
     this.laborCost = 0;
     this.laborHours = 1;
   }
+
+  // ── Dropdown buscable de productos ──────────────────────────────────────
+
+  openLineDropdown(line: CalcLine): void {
+    this.lines.forEach(l => { if (l !== line) l.dropdownOpen = false; });
+    line.searchText = '';
+    line.dropdownOpen = true;
+  }
+
+  onLineSearchInput(line: CalcLine, value: string): void {
+    line.searchText = value;
+  }
+
+  onLineBlur(line: CalcLine): void {
+    setTimeout(() => { line.dropdownOpen = false; }, 160);
+  }
+
+  selectIngredient(line: CalcLine, ing: Ingredient): void {
+    line.ingredient_id = ing.id;
+    line.dropdownOpen = false;
+    line.searchText = '';
+    this.onIngredientChange(line);
+  }
+
+  getFilteredIngredients(line: CalcLine): Ingredient[] {
+    const q = (line.searchText || '').trim().toLowerCase();
+    if (!q) return this.ingredients;
+    return this.ingredients.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      i.id.toString().includes(q) ||
+      i.category_name.toLowerCase().includes(q) ||
+      i.unit_abbr.toLowerCase().includes(q)
+    );
+  }
+
+  getFilteredCategories(line: CalcLine): string[] {
+    const filtered = this.getFilteredIngredients(line);
+    return [...new Set(filtered.map(i => i.category_name))].sort();
+  }
+
+  getFilteredByCategory(line: CalcLine, cat: string): Ingredient[] {
+    return this.getFilteredIngredients(line).filter(i => i.category_name === cat);
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
 
   isFragranceLine(line: CalcLine): boolean {
     if (!line.ingredient_id || line.isWaxLine) return false;

@@ -24,6 +24,10 @@ export class ProductsFormComponent implements OnInit {
   uploadingImage = false;
   successMsg = '';
 
+  // Calculadora de precio unitario
+  calcTotal: number | null = null;
+  calcQty: number | null = null;
+
   constructor(
     private fb: FormBuilder,
     private service: ProductsService,
@@ -146,6 +150,15 @@ export class ProductsFormComponent implements OnInit {
 
   cancel(): void {
     this.router.navigate(['/dashboard/products']);
+  }
+
+  onCalcChange(): void {
+    const total = Number(this.calcTotal);
+    const qty   = Number(this.calcQty);
+    if (total > 0 && qty > 0) {
+      const unit = Math.round((total / qty) * 1_000_000) / 1_000_000;
+      this.form.get('price')?.setValue(unit);
+    }
   }
 
   field(name: string) { return this.form.get(name); }

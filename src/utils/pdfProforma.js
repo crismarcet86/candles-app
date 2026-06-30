@@ -1,4 +1,4 @@
-const PDFDocument = require('pdfkit');
+﻿const PDFDocument = require('pdfkit');
 const { drawPdfHeader } = require('./pdfHeader');
 
 /**
@@ -118,9 +118,9 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
       const midY = itemY + (rowHeight - 10) / 2;
       doc.text(Number(item.quantity).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 3 }),
         col.qty, midY, { width: 50, align: 'right' });
-      doc.text(`S/ ${Number(item.unit_price).toFixed(2)}`,
+      doc.text(`$${Number(item.unit_price).toFixed(2)}`,
         col.price, midY, { width: 60, align: 'right' });
-      doc.text(`S/ ${Number(item.subtotal).toFixed(2)}`,
+      doc.text(`$${Number(item.subtotal).toFixed(2)}`,
         col.sub, midY, { width: 80, align: 'right' });
 
       doc.y = itemY + rowHeight;
@@ -146,16 +146,16 @@ function generateProformaPDF(proforma, businessName = 'Mi Negocio', logoPath = n
 
     const displaySubtotal = Number(proforma.subtotal) + Number(proforma.labor_cost || 0);
 
-    drawTotalRow('Subtotal:', `S/ ${displaySubtotal.toFixed(2)}`);
+    drawTotalRow('Subtotal:', `$${displaySubtotal.toFixed(2)}`);
     if (Number(proforma.discount) > 0) {
-      drawTotalRow('Descuento:', `- S/ ${Number(proforma.discount).toFixed(2)}`, false, '#dc2626');
+      drawTotalRow('Descuento:', `- $${Number(proforma.discount).toFixed(2)}`, false, '#dc2626');
     }
 
     // Separador antes del total
     doc.moveTo(totLabelX, doc.y + 2).lineTo(545, doc.y + 2).strokeColor('#e5e7eb').lineWidth(0.5).stroke();
     doc.moveDown(0.5);
 
-    drawTotalRow('TOTAL:', `S/ ${Number(proforma.total).toFixed(2)}`, true, brown);
+    drawTotalRow('TOTAL:', `$${Number(proforma.total).toFixed(2)}`, true, brown);
 
     // ── PIE DE PÁGINA ────────────────────────────────────────────
     doc.fillColor(gray).fontSize(8).font('Helvetica')

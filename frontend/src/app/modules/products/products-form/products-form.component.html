@@ -89,16 +89,38 @@
       <!-- Precio + Stock -->
       <div class="form-row">
         <div class="form-group">
-          <label for="price">Precio <span class="required">*</span></label>
+          <label for="price">Precio por unidad <span class="required">*</span></label>
           <input id="price" type="number" formControlName="price"
-                 placeholder="0.00" step="1" min="0"
-                 [class.invalid]="field('price')?.invalid && field('price')?.touched">
+                 placeholder="0.000000" step="0.000001" min="0"
+                 [class.invalid]="field('price')?.invalid && field('price')?.touched"
+                 (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
           <span class="field-error" *ngIf="field('price')?.hasError('required') && field('price')?.touched">
             El precio es requerido
           </span>
           <span class="field-error" *ngIf="field('price')?.hasError('min') && field('price')?.touched">
             El precio no puede ser negativo
           </span>
+          <!-- Calculadora de precio unitario -->
+          <div class="price-calc">
+            <span class="calc-label">Calcular:</span>
+            <div class="calc-field">
+              <span class="calc-mini-label">$ total</span>
+              <input type="number" class="calc-input"
+                     [(ngModel)]="calcTotal" [ngModelOptions]="{standalone: true}"
+                     (input)="onCalcChange()"
+                     min="0" step="0.01" placeholder="0.00"
+                     (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
+            </div>
+            <span class="calc-op">÷</span>
+            <div class="calc-field">
+              <span class="calc-mini-label">cantidad</span>
+              <input type="number" class="calc-input"
+                     [(ngModel)]="calcQty" [ngModelOptions]="{standalone: true}"
+                     (input)="onCalcChange()"
+                     min="0.000001" step="0.001" placeholder="1"
+                     (keydown)="$event.key==='e'||$event.key==='E'||$event.key==='+'||$event.key==='-'?$event.preventDefault():null">
+            </div>
+          </div>
         </div>
 
         <div class="form-group">

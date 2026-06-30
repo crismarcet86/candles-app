@@ -1,4 +1,4 @@
-const PDFDocument = require('pdfkit');
+﻿const PDFDocument = require('pdfkit');
 const { drawPdfHeader } = require('./pdfHeader');
 
 /**
@@ -115,7 +115,7 @@ function generateReportPDF({ summary, orders, lowStock, topClients, from, to, bu
 
     const kpis = [
       { label: 'Órdenes totales',     value: String(summary.total_orders ?? 0) },
-      { label: 'Ingresos totales',    value: `S/ ${Number(summary.total_revenue ?? 0).toFixed(2)}` },
+      { label: 'Ingresos totales',    value: `$${Number(summary.total_revenue ?? 0).toFixed(2)}` },
       { label: 'Clientes activos',    value: String(summary.active_clients ?? 0) },
       { label: 'Proformas pendientes',value: String(summary.pending_proformas ?? 0) },
       { label: 'Productos con stock bajo', value: String(summary.low_stock_count ?? 0) },
@@ -161,7 +161,7 @@ function generateReportPDF({ summary, orders, lowStock, topClients, from, to, bu
           String(o.id).padStart(4, '0'),
           o.client_name,
           o.item_count,
-          `S/ ${Number(o.total).toFixed(2)}`,
+          `$${Number(o.total).toFixed(2)}`,
           new Date(o.created_at).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         ])
       );
@@ -208,7 +208,7 @@ function generateReportPDF({ summary, orders, lowStock, topClients, from, to, bu
           idx + 1,
           c.name,
           c.order_count,
-          `S/ ${Number(c.total_spent).toFixed(2)}`,
+          `$${Number(c.total_spent).toFixed(2)}`,
         ])
       );
     }

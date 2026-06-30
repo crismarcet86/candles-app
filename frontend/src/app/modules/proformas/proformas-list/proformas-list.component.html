@@ -1,4 +1,4 @@
-<div class="page">
+﻿<div class="page">
   <div class="page-header">
     <div>
       <h1 class="page-title">🧾 Proformas</h1>
@@ -53,7 +53,7 @@
           <tr *ngFor="let p of proformas" [class.row-cancelled]="p.status === 'cancelada'">
             <td class="text-muted">#{{ p.id }}</td>
             <td>{{ p.client_name }}</td>
-            <td><strong>S/ {{ p.total | number:'1.2-2' }}</strong></td>
+            <td><strong>${{ p.total | number:'1.2-2' }}</strong></td>
             <td>
               <span class="badge" [ngClass]="statusClass(p.status)">{{ statusLabel(p.status) }}</span>
             </td>
