@@ -8,7 +8,8 @@ export class AuthGuard implements CanActivate {
 
   canActivate(): boolean {
     if (this.auth.isLoggedIn) return true;
-    this.router.navigate(['/auth/login']);
+    if (this.auth.token) this.auth.logout(); // token expirado — limpiar sesión
+    else this.router.navigate(['/auth/login']);
     return false;
   }
 }

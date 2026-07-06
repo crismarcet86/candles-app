@@ -19,7 +19,17 @@ export class AuthService {
   // ── Getters ────────────────────────────────────────────────
   get currentUser(): User | null { return this.userSubject.value; }
   get token(): string | null     { return localStorage.getItem(this.TOKEN_KEY); }
-  get isLoggedIn(): boolean      { return !!this.token; }
+
+  isTokenExpired(): boolean {
+    const token = this.token;
+    if (!token) return true;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return Date.now() >= payload.exp * 1000;
+    } catch { return true; }
+  }
+
+  get isLoggedIn(): boolean { return !!this.token && !this.isTokenExpired(); }
 
   get businessName(): string {
     return localStorage.getItem(this.BNAME_KEY) || 'Mi Negocio';
