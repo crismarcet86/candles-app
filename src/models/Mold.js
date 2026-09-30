@@ -7,7 +7,7 @@ class Mold {
     if (mold_type_id) { conds.push('m.mold_type_id = ?'); params.push(mold_type_id); }
     const where = conds.length ? 'WHERE ' + conds.join(' AND ') : '';
     const [rows] = await pool.query(`
-      SELECT m.*, mt.name AS mold_type_name
+      SELECT m.*, mt.name AS mold_type_name, mt.fragrance_pct AS mold_type_fragrance_pct
       FROM molds m
       LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
       ${where}
@@ -18,7 +18,7 @@ class Mold {
 
   static async findAllActive() {
     const [rows] = await pool.query(`
-      SELECT m.*, mt.name AS mold_type_name
+      SELECT m.*, mt.name AS mold_type_name, mt.fragrance_pct AS mold_type_fragrance_pct
       FROM molds m
       LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
       WHERE m.is_active = 1
@@ -29,7 +29,7 @@ class Mold {
 
   static async findById(id) {
     const [[row]] = await pool.query(`
-      SELECT m.*, mt.name AS mold_type_name
+      SELECT m.*, mt.name AS mold_type_name, mt.fragrance_pct AS mold_type_fragrance_pct
       FROM molds m
       LEFT JOIN mold_types mt ON m.mold_type_id = mt.id
       WHERE m.id = ?
@@ -37,20 +37,20 @@ class Mold {
     return row || null;
   }
 
-  static async create({ name, wax_grams, total_grams, mold_type_id, description }) {
+  static async create({ name, wax_grams, quantity, total_grams, mold_type_id, description }) {
     const [result] = await pool.query(
-      'INSERT INTO molds (name, wax_grams, total_grams, mold_type_id, description) VALUES (?, ?, ?, ?, ?)',
-      [name, wax_grams, total_grams || null, mold_type_id || null, description || null]
+      'INSERT INTO molds (name, wax_grams, quantity, total_grams, mold_type_id, description) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, wax_grams, quantity || 0, total_grams || null, mold_type_id || null, description || null]
     );
     return this.findById(result.insertId);
   }
 
-  static async update(id, { name, wax_grams, total_grams, mold_type_id, description, is_active }) {
+  static async update(id, { name, wax_grams, quantity, total_grams, mold_type_id, description, is_active }) {
     await pool.query(
       `UPDATE molds
-       SET name=?, wax_grams=?, total_grams=?, mold_type_id=?, description=?, is_active=?, updated_at=NOW()
+       SET name=?, wax_grams=?, quantity=?, total_grams=?, mold_type_id=?, description=?, is_active=?, updated_at=NOW()
        WHERE id=?`,
-      [name, wax_grams, total_grams || null, mold_type_id || null, description || null, is_active ?? 1, id]
+      [name, wax_grams, quantity || 0, total_grams || null, mold_type_id || null, description || null, is_active ?? 1, id]
     );
     return this.findById(id);
   }

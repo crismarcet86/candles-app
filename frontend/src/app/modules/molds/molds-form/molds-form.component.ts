@@ -46,6 +46,7 @@ export class MoldsFormComponent implements OnInit {
       mold_type_id: [null],
       total_grams:  [null, [Validators.min(0.001)]],
       wax_grams:    [null, [Validators.required, Validators.min(0.001)]],
+      quantity:     [0, [Validators.min(0), Validators.pattern(/^\d+$/)]],
       description:  [''],
       is_active:    [1]
     });
@@ -100,6 +101,7 @@ export class MoldsFormComponent implements OnInit {
     const payload = {
       ...val,
       wax_grams:    Number(val.wax_grams),
+      quantity:     Number(val.quantity) || 0,
       total_grams:  val.total_grams ? Number(val.total_grams) : null,
       mold_type_id: val.mold_type_id ? Number(val.mold_type_id) : null,
     };

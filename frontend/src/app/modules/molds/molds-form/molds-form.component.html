@@ -80,6 +80,16 @@
         </div>
 
         <div class="form-group">
+          <label>Cantidad</label>
+          <input type="number" formControlName="quantity"
+                 (keydown)="blockInvalidKey($event)"
+                 placeholder="0" min="0" step="1"
+                 [class.invalid]="field('quantity')?.invalid && field('quantity')?.touched">
+          <span class="field-hint">Unidades de este molde disponibles</span>
+          <span class="field-error" *ngIf="field('quantity')?.invalid && field('quantity')?.touched">Debe ser un entero mayor o igual a 0</span>
+        </div>
+
+        <div class="form-group">
           <label>Descripción</label>
           <textarea formControlName="description" placeholder="Descripción opcional del molde..."></textarea>
         </div>

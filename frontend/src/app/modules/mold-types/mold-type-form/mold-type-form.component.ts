@@ -32,6 +32,7 @@ export class MoldTypeFormComponent implements OnInit {
     this.typeId = id ? +id : null;
     this.form = this.fb.group({
       name:      ['', [Validators.required, Validators.minLength(2)]],
+      fragrance_pct: [0, [Validators.min(0), Validators.max(10)]],
       is_active: [1]
     });
     if (this.isEdit && this.typeId) {
@@ -73,9 +74,10 @@ export class MoldTypeFormComponent implements OnInit {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading = true;
     this.errorMsg = '';
+    const payload = { ...this.form.value, fragrance_pct: Number(this.form.value.fragrance_pct) || 0 };
     const req = this.isEdit
-      ? this.svc.update(this.typeId!, this.form.value)
-      : this.svc.create(this.form.value);
+      ? this.svc.update(this.typeId!, payload)
+      : this.svc.create(payload);
     req.subscribe({
       next: (r) => {
         if (!this.isEdit) {
@@ -91,4 +93,7 @@ export class MoldTypeFormComponent implements OnInit {
 
   cancel(): void { this.router.navigate(['/dashboard/mold-types']); }
   field(n: string) { return this.form.get(n); }
+  blockInvalidKey(e: KeyboardEvent): void {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
+  }
 }

@@ -21,18 +21,18 @@ class MoldType {
     return row || null;
   }
 
-  static async create({ name }) {
+  static async create({ name, fragrance_pct }) {
     const [result] = await pool.query(
-      'INSERT INTO mold_types (name) VALUES (?)',
-      [name]
+      'INSERT INTO mold_types (name, fragrance_pct) VALUES (?, ?)',
+      [name, fragrance_pct || 0]
     );
     return this.findById(result.insertId);
   }
 
-  static async update(id, { name, is_active }) {
+  static async update(id, { name, fragrance_pct, is_active }) {
     await pool.query(
-      'UPDATE mold_types SET name=?, is_active=?, updated_at=NOW() WHERE id=?',
-      [name, is_active ?? 1, id]
+      'UPDATE mold_types SET name=?, fragrance_pct=?, is_active=?, updated_at=NOW() WHERE id=?',
+      [name, fragrance_pct || 0, is_active ?? 1, id]
     );
     return this.findById(id);
   }

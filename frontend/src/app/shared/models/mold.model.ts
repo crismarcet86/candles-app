@@ -2,6 +2,8 @@ export interface Mold {
   id: number;
   name: string;
   wax_grams: number;
+  quantity: number;
+  mold_type_fragrance_pct: number | null;
   total_grams: number | null;
   mold_type_id: number | null;
   mold_type_name: string | null;

@@ -29,13 +29,14 @@
           <tr>
             <th class="th-img"></th>
             <th>Nombre</th>
+            <th>% Fragancia</th>
             <th>Estado</th>
             <th class="th-actions">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngIf="types.length === 0">
-            <td colspan="4" class="empty-state">No hay tipos de molde registrados</td>
+            <td colspan="5" class="empty-state">No hay tipos de molde registrados</td>
           </tr>
           <tr *ngFor="let t of types" [class.row-inactive]="t.is_active === 0">
             <!-- Thumbnail -->
@@ -49,6 +50,7 @@
               </div>
             </td>
             <td><strong>{{ t.name }}</strong></td>
+            <td>{{ t.fragrance_pct | number:'1.0-2' }}%</td>
             <td>
               <span class="badge" [class.badge-active]="t.is_active === 1" [class.badge-inactive]="t.is_active === 0">
                 {{ t.is_active === 1 ? 'Activo' : 'Inactivo' }}

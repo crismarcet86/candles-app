@@ -9,6 +9,7 @@ const path    = require('path');
 const rules = [
   body('name').notEmpty().withMessage('Nombre requerido'),
   body('wax_grams').isFloat({ min: 0.001 }).withMessage('Gramos de cera requeridos (> 0)'),
+  body('quantity').optional({ nullable: true, checkFalsy: true }).isInt({ min: 0 }).withMessage('Cantidad debe ser un entero >= 0'),
 ];
 
 const imageStorage = multer.diskStorage({

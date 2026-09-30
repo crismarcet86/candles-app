@@ -69,15 +69,16 @@ exports.getPdf = async (req, res, next) => {
       m.mold_type_name || '—',
       m.total_grams != null ? m.total_grams : '—',
       m.wax_grams,
+      m.quantity ?? 0,
       m.description || '—',
       m.is_active === 1 ? 'Activo' : 'Inactivo',
     ]);
     const pdf = await generateListPDF({
       title: 'Listado de Moldes',
       subtitle, businessName, logoPath,
-      headers: ['NOMBRE', 'TIPO', 'PESO TOTAL (g)', 'CERA (g)', 'DESCRIPCIÓN', 'ESTADO'],
-      widths:  [130, 80, 75, 65, 100, 55],
-      aligns:  ['left', 'left', 'right', 'right', 'left', 'left'],
+      headers: ['NOMBRE', 'TIPO', 'PESO TOTAL (g)', 'CERA (g)', 'CANT.', 'DESCRIPCIÓN', 'ESTADO'],
+      widths:  [120, 75, 70, 60, 40, 90, 50],
+      aligns:  ['left', 'left', 'right', 'right', 'right', 'left', 'left'],
       rows,
     });
     res.setHeader('Content-Type', 'application/pdf');

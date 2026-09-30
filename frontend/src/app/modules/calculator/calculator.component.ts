@@ -17,6 +17,8 @@ interface Mold {
   id: number;
   name: string;
   wax_grams: number;
+  mold_type_name?: string | null;
+  mold_type_fragrance_pct?: number | null;
 }
 
 interface CalcLine {
@@ -97,6 +99,36 @@ export class CalculatorComponent implements OnInit {
     });
   }
 
+  // ── Dropdown buscable de moldes ─────────────────────────────────────────
+  moldSearchText = '';
+  moldDropdownOpen = false;
+
+  get filteredMolds(): Mold[] {
+    const q = this.moldSearchText.trim().toLowerCase();
+    if (!q) return this.molds;
+    return this.molds.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      m.id.toString().includes(q) ||
+      (m.mold_type_name || '').toLowerCase().includes(q)
+    );
+  }
+
+  openMoldDropdown(): void {
+    this.moldSearchText = '';
+    this.moldDropdownOpen = true;
+  }
+
+  onMoldBlur(): void {
+    setTimeout(() => { this.moldDropdownOpen = false; }, 160);
+  }
+
+  selectMold(m: Mold): void {
+    this.selectedMoldId = m.id;
+    this.moldDropdownOpen = false;
+    this.moldSearchText = '';
+    this.onMoldChange();
+  }
+
   onMoldChange(): void {
     this.selectedMold = this.molds.find(m => m.id === +this.selectedMoldId!) || null;
     this.lines = [];
@@ -175,14 +207,24 @@ export class CalculatorComponent implements OnInit {
     if (hadFragrance && !ing.is_fragrance) {
       this.recalcWaxLine();
     }
+
+    // Fragancia: precargar el % del tipo de molde (editable, máx 10%)
+    const typePct = Number(this.selectedMold?.mold_type_fragrance_pct) || 0;
+    if (ing.is_fragrance && !line.isWaxLine && !(line.fragrance_pct || 0) && typePct > 0) {
+      line.fragrance_pct = typePct;
+      this.onFragrancePctChange(line);
+    }
   }
+
+  readonly MAX_FRAGRANCE_PCT = 10;
 
   onFragrancePctChange(line: CalcLine): void {
     if (!this.selectedMold) return;
-    const pct = Number(line.fragrance_pct) || 0;
-    if (pct > 0) {
-      line.grams = Math.round(this.selectedMold.wax_grams * (pct / 100) * 100) / 100;
-    }
+    let pct = Number(line.fragrance_pct) || 0;
+    if (pct > this.MAX_FRAGRANCE_PCT) pct = this.MAX_FRAGRANCE_PCT;
+    if (pct < 0) pct = 0;
+    if (line.fragrance_pct != null && Number(line.fragrance_pct) !== pct) line.fragrance_pct = pct;
+    line.grams = Math.round(this.selectedMold.wax_grams * (pct / 100) * 100) / 100;
     this.recalcLine(line);
     this.recalcWaxLine();
   }

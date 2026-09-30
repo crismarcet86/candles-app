@@ -6,6 +6,7 @@ import { environment } from '../../../environments/environment';
 export interface MoldType {
   id: number;
   name: string;
+  fragrance_pct: number;
   image_path: string | null;
   image_url: string | null;
   is_active: number;
@@ -29,7 +30,7 @@ export class MoldTypesService {
     return this.http.get<ApiResponse<MoldType>>(`${this.base}/${id}`);
   }
 
-  create(payload: { name: string }): Observable<ApiResponse<MoldType>> {
+  create(payload: { name: string; fragrance_pct?: number }): Observable<ApiResponse<MoldType>> {
     return this.http.post<ApiResponse<MoldType>>(this.base, payload);
   }
 

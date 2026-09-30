@@ -23,11 +23,14 @@ exports.getById = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+const invalidPct = v => v != null && v !== '' && !(Number(v) >= 0 && Number(v) <= 10);
+
 exports.create = async (req, res, next) => {
   try {
-    const { name } = req.body;
+    const { name, fragrance_pct } = req.body;
     if (!name?.trim()) return badRequest(res, 'El nombre es requerido');
-    created(res, fmt(req, await MoldType.create({ name: name.trim() })), 'Tipo de molde creado');
+    if (invalidPct(fragrance_pct)) return badRequest(res, 'El % de fragancia debe estar entre 0 y 10');
+    created(res, fmt(req, await MoldType.create({ name: name.trim(), fragrance_pct: Number(fragrance_pct) || 0 })), 'Tipo de molde creado');
   } catch (e) { next(e); }
 };
 
@@ -37,6 +40,7 @@ exports.update = async (req, res, next) => {
     if (!existing) return notFound(res, 'Tipo de molde no encontrado');
     const { name } = req.body;
     if (!name?.trim()) return badRequest(res, 'El nombre es requerido');
+    if (invalidPct(req.body.fragrance_pct)) return badRequest(res, 'El % de fragancia debe estar entre 0 y 10');
     success(res, fmt(req, await MoldType.update(req.params.id, req.body)), 'Tipo de molde actualizado');
   } catch (e) { next(e); }
 };
