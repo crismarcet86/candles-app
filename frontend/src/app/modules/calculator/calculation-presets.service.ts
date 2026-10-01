@@ -15,6 +15,12 @@ export interface CalcPresetItem {
   fragrance_pct?: number | null;
 }
 
+export interface CalcPresetExtra {
+  id?: number;
+  name: string;
+  cost: number;
+}
+
 export interface CalcPreset {
   id: number;
   name: string;
@@ -24,11 +30,13 @@ export interface CalcPreset {
   sell_price: number;
   cost_per_unit: number;
   includes_color: number;
+  color_cost?: number;
   labor_cost: number;
   labor_hours: number;
   is_active: number;
   item_count?: number;
   items?: CalcPresetItem[];
+  extras?: CalcPresetExtra[];
   created_at: string;
 }
 

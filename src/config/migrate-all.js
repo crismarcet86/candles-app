@@ -29,6 +29,7 @@ const MIGRATIONS = [
   'migrate-returns.js',
   'migrate-order-items-v2.js',
   'migrate-mold-fragrance-qty.js',
+  'migrate-presets-v5.js',
 ];
 
 async function runAll() {

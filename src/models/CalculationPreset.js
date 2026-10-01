@@ -30,23 +30,36 @@ class CalculationPreset {
     const [items] = await pool.query(
       'SELECT * FROM calculation_preset_items WHERE preset_id = ? ORDER BY id', [id]
     );
-    return { ...preset, items };
+    const [extras] = await pool.query(
+      'SELECT * FROM calculation_preset_extras WHERE preset_id = ? ORDER BY id', [id]
+    );
+    return { ...preset, items, extras };
+  }
+
+  static async _insertExtras(conn, presetId, extras = []) {
+    for (const ex of extras || []) {
+      if (!ex.name?.trim()) continue;
+      await conn.query(
+        'INSERT INTO calculation_preset_extras (preset_id, name, cost) VALUES (?, ?, ?)',
+        [presetId, ex.name.trim(), Number(ex.cost) || 0]
+      );
+    }
   }
 
   /**
    * Guarda un cálculo como preset reutilizable.
    * items: [{ product_id, ingredient_name, grams, is_unit, unit_abbr, unit_cost, subtotal, fragrance_pct }]
    */
-  static async create({ name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, labor_cost, labor_hours, items }) {
+  static async create({ name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, color_cost, labor_cost, labor_hours, items, extras }) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
       const [result] = await conn.query(
         `INSERT INTO calculation_presets
-          (name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, labor_cost, labor_hours)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0, labor_cost || 0, labor_hours || 1]
+          (name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, color_cost, labor_cost, labor_hours)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0, color_cost ?? 0.10, labor_cost || 0, labor_hours || 1]
       );
       const presetId = result.insertId;
 
@@ -70,6 +83,8 @@ class CalculationPreset {
         );
       }
 
+      await this._insertExtras(conn, presetId, extras);
+
       await conn.commit();
       return this.findById(presetId);
     } catch (err) {
@@ -80,19 +95,20 @@ class CalculationPreset {
     }
   }
 
-  static async update(id, { name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, labor_cost, labor_hours, items }) {
+  static async update(id, { name, mold_name, wax_grams, quantity, sell_price, cost_per_unit, includes_color, color_cost, labor_cost, labor_hours, items, extras }) {
     const conn = await pool.getConnection();
     try {
       await conn.beginTransaction();
 
       await conn.query(
         `UPDATE calculation_presets
-         SET name=?, mold_name=?, wax_grams=?, quantity=?, sell_price=?, cost_per_unit=?, includes_color=?, labor_cost=?, labor_hours=?, is_active=1, updated_at=NOW()
+         SET name=?, mold_name=?, wax_grams=?, quantity=?, sell_price=?, cost_per_unit=?, includes_color=?, color_cost=?, labor_cost=?, labor_hours=?, is_active=1, updated_at=NOW()
          WHERE id=?`,
-        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0, labor_cost || 0, labor_hours || 1, id]
+        [name, mold_name || null, wax_grams || null, quantity || 1, sell_price || 0, cost_per_unit || 0, includes_color ? 1 : 0, color_cost ?? 0.10, labor_cost || 0, labor_hours || 1, id]
       );
 
       await conn.query('DELETE FROM calculation_preset_items WHERE preset_id = ?', [id]);
+      await conn.query('DELETE FROM calculation_preset_extras WHERE preset_id = ?', [id]);
 
       for (const item of items) {
         if (!item.ingredient_id && !item.ingredient_name) continue;
@@ -113,6 +129,8 @@ class CalculationPreset {
           ]
         );
       }
+
+      await this._insertExtras(conn, id, extras);
 
       await conn.commit();
       return this.findById(id);

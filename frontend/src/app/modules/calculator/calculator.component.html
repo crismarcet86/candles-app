@@ -80,8 +80,13 @@
           <div class="form-group color-check-group">
             <label class="color-check-label">
               <input type="checkbox" [(ngModel)]="includesColor">
-              <span>Incluye color <span class="color-cost-hint">(+ $0.10)</span></span>
+              <span>Incluye color</span>
             </label>
+            <div class="input-suffix-wrapper color-cost-input" *ngIf="includesColor">
+              <span class="input-prefix">$</span>
+              <input type="number" [(ngModel)]="colorCost" (keydown)="blockInvalidKey($event)"
+                     min="0" step="0.01" placeholder="0.10">
+            </div>
           </div>
         </div>
 
@@ -164,6 +169,24 @@
           </div>
         </div>
 
+        <!-- Otros (empaque, etiquetas...) -->
+        <div class="panel-section" *ngIf="selectedMold">
+          <div class="section-header">
+            <h3 class="section-title">Otros (empaque, etiqueta…)</h3>
+            <button class="btn-add" (click)="addExtra()">+ Agregar</button>
+          </div>
+          <p class="extras-hint" *ngIf="extras.length === 0">Ej: papel kraft, cinta, etiqueta. Ingrese el valor por 1 vela.</p>
+          <div class="extra-row" *ngFor="let ex of extras; let i = index">
+            <input type="text" class="extra-name" [(ngModel)]="ex.name" placeholder="Nombre (ej: Papel kraft)">
+            <div class="input-suffix-wrapper extra-cost">
+              <span class="input-prefix">$</span>
+              <input type="number" [(ngModel)]="ex.cost" (keydown)="blockInvalidKey($event)"
+                     min="0" step="0.01" placeholder="0.00">
+            </div>
+            <button class="btn-remove" (click)="removeExtra(i)" title="Quitar">✕</button>
+          </div>
+        </div>
+
         <!-- Precio de venta -->
         <div class="panel-section" *ngIf="selectedMold && lines.length > 0">
           <h3 class="section-title">Precio de venta</h3>
@@ -204,9 +227,13 @@
                 ${{ line.subtotal | number:'1.2-2' }}
               </span>
             </div>
-            <div class="result-row" *ngIf="includesColor">
+            <div class="result-row" *ngIf="includesColor && colorCost > 0">
               <span>Color</span>
-              <span class="result-val">$0.10</span>
+              <span class="result-val">${{ colorCost | number:'1.2-2' }}</span>
+            </div>
+            <div class="result-row" *ngFor="let ex of extras">
+              <span *ngIf="ex.name.trim() && ex.cost > 0">{{ ex.name }}</span>
+              <span *ngIf="ex.name.trim() && ex.cost > 0" class="result-val">${{ ex.cost | number:'1.2-2' }}</span>
             </div>
             <div class="result-row" *ngIf="laborTotal > 0">
               <span>Mano de obra</span>

@@ -55,6 +55,8 @@ export class CalculatorComponent implements OnInit {
   quantity: number  = 1;  // cuántas velas se calcula
   marginTarget: number = 0; // % de margen deseado
   includesColor: boolean = false;
+  colorCost: number = 0.10;
+  extras: { name: string; cost: number }[] = [];
   laborCost: number = 0;
   laborHours: number = 1;
 
@@ -252,9 +254,25 @@ export class CalculatorComponent implements OnInit {
     return (this.laborCost || 0) * (this.laborHours || 1);
   }
 
+  get extrasTotal(): number {
+    return this.extras.reduce((sum, e) => sum + (Number(e.cost) || 0), 0);
+  }
+
   get totalCostPerCandle(): number {
     const linesCost = this.lines.reduce((sum, l) => sum + (l.subtotal || 0), 0);
-    return linesCost + (this.includesColor ? 0.10 : 0) + this.laborTotal;
+    return linesCost + (this.includesColor ? (Number(this.colorCost) || 0) : 0) + this.extrasTotal + this.laborTotal;
+  }
+
+  addExtra(): void {
+    this.extras.push({ name: '', cost: 0 });
+  }
+
+  removeExtra(i: number): void {
+    this.extras.splice(i, 1);
+  }
+
+  blockInvalidKey(e: KeyboardEvent): void {
+    if (['e', 'E', '+', '-'].includes(e.key)) e.preventDefault();
   }
 
   get totalCost(): number {
@@ -306,9 +324,11 @@ export class CalculatorComponent implements OnInit {
       quantity:      this.quantity,
       sellPrice:     this.sellPrice,
       includesColor: this.includesColor,
+      colorCost:     this.colorCost,
       laborCost:     this.laborCost,
       laborHours:    this.laborHours,
-      lines:         this.lines
+      extras:        this.extras.filter(e => e.name.trim() && e.cost > 0),
+      lines:         this.lines.map(l => ({ ...l, isFragrance: this.isFragranceLine(l) }))
     };
     this.http.post(`${environment.apiUrl}/calculator/pdf`, body, { responseType: 'blob' }).subscribe({
       next: blob => {
@@ -353,8 +373,10 @@ export class CalculatorComponent implements OnInit {
       sell_price:     this.sellPrice,
       cost_per_unit:  this.totalCostPerCandle,
       includes_color: this.includesColor,
+      color_cost:     this.colorCost,
       labor_cost:     this.laborCost,
       labor_hours:    this.laborHours,
+      extras:         this.extras.filter(e => e.name.trim()).map(e => ({ name: e.name.trim(), cost: Number(e.cost) || 0 })),
       items:          this.lines
         .filter(l => l.ingredient_id && l.subtotal > 0)
         .map(l => ({
@@ -427,6 +449,8 @@ export class CalculatorComponent implements OnInit {
         this.sellPrice     = Number(p.sell_price) || 0;
         this.marginTarget  = 0;
         this.includesColor = !!p.includes_color;
+        this.colorCost     = p.color_cost != null ? Number(p.color_cost) : 0.10;
+        this.extras        = (p.extras || []).map((e: any) => ({ name: e.name, cost: Number(e.cost) || 0 }));
         this.laborCost     = Number(p.labor_cost) || 0;
         this.laborHours    = Number(p.labor_hours) || 1;
 
@@ -467,6 +491,8 @@ export class CalculatorComponent implements OnInit {
     this.editingPresetId = null;
     this.saveSuccess = '';
     this.includesColor = false;
+    this.colorCost = 0.10;
+    this.extras = [];
     this.laborCost = 0;
     this.laborHours = 1;
   }

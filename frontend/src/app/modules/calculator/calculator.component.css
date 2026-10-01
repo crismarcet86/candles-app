@@ -139,3 +139,14 @@ input[readonly] { background: #f3f4f6; color: #6b7280; cursor: default; }
 .ing-id { font-size: 0.72rem; font-weight: 700; color: #9ca3af; background: #f3f4f6; border-radius: 4px; padding: 0.05rem 0.3rem; flex-shrink: 0; }
 .ing-unit { font-size: 0.78rem; color: #9ca3af; margin-left: auto; flex-shrink: 0; }
 .dropdown-empty { padding: 0.75rem; text-align: center; font-size: 0.85rem; color: #9ca3af; }
+
+/* Color editable y extras */
+.color-cost-input { margin-top: 0.4rem; max-width: 140px; }
+.input-prefix { position: absolute; left: 0.65rem; top: 50%; transform: translateY(-50%); font-size: 0.85rem; color: #9ca3af; pointer-events: none; }
+.color-cost-input input, .extra-cost input { padding-left: 1.5rem; }
+.extras-hint { font-size: 0.8rem; color: #9ca3af; margin-bottom: 0.4rem; }
+.extra-row { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.extra-name { flex: 1; min-width: 0; }
+.extra-cost { width: 120px; flex-shrink: 0; }
+.color-cost-input, .extra-cost { position: relative; }
+.color-cost-input input, .extra-cost input { border-radius: 8px; width: 100%; }

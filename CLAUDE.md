@@ -35,6 +35,7 @@ node src/config/migrate-delivery.js        # delivery_date en proformas; deliver
 node src/config/migrate-returns.js         # Tablas order_returns + order_return_items para devoluciones
 node src/config/migrate-order-items-v2.js  # preset_id + is_service en order_items
 node src/config/migrate-mold-fragrance-qty.js # fragrance_pct en mold_types (máx 10) + quantity en molds
+node src/config/migrate-presets-v5.js      # color_cost en presets + tabla calculation_preset_extras (empaque/otros por vela)
 
 # Columnas agregadas con ALTER TABLE directo (sin script):
 #   categories.is_fragrance TINYINT(1) DEFAULT 0
@@ -49,7 +50,7 @@ No hay test runner ni linter configurado en ninguno de los dos proyectos.
 # Comandos de base de datos
 
 ```bash
-npm run db:migrate-all   # Corre las 19 migraciones en orden — seguro de re-ejecutar
+npm run db:migrate-all   # Corre las 20 migraciones en orden — seguro de re-ejecutar
 npm run db:reset         # Backup → drop → migraciones → restore (ideal al cambiar de ambiente)
 npm run db:restore <f>   # Restaura datos desde un JSON de backup generado por db:reset
 ```
