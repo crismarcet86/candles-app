@@ -60,7 +60,7 @@ cd frontend && npm install
 npm run db:migrate-all
 ```
 
-Esto corre las 18 migraciones en orden. Es seguro de re-ejecutar (cada migracion verifica si la columna/tabla ya existe antes de crearla).
+Esto corre las 20 migraciones en orden. Es seguro de re-ejecutar (cada migracion verifica si la columna/tabla ya existe antes de crearla).
 
 **Si cambias de ambiente y tenes datos que preservar:**
 ```bash
@@ -88,6 +88,8 @@ node src/config/migrate-product-image.js    # image_path en products
 node src/config/migrate-delivery.js     # delivery_date/status + orders.status ENUM ampliado
 node src/config/migrate-returns.js      # order_returns + order_return_items
 node src/config/migrate-order-items-v2.js   # preset_id + is_service en order_items
+node src/config/migrate-mold-fragrance-qty.js # fragrance_pct en mold_types + quantity en molds
+node src/config/migrate-presets-v5.js   # color_cost en presets + tabla calculation_preset_extras
 ```
 
 ### 4. Iniciar servidores
@@ -101,6 +103,15 @@ cd frontend && npm start
 ```
 
 Abrir `http://localhost:4200` en el navegador.
+
+**Atajo en Windows (sin abrir terminales a mano):**
+
+| Archivo | Que hace |
+|---------|----------|
+| `iniciar.bat` | Abre backend (`npm run dev`) y frontend (`npm start`) en dos ventanas y lanza el navegador en `http://localhost:4200` |
+| `detener.bat` | Cierra lo que este escuchando en los puertos 3000 y 4200 y las ventanas de `iniciar.bat` |
+
+Ninguno enciende MySQL: hay que iniciarlo antes (por ejemplo, desde el panel de XAMPP).
 
 ---
 
@@ -132,19 +143,23 @@ Abrir `http://localhost:4200` en el navegador.
 - Flag `is_fragrance`: los productos de estas categorias activan el campo de % fragancia en la calculadora
 
 ### Moldes y tipos de molde
-- **Tipos de molde**: clasificacion con imagen referencial
-- **Moldes**: `total_grams` (peso agua por desplazamiento), `wax_grams` auto-calculado (`total_grams x 0.90 x 1.05`)
+- **Tipos de molde**: clasificacion con imagen referencial y **% de fragancia/esencia por defecto** (`fragrance_pct`, entre 0 y 10), visible en el listado
+- **Moldes**: `total_grams` (peso agua por desplazamiento), `wax_grams` auto-calculado (`total_grams x 0.90 x 1.05`) y **cantidad** (`quantity`, unidades disponibles) visible en el listado y en el PDF
 - Imagen referencial por molde y tipo de molde
 
 ### Calculadora de costos
-- Selecciona molde e ingredientes
+- **Molde y productos buscables**: ambos combos tienen buscador (el de molde filtra por nombre, tipo o ID)
 - Auto-llena cera segun `wax_grams` del molde
-- **% Fragancia**: para productos de categoria `is_fragrance`, calcula `ml = wax_grams x pct/100` y reduce la linea de cera
-- **Mano de obra**: tarifa (S//h) x horas
-- **Color**: checkbox que suma S/ 0.10 por vela
-- Calcula costo total, ganancia y margen dado un precio de venta
-- Los calculos se guardan como **presets** reutilizables en proformas
-- Exportacion a PDF con todos los costos (ingredientes + mano de obra + color)
+- **% Fragancia**: para productos de categoria `is_fragrance`, se precarga con el % del tipo de molde, es editable (maximo 10%), calcula `ml = wax_grams x pct/100` y reduce la linea de cera
+- Los productos (cera, fragancia, pabilo, palo, etc.) representan los ingredientes de **1 sola vela**
+- **Otros (empaque, etiqueta...)**: filas libres con nombre y valor por vela (papel kraft, cinta, etc.); suman al costo, no descuentan stock
+- **Mano de obra**: tarifa ($/h) x horas
+- **Color**: checkbox con monto editable (por defecto $0.10 por vela)
+- Calcula costo por vela, costo total para N velas, ganancia y margen dado un precio de venta (o un margen deseado)
+- Los calculos se guardan como **presets** (incluye color, extras, mano de obra y % fragancia), se pueden volver a cargar y usar en proformas
+- **PDF de 2 hojas**:
+  - Hoja 1: costos por vela (productos, mano de obra, color, extras), resumen y margen
+  - Hoja 2 "Materiales a usar": total para N velas de cada producto (cera/otros en `kg` y `g` desde 1000 g, fragancia en `ml`, pabilos/palos en unidades) y costo de materiales
 
 ### Clientes
 - CRUD con nombre, CI/RUC, correo, telefono, direccion y notas
@@ -268,6 +283,10 @@ Transaccion que:
 5. Marca los presets usados como inactivos
 6. Rollback completo ante cualquier falla
 
+### Calculadora y presets
+- Un preset guarda molde, productos, `color_cost`, extras (`calculation_preset_extras`), mano de obra, cantidad y precio de venta
+- Al confirmar una proforma solo se descuenta stock de los productos del preset; los extras son solo costo
+
 ### Formula de cera
 ```
 wax_grams = total_grams x 0.90 x 1.05
@@ -281,7 +300,7 @@ Donde `total_grams` es el peso del agua al llenar el molde por desplazamiento.
 | Comando | Descripcion |
 |---------|-------------|
 | `npm run db:migrate` | Schema base (primera vez) |
-| `npm run db:migrate-all` | Corre las 18 migraciones en orden, seguro de re-ejecutar |
+| `npm run db:migrate-all` | Corre las 20 migraciones en orden, seguro de re-ejecutar |
 | `npm run db:reset` | Backup → drop → migraciones → restore (cambio de ambiente) |
 | `npm run db:restore <archivo.json>` | Restaura datos desde un backup JSON |
 

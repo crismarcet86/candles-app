@@ -52,8 +52,8 @@
   <div class="subtitulo" style="font-size:13pt; margin-top:6px;">Sistema de Gestión para Negocio de Velas Artesanales</div>
   <div class="meta">
     <table style="width:auto; margin:0 auto; border:none;">
-      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Versión:</td><td style="border:none; padding:3px 12px;">1.0</td></tr>
-      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Fecha:</td><td style="border:none; padding:3px 12px;">Junio 2026</td></tr>
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Versión:</td><td style="border:none; padding:3px 12px;">1.1</td></tr>
+      <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Fecha:</td><td style="border:none; padding:3px 12px;">Octubre 2026</td></tr>
       <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Plataforma:</td><td style="border:none; padding:3px 12px;">Node.js + Angular 16 + MySQL</td></tr>
       <tr><td style="border:none; font-weight:bold; text-align:right; padding:3px 12px;">Repositorio:</td><td style="border:none; padding:3px 12px;">github.com/crismarcet86/candles-app</td></tr>
     </table>
@@ -266,7 +266,13 @@ candles-app/
 │   │   ├── migrate-report-logo.js  report_logo_path en business_settings (imagen PDFs)
 │   │   ├── migrate-mold-type-image.js image_path en mold_types (imagen referencial)
 │   │   ├── migrate-mold-image.js      image_path en molds (imagen referencial)
-│   │   └── migrate-product-image.js   image_path en products (imagen referencial)
+│   │   ├── migrate-product-image.js   image_path en products (imagen referencial)
+│   │   ├── migrate-delivery.js        delivery_date en proformas/orders; delivery_status en orders
+│   │   ├── migrate-returns.js         Tablas order_returns y order_return_items
+│   │   ├── migrate-order-items-v2.js  preset_id e is_service en order_items
+│   │   ├── migrate-mold-fragrance-qty.js fragrance_pct en mold_types; quantity en molds
+│   │   ├── migrate-presets-v5.js      color_cost en presets + tabla calculation_preset_extras
+│   │   └── migrate-all.js             Corre todas las migraciones en orden (idempotente)
 │   ├── controllers/
 │   │   ├── authController.js       Login, register, me, change-password
 │   │   ├── userController.js       CRUD usuarios (solo admin)
@@ -459,6 +465,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
   <tr><td>id</td><td>INT PK</td><td></td></tr>
   <tr><td>name</td><td>VARCHAR(100) NOT NULL</td><td>Ej: "Redondo", "Cuadrado"</td></tr>
+  <tr><td>fragrance_pct</td><td>DECIMAL(5,2) NOT NULL DEFAULT 0</td><td>% de fragancia/esencia por defecto del tipo (0–10). Se precarga en la calculadora</td></tr>
   <tr><td>image_path</td><td>VARCHAR(255) NULL</td><td>Filename en public/uploads/; <code>image_url</code> se construye en el controller</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
 </table>
@@ -471,6 +478,7 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>mold_type_id</td><td>INT FK → mold_types NULL</td><td></td></tr>
   <tr><td>total_grams</td><td>DECIMAL(10,2) NULL</td><td>Peso del agua al llenar el molde (método de desplazamiento)</td></tr>
   <tr><td>wax_grams</td><td>DECIMAL(10,2) NULL</td><td>Auto: total_grams × 0.90 × 1.05</td></tr>
+  <tr><td>quantity</td><td>INT NOT NULL DEFAULT 0</td><td>Unidades disponibles de este molde (informativo)</td></tr>
   <tr><td>description</td><td>TEXT NULL</td><td></td></tr>
   <tr><td>image_path</td><td>VARCHAR(255) NULL</td><td>Nombre de archivo en <code>public/uploads/</code>; <code>image_url</code> se construye en el controller</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Soft delete</td></tr>
@@ -523,7 +531,8 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>quantity</td><td>INT DEFAULT 1</td><td>Cantidad de velas calculadas</td></tr>
   <tr><td>sell_price</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Precio de venta sugerido</td></tr>
   <tr><td>cost_per_unit</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Costo calculado por vela</td></tr>
-  <tr><td>includes_color</td><td>TINYINT(1) DEFAULT 0</td><td>Suma S/ 0.10 por vela</td></tr>
+  <tr><td>includes_color</td><td>TINYINT(1) DEFAULT 0</td><td>1 si el cálculo incluye color (el monto está en <code>color_cost</code>)</td></tr>
+  <tr><td>color_cost</td><td>DECIMAL(10,4) NOT NULL DEFAULT 0.10</td><td>Monto de color por vela, editable en la calculadora</td></tr>
   <tr><td>labor_cost</td><td>DECIMAL(10,2) DEFAULT 0</td><td>Tarifa por hora de mano de obra</td></tr>
   <tr><td>labor_hours</td><td>DECIMAL(6,2) DEFAULT 1</td><td>Horas de trabajo</td></tr>
   <tr><td>is_active</td><td>TINYINT(1) DEFAULT 1</td><td>Se pone a 0 al usar el preset en una orden confirmada</td></tr>
@@ -542,6 +551,16 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td>unit_cost</td><td>DECIMAL(14,6) DEFAULT 0</td><td>Costo por unidad mínima en el momento del cálculo</td></tr>
   <tr><td>subtotal</td><td>DECIMAL(12,4) DEFAULT 0</td><td>Costo parcial de este ingrediente</td></tr>
   <tr><td>fragrance_pct</td><td>DECIMAL(6,2) NULL</td><td>% de fragancia aplicado (solo para ingredientes is_fragrance=1)</td></tr>
+</table>
+
+<h3>calculation_preset_extras</h3>
+<p>Elementos adicionales por vela (papel kraft, cinta, etiqueta…). Solo aportan costo; <strong>no descuentan stock</strong> y no tienen producto asociado.</p>
+<table>
+  <tr><th>Columna</th><th>Tipo</th><th>Notas</th></tr>
+  <tr><td>id</td><td>INT PK</td><td></td></tr>
+  <tr><td>preset_id</td><td>INT FK → calculation_presets</td><td>ON DELETE CASCADE</td></tr>
+  <tr><td>name</td><td>VARCHAR(150) NOT NULL</td><td>Ej: "Papel kraft"</td></tr>
+  <tr><td>cost</td><td>DECIMAL(12,4) NOT NULL DEFAULT 0</td><td>Valor por 1 vela</td></tr>
 </table>
 
 <h3>business_settings</h3>
@@ -580,7 +599,14 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
   <tr><td><code>migrate-mold-type-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del tipo de molde</td><td>mold_types</td></tr>
   <tr><td><code>migrate-mold-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del molde</td><td>molds</td></tr>
   <tr><td><code>migrate-product-image.js</code></td><td>Agrega <code>image_path VARCHAR(255) NULL</code> para imagen referencial del ingrediente</td><td>products</td></tr>
+  <tr><td><code>migrate-delivery.js</code></td><td>Agrega <code>delivery_date</code> a proformas y orders; <code>delivery_status</code> a orders y amplía el ENUM de <code>orders.status</code></td><td>proformas, orders</td></tr>
+  <tr><td><code>migrate-returns.js</code></td><td>Crea <code>order_returns</code> y <code>order_return_items</code> para devoluciones</td><td>order_returns, order_return_items</td></tr>
+  <tr><td><code>migrate-order-items-v2.js</code></td><td>Agrega <code>preset_id</code> e <code>is_service</code> a order_items</td><td>order_items</td></tr>
+  <tr><td><code>migrate-mold-fragrance-qty.js</code></td><td>Agrega <code>fragrance_pct DECIMAL(5,2) DEFAULT 0</code> a mold_types y <code>quantity INT DEFAULT 0</code> a molds</td><td>mold_types, molds</td></tr>
+  <tr><td><code>migrate-presets-v5.js</code></td><td>Agrega <code>color_cost DECIMAL(10,4) DEFAULT 0.10</code> a calculation_presets y crea <code>calculation_preset_extras</code></td><td>calculation_presets, calculation_preset_extras</td></tr>
 </table>
+
+<p><code>npm run db:migrate-all</code> (<code>migrate-all.js</code>) ejecuta las 20 migraciones en orden y es seguro de re-ejecutar.</p>
 
 <div class="info">
   <strong>Nota:</strong> La columna <code>categories.is_fragrance</code> se agregó con ALTER TABLE directo (sin script dedicado).
@@ -659,10 +685,10 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
 <h2>7.7 Tipos de Molde <span class="version">— /api/mold-types</span></h2>
 <table>
   <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
-  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types</td><td>Listar todos los tipos con <code>image_url</code></td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types</td><td>Listar todos los tipos con <code>image_url</code> y <code>fragrance_pct</code></td></tr>
   <tr><td><span class="badge badge-get">GET</span></td><td>/mold-types/:id</td><td>Detalle de un tipo</td></tr>
-  <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types</td><td><code>{ name }</code> (requireAuth)</td></tr>
-  <tr><td><span class="badge badge-put">PUT</span></td><td>/mold-types/:id</td><td>Actualizar nombre / estado (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types</td><td><code>{ name, fragrance_pct? }</code> — <code>fragrance_pct</code> entre 0 y 10, de lo contrario 400 (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-put">PUT</span></td><td>/mold-types/:id</td><td>Actualizar nombre, % de fragancia (0–10) y estado (requireAuth)</td></tr>
   <tr><td><span class="badge badge-delete">DELETE</span></td><td>/mold-types/:id</td><td>Soft delete (requireAuth)</td></tr>
   <tr><td><span class="badge badge-post">POST</span></td><td>/mold-types/:id/image</td><td>Multipart: sube imagen referencial; guarda como <code>mold-type-{id}.ext</code> (requireAuth)</td></tr>
 </table>
@@ -670,9 +696,9 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
 <h2>7.8 Moldes <span class="version">— /api/molds</span></h2>
 <table>
   <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
-  <tr><td><span class="badge badge-get">GET</span></td><td>/molds</td><td>Listar moldes activos (con tipo y gramos)</td></tr>
-  <tr><td><span class="badge badge-get">GET</span></td><td>/molds/pdf</td><td>PDF del listado de moldes</td></tr>
-  <tr><td><span class="badge badge-post">POST</span></td><td>/molds</td><td><code>{ name, mold_type_id?, total_grams, wax_grams }</code></td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/molds</td><td>Listar moldes (con tipo, gramos, <code>quantity</code> y <code>mold_type_fragrance_pct</code> del tipo)</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/molds/pdf</td><td>PDF del listado de moldes (incluye columna Cantidad)</td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/molds</td><td><code>{ name, mold_type_id?, total_grams, wax_grams, quantity? }</code> — <code>quantity</code> entero ≥ 0</td></tr>
   <tr><td><span class="badge badge-put">PUT</span></td><td>/molds/:id</td><td>Actualizar</td></tr>
   <tr><td><span class="badge badge-delete">DELETE</span></td><td>/molds/:id</td><td>Soft delete</td></tr>
   <tr><td><span class="badge badge-post">POST</span></td><td>/molds/:id/image</td><td>Subir imagen referencial del molde (multipart/form-data, campo <code>image</code>, requireAuth)</td></tr>
@@ -702,11 +728,13 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
 <table>
   <tr><th>Método</th><th>Ruta</th><th>Descripción</th></tr>
   <tr><td><span class="badge badge-get">GET</span></td><td>/presets</td><td>Listar presets activos con sus ítems</td></tr>
-  <tr><td><span class="badge badge-get">GET</span></td><td>/presets/:id</td><td>Detalle de un preset</td></tr>
-  <tr><td><span class="badge badge-post">POST</span></td><td>/presets</td><td>Crear preset (requireAuth)</td></tr>
+  <tr><td><span class="badge badge-get">GET</span></td><td>/presets/:id</td><td>Detalle de un preset con <code>items</code> y <code>extras</code></td></tr>
+  <tr><td><span class="badge badge-post">POST</span></td><td>/presets</td><td>Crear preset: acepta <code>color_cost</code> y <code>extras: [{ name, cost }]</code> además de los campos anteriores (requireAuth)</td></tr>
   <tr><td><span class="badge badge-put">PUT</span></td><td>/presets/:id</td><td>Actualizar preset (requireAuth)</td></tr>
   <tr><td><span class="badge badge-delete">DELETE</span></td><td>/presets/:id</td><td>Desactivar (soft, requireAuth)</td></tr>
 </table>
+
+<p>Además: <span class="badge badge-post">POST</span> <code>/api/calculator/pdf</code> genera el PDF de la calculadora (2 hojas). Body: <code>moldName, waxGrams, quantity, sellPrice, includesColor, colorCost, laborCost, laborHours, lines, extras</code>. Ver sección 12.5.</p>
 
 <h2>7.12 Reportes <span class="version">— /api/reports (requireAuth)</span></h2>
 <table>
@@ -804,7 +832,8 @@ business_settings (id=1, name, ruc, phone, observations, logo_path)
 <p>Archivo: <code>src/models/CalculationPreset.js</code></p>
 <ul>
   <li>Guarda el estado completo de la calculadora: molde, ingredientes con gramos y %, color, mano de obra.</li>
-  <li>Al crear/actualizar: borra y re-inserta los items del preset en la misma transacción.</li>
+  <li>Guarda además <code>color_cost</code> y los <code>extras</code> (empaque, etiquetas…) en <code>calculation_preset_extras</code>.</li>
+  <li>Al crear/actualizar: borra y re-inserta los items y los extras del preset en la misma transacción. <code>findById</code> devuelve <code>items</code> y <code>extras</code>.</li>
   <li>Al confirmarse una orden que usa un preset: <code>is_active</code> se pone a 0 (preset ya consumido).</li>
 </ul>
 
@@ -870,13 +899,15 @@ badRequest(res, msg)      → 400 { ok: false, message }
 <h2>10.3 Módulo Calculator</h2>
 <p>Es el módulo más complejo del frontend. Permite calcular el costo exacto de fabricación de una vela:</p>
 <ol>
-  <li>Seleccionar un molde → auto-rellena los gramos de cera (<code>wax_grams</code>)</li>
-  <li>Agregar líneas de ingredientes con cantidad en gramos</li>
-  <li>Si el ingrediente tiene <code>is_fragrance = 1</code> (vía categoría): aparece campo de % fragancia. Al ingresarlo, calcula los ml y reduce la cera automáticamente</li>
-  <li>Checkbox "Incluye color" → suma S/ 0.10 al costo por vela</li>
+  <li>Seleccionar un molde con un <strong>combo buscable</strong> (filtra por nombre, tipo o ID) → auto-rellena los gramos de cera (<code>wax_grams</code>)</li>
+  <li>Agregar líneas de productos (cera, fragancia, pabilo, palo…): representan los ingredientes de <strong>1 sola vela</strong></li>
+  <li>Si el producto tiene <code>is_fragrance = 1</code> (vía categoría): aparece el campo % fragancia, <strong>precargado con el % del tipo de molde</strong> (<code>mold_type_fragrance_pct</code>). Es editable con tope de <strong>10%</strong>; calcula los ml y reduce la cera automáticamente</li>
+  <li>Checkbox "Incluye color" → campo con el monto editable (<code>colorCost</code>, por defecto $0.10) que se suma al costo por vela</li>
+  <li>Sección <strong>"Otros (empaque, etiqueta…)"</strong>: filas con nombre y valor por vela (<code>extras</code>) que se suman al costo</li>
   <li>Campo tarifa/hora × horas = mano de obra total</li>
-  <li>Ingresando precio de venta → calcula ganancia y margen %</li>
-  <li>El cálculo se guarda como preset (con todos los campos) y puede cargarse/reutilizarse</li>
+  <li>Ingresando precio de venta (o margen deseado) → calcula ganancia y margen %</li>
+  <li>El cálculo se guarda como preset (con color, extras y todos los campos) y puede cargarse/reutilizarse; en proformas se carga con su cantidad y precio</li>
+  <li>El PDF incluye una segunda hoja con los materiales totales para N velas (ver 12.5)</li>
 </ol>
 
 <h2>10.4 Módulo Proformas</h2>
@@ -977,12 +1008,15 @@ Para cada línea de ingrediente:
   - En g:   costoPorGramo = price;         lineaCosto = grams × costoPorGramo
 
 % Fragancia (solo si is_fragrance = 1):
+  pct = min(max(pct, 0), 10)                   // tope 10%
+  pct inicial = mold_type.fragrance_pct         // se precarga al elegir el producto
   fragranceMl = wax_grams × (pct / 100)
   cera reducida en fragranceMl (misma densidad)
 
 Costo total por vela:
   totalCosto = ΣlineaCostos
-             + (includesColor ? 0.10 : 0)
+             + (includesColor ? colorCost : 0)     // colorCost editable, default 0.10
+             + Σextras.cost                        // empaque, etiquetas… (por vela)
              + (laborCost × laborHours)
 
 Margen:
@@ -1027,13 +1061,21 @@ total mostrado  = displaySubtotal - descuento
 </ul>
 
 <h2>12.3 Listados PDF Genéricos</h2>
-<p>Archivo: <code>src/utils/pdfList.js</code> — Función <code>generateListPDF({ title, headers, widths, aligns, rows, businessName, logoPath })</code></p>
+<p>Archivo: <code>src/utils/pdfList.js</code> — Función <code>generateListPDF({ title, subtitle, headers, widths, aligns, rows, businessName, logoPath, extraPages })</code></p>
+<p><code>extraPages</code> (opcional) es un arreglo <code>[{ title, subtitle?, headers, widths, aligns, rows }]</code>; cada elemento agrega una hoja con su propia tabla y encabezado.</p>
 <p>Usada por: categorías, unidades, productos, clientes, moldes, tipos de molde, usuarios, órdenes.</p>
 
 <h2>12.4 Encabezado Común</h2>
 <p>Archivo: <code>src/utils/pdfHeader.js</code> — Función <code>drawPdfHeader(doc, { businessName, logoPath })</code></p>
 <p>Si <code>logoPath</code> existe, dibuja la imagen desde <code>public/uploads/</code>. El nombre del negocio siempre se muestra como título.</p>
 <p><strong>Sistema de logos dual:</strong> Todos los controladores PDF consultan <code>business_settings</code> y pasan <code>report_logo_path || logo_path</code> como <code>logoPath</code>. Esto permite tener una imagen dedicada para reportes/PDFs (campo <em>"Imagen para PDFs"</em> en Configuración) distinta del logo que aparece como icono/favicon en la interfaz web. Si no se sube una imagen de reporte, se usa el logo del negocio como respaldo.</p>
+
+<h2>12.5 PDF de la Calculadora</h2>
+<p>Archivo: <code>src/controllers/calculatorController.js</code> — <code>POST /api/calculator/pdf</code></p>
+<ul>
+  <li><strong>Hoja 1 — Calculadora de Costos:</strong> productos con cantidad y costo unitario, mano de obra, color (con el monto real), extras, costo por vela, costo para N velas, precio de venta, ganancia y margen.</li>
+  <li><strong>Hoja 2 — Materiales a usar:</strong> por cada producto, cantidad por vela, <strong>total para N velas</strong> y costo total. Los gramos desde 1000 se muestran como <code>kg + g</code> (ej: 30 × 180 g = <code>5 kg 400 g</code>), las fragancias en <code>ml</code> (desde 1000, <code>L + ml</code>) y pabilos/palos en unidades. Los extras aparecen como 1 u por vela / N u en total. Cierra con el costo de materiales.</li>
+</ul>
 
 <!-- ═══════════════════════════════════════════════════════════
      13. CONFIGURACIÓN Y VARIABLES DE ENTORNO
@@ -1100,20 +1142,8 @@ cp .env.example .env
 # 4. Instalar dependencias del backend
 npm install
 
-# 5. Ejecutar migraciones en orden
-npm run db:migrate
-node src/config/migrate-v2.js
-node src/config/migrate-cedula.js
-node src/config/migrate-settings.js
-node src/config/migrate-presets.js
-node src/config/migrate-mold-types.js
-node src/config/migrate-presets-v2.js
-node src/config/migrate-presets-v3.js
-node src/config/migrate-presets-v4.js
-node src/config/migrate-username.js
-node src/config/migrate-report-logo.js
-node src/config/migrate-mold-type-image.js
-node src/config/migrate-mold-image.js
+# 5. Ejecutar todas las migraciones en orden (20, idempotente)
+npm run db:migrate-all
 
 # 6. Instalar dependencias del frontend
 cd frontend && npm install && cd ..
@@ -1131,6 +1161,10 @@ cd frontend && npm start
   <tr><th>Script</th><th>Comando</th><th>Descripción</th></tr>
   <tr><td>Backend dev</td><td><code>npm run dev</code></td><td>nodemon con auto-reload → puerto 3000</td></tr>
   <tr><td>Backend prod</td><td><code>npm start</code></td><td>node directo → puerto 3000</td></tr>
+  <tr><td>Todas las migraciones</td><td><code>npm run db:migrate-all</code></td><td>Corre las 20 migraciones en orden; seguro de re-ejecutar</td></tr>
+  <tr><td>Reset de BD</td><td><code>npm run db:reset</code></td><td>Backup JSON → drop → migraciones → restore</td></tr>
+  <tr><td>Iniciar (Windows)</td><td><code>iniciar.bat</code></td><td>Abre backend y frontend en dos ventanas y el navegador en localhost:4200 (MySQL debe estar encendido)</td></tr>
+  <tr><td>Detener (Windows)</td><td><code>detener.bat</code></td><td>Cierra los procesos en los puertos 3000 y 4200</td></tr>
   <tr><td>Migración base</td><td><code>npm run db:migrate</code></td><td>Schema inicial + datos semilla</td></tr>
   <tr><td>Frontend dev</td><td><code>cd frontend &amp;&amp; npm start</code></td><td>ng serve --host 0.0.0.0 → puerto 4200</td></tr>
   <tr><td>Frontend build</td><td><code>cd frontend &amp;&amp; npm run build</code></td><td>Build de producción en dist/</td></tr>
@@ -1180,8 +1214,8 @@ GET http://localhost:3000/health
   <li><strong>Crear categorías</strong>: marcar <code>is_fragrance = 1</code> para categorías de esencias/fragancias.</li>
   <li><strong>Crear unidades</strong>: g, kg, ml, oz, lb, u (o las que use el negocio).</li>
   <li><strong>Crear ingredientes</strong>: asignar categoría, unidad, precio y stock inicial.</li>
-  <li><strong>Crear tipos de molde y moldes</strong>: ingresar el peso total de agua para calcular automáticamente los gramos de cera.</li>
-  <li><strong>Usar la calculadora</strong>: seleccionar molde, agregar ingredientes, definir % de fragancia, mano de obra y precio de venta. Guardar como preset.</li>
+  <li><strong>Crear tipos de molde y moldes</strong>: en el tipo, definir el % de fragancia por defecto (máx. 10%); en el molde, ingresar el peso total de agua para calcular automáticamente los gramos de cera y la cantidad disponible.</li>
+  <li><strong>Usar la calculadora</strong>: buscar el molde, agregar productos de 1 vela (el % de fragancia se precarga del tipo de molde), definir color, extras de empaque, mano de obra y precio de venta. Guardar como preset y, si se necesita, descargar el PDF con la hoja de materiales para N velas.</li>
   <li><strong>Crear cliente y proforma</strong>: agregar ítems libres o desde un preset. Descargar PDF para enviar al cliente.</li>
   <li><strong>Confirmar pedido</strong>: en el detalle de proforma, confirmar para generar la orden y descontar el stock automáticamente.</li>
 </ol>
@@ -1204,7 +1238,7 @@ GET http://localhost:3000/health
 </table>
 
 <footer>
-  <p>Documento Técnico — Candles App v1.0 · Generado el 24 de junio de 2026</p>
+  <p>Documento Técnico — Candles App v1.1 · Actualizado el 1 de octubre de 2026</p>
   <p>Sistema de gestión para negocio de velas artesanales · Node.js + Angular 16 + MySQL 8</p>
 </footer>
 
