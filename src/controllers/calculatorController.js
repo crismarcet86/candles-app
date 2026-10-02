@@ -19,7 +19,7 @@ const lineUnit = l => l.is_unit ? 'u' : ((l.isFragrance || String(l.unit_abbr).t
 
 exports.getPdf = async (req, res, next) => {
   try {
-    const { moldName, waxGrams, quantity, sellPrice, includesColor, colorCost, laborCost, laborHours, lines, extras } = req.body;
+    const { moldName, waxGrams, moldQuantity, quantity, sellPrice, includesColor, colorCost, laborCost, laborHours, lines, extras } = req.body;
 
     if (!lines || !Array.isArray(lines)) return badRequest(res, 'Datos inválidos');
 
@@ -50,7 +50,7 @@ exports.getPdf = async (req, res, next) => {
       .map(l => [
         l.ingredient_name || '—',
         `${l.grams} ${lineUnit(l)}`,
-        `${Number(l.unit_cost).toFixed(4)}/${lineUnit(l)}`,
+        `$${Number(l.unit_cost).toFixed(4)}/${lineUnit(l)}`,
         `$${Number(l.subtotal).toFixed(2)}`
       ]);
 
@@ -60,9 +60,9 @@ exports.getPdf = async (req, res, next) => {
       ingredientRows.push(['Mano de obra' + hoursLabel, '', '', `$${laborTotal.toFixed(2)}`]);
     }
     if (colorAmount > 0) {
-      ingredientRows.push(['Color', '', '', `${colorAmount.toFixed(2)}`]);
+      ingredientRows.push(['Color', '', '', `$${colorAmount.toFixed(2)}`]);
     }
-    extraList.forEach(e => ingredientRows.push([e.name.trim(), '', '', `${Number(e.cost).toFixed(2)}`]));
+    extraList.forEach(e => ingredientRows.push([e.name.trim(), '', '', `$${Number(e.cost).toFixed(2)}`]));
 
     // Filas de resumen
     const summaryRows = [
@@ -86,22 +86,25 @@ exports.getPdf = async (req, res, next) => {
 
     const subtitle = `Molde: ${moldName || '—'} (${waxGrams || 0}g cera) | Cantidad: ${qty} vela(s) | ${date}`;
 
-    // Hoja 2: materiales totales para N velas
+    // Hoja 2: materiales por 1 vela, por N moldes y por el total de velas
+    const molds = Math.max(Math.floor(Number(moldQuantity)) || 1, 1);
     const usedLines = lines.filter(l => l.ingredient_id && Number(l.subtotal) > 0);
     const materialRows = usedLines.map(l => {
       const unit = lineUnit(l);
+      const perCandle = Number(l.grams) || 0;
       return [
         l.ingredient_name || '—',
-        formatQty(l.grams, unit),
-        formatQty((Number(l.grams) || 0) * qty, unit),
-        `${((Number(l.subtotal) || 0) * qty).toFixed(2)}`,
+        formatQty(perCandle, unit),
+        formatQty(perCandle * molds, unit),
+        formatQty(perCandle * qty, unit),
+        `$${((Number(l.subtotal) || 0) * qty).toFixed(2)}`,
       ];
     });
     extraList.forEach(e => materialRows.push([
-      e.name.trim(), '1 u', `${qty} u`, `${(Number(e.cost) * qty).toFixed(2)}`,
+      e.name.trim(), '1 u', `${molds} u`, `${qty} u`, `$${(Number(e.cost) * qty).toFixed(2)}`,
     ]));
     const materialsCost = usedLines.reduce((s, l) => s + (Number(l.subtotal) || 0), 0) * qty + extrasTotal * qty;
-    materialRows.push(['', '', '', ''], ['Costo de materiales', '', '', `${materialsCost.toFixed(2)}`]);
+    materialRows.push(['', '', '', '', ''], ['Costo de materiales', '', '', '', `$${materialsCost.toFixed(2)}`]);
 
     const pdf = await generateListPDF({
       title: 'Calculadora de Costos',
@@ -112,10 +115,10 @@ exports.getPdf = async (req, res, next) => {
       rows:    [...ingredientRows, ...summaryRows],
       extraPages: [{
         title: 'Materiales a usar',
-        subtitle: `Total para ${qty} vela(s) | Molde: ${moldName || '—'}`,
-        headers: ['PRODUCTO', 'POR VELA', `TOTAL (${qty} VELAS)`, 'COSTO TOTAL'],
-        widths:  [200, 100, 110, 85],
-        aligns:  ['left', 'right', 'right', 'right'],
+        subtitle: `Molde: ${moldName || '—'} | ${molds} molde(s) | Total para ${qty} vela(s)`,
+        headers: ['PRODUCTO', '1 VELA', `${molds} MOLDE(S)`, `${qty} VELAS`, 'COSTO TOTAL'],
+        widths:  [155, 85, 85, 85, 85],
+        aligns:  ['left', 'right', 'right', 'right', 'right'],
         rows:    materialRows,
       }],
     });

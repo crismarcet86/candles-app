@@ -17,6 +17,7 @@ interface Mold {
   id: number;
   name: string;
   wax_grams: number;
+  quantity?: number;
   mold_type_name?: string | null;
   mold_type_fragrance_pct?: number | null;
 }
@@ -321,6 +322,7 @@ export class CalculatorComponent implements OnInit {
     const body = {
       moldName:      this.selectedMold?.name,
       waxGrams:      this.selectedMold?.wax_grams,
+      moldQuantity:  this.selectedMold?.quantity,
       quantity:      this.quantity,
       sellPrice:     this.sellPrice,
       includesColor: this.includesColor,

@@ -159,7 +159,7 @@ Ninguno enciende MySQL: hay que iniciarlo antes (por ejemplo, desde el panel de 
 - Los calculos se guardan como **presets** (incluye color, extras, mano de obra y % fragancia), se pueden volver a cargar y usar en proformas
 - **PDF de 2 hojas**:
   - Hoja 1: costos por vela (productos, mano de obra, color, extras), resumen y margen
-  - Hoja 2 "Materiales a usar": total para N velas de cada producto (cera/otros en `kg` y `g` desde 1000 g, fragancia en `ml`, pabilos/palos en unidades) y costo de materiales
+  - Hoja 2 "Materiales a usar": por producto: para 1 vela, para N moldes (cantidad del molde) y para el total de velas (cera/otros en `kg` y `g` desde 1000 g, fragancia en `ml`, pabilos/palos en unidades) y costo de materiales
 
 ### Clientes
 - CRUD con nombre, CI/RUC, correo, telefono, direccion y notas
